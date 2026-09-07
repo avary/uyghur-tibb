@@ -1,0 +1,8 @@
+__pycache__
+*.py
+*.pyc
+*.bat
+*.bak
+*.txt
+package-lock.json
+.git

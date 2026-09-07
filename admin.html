@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ug">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 «ئۇيغۇر تېبابىتى» ئارقا سەھنە باشقۇرۇش سىستېمىسى</title>
+<link rel="icon" href="icon-192.png" type="image/png">
+<style>
+@font-face {
+  font-family: 'UKIJEkran';
+  src: url('data:application/font-woff;charset=utf-8;base64,...');
+}
+:root {
+  --teal: #0e7c6f;
+  --teal-dark: #0a5c52;
+  --teal-light: #e3f2ef;
+  --gold: #c9a227;
+  --gold-light: #faf3dd;
+  --ink: #1f2d2a;
+  --muted: #5e706c;
+  --line: #d8e4e1;
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --red: #c0392b;
+  --green: #1e8e4d;
+  --radius: 14px;
+  --shadow: 0 4px 20px rgba(10,92,82,.08);
+}
+[data-theme="dark"] {
+  --teal: #18a184;
+  --teal-dark: #20b898;
+  --teal-light: #0f332c;
+  --gold: #e2ba39;
+  --gold-light: #2b240f;
+  --ink: #e0eae8;
+  --muted: #93a7a3;
+  --line: #1c3631;
+  --bg: #071916;
+  --card: #0d2722;
+  --shadow: 0 4px 20px rgba(0,0,0,.45);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  font-family: "UKIJEkran", "Microsoft Uighur", "UKIJ Tuz", "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.8;
+  min-height: 100vh;
+  transition: background .2s, color .2s;
+}
+a { color: var(--teal-dark); text-decoration: none; }
+
+/* Login Screen */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(-135deg, #072a25, #0a5c52 60%, #12876f);
+}
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--card);
+  border-radius: 22px;
+  padding: 2.2rem 2rem;
+  box-shadow: 0 16px 50px rgba(0,0,0,.4);
+  text-align: center;
+}
+.login-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto .8rem;
+  background: #fff;
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow: inset 0 0 0 3px var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-logo img { width: 100%; height: 100%; }
+.login-card h2 { margin: 0 0 .3rem; color: var(--teal-dark); font-size: 1.35rem; }
+.login-card p { margin: 0 0 1.5rem; color: var(--muted); font-size: .9rem; }
+.inp-group { margin-bottom: 1.2rem; text-align: right; }
+.inp-group label { display: block; font-size: .9rem; font-weight: bold; margin-bottom: .3rem; color: var(--ink); }
+.inp {
+  width: 100%;
+  padding: .75rem 1rem;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color .2s, box-shadow .2s;
+  background: var(--card);
+  color: var(--ink);
+}
+.inp:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-light); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .7rem 1.4rem;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: .95rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+}
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-teal:hover { background: var(--teal-dark); }
+.btn-gold { background: var(--gold); color: #2d2300; }
+.btn-gold:hover { opacity: .9; }
+.btn-line { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.btn-line:hover { border-color: var(--teal); color: var(--teal-dark); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { opacity: .9; }
+.btn-sm { padding: .35rem .8rem; font-size: .85rem; border-radius: 8px; }
+.btn-block { width: 100%; }
+.badge {
+  display: inline-block;
+  padding: .15rem .6rem;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: bold;
+  background: var(--line);
+  color: var(--ink);
+}
+.badge-gold { background: var(--gold-light); color: #8a6a00; border: 1px solid var(--gold); }
+.badge-green { background: #e5f6ea; color: #1e8e4d; }
+.badge-red { background: #fbe7e5; color: #c0392b; }
+
+/* Admin Shell */
+.admin-app { display: none; min-height: 100vh; flex-direction: column; }
+.topbar {
+  background: linear-gradient(-90deg, #072a25, #0a5c52 60%, #12876f);
+  color: #fff;
+  padding: .75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand-box { display: flex; align-items: center; gap: .8rem; }
+.brand-box img { width: 36px; height: 36px; border-radius: 10px; background: #fff; padding: 3px; }
+.brand-box h1 { margin: 0; font-size: 1.15rem; font-weight: bold; }
+.top-actions { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.top-actions a, .top-actions button {
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  padding: .4rem .9rem;
+  border-radius: 10px;
+  font-size: .88rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-family: inherit;
+  transition: all .2s;
+}
+.top-actions a:hover, .top-actions button:hover { background: rgba(255,255,255,.25); }
+
+.admin-body { display: flex; flex: 1; }
+.sidebar {
+  width: 250px;
+  background: var(--card);
+  border-left: 1px solid var(--line);
+  padding: 1.2rem .8rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  flex-shrink: 0;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .7rem 1rem;
+  border-radius: 12px;
+  color: var(--muted);
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: right;
+  font-family: inherit;
+  font-size: .95rem;
+  transition: all .2s;
+}
+.nav-item .icon { font-size: 1.2rem; }
+.nav-item:hover { background: var(--teal-light); color: var(--teal-dark); }
+.nav-item.active { background: var(--teal-light); color: var(--teal-dark); }
+
+.content-pane { flex: 1; padding: 1.8rem; overflow-y: auto; max-width: 1400px; margin: 0 auto; width: 100%; }
+.panel { display: none; }
+.panel.active { display: block; }
+.panel-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--teal-dark);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.stat-data b { display: block; font-size: 1.5rem; line-height: 1.2; color: var(--ink); }
+.stat-data span { font-size: .85rem; color: var(--muted); }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  margin-bottom: 1.5rem;
+}
+
+/* PDF Box */
+.pdf-manager-box {
+  background: var(--bg);
+  border: 2px dashed var(--teal);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+.pdf-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .8rem;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+.pdf-dropzone {
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  padding: 1.6rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--card);
+  transition: all .2s;
+  margin-bottom: 1rem;
+}
+.pdf-dropzone:hover { border-color: var(--teal); background: var(--teal-light); }
+
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); }
+table.data-table { width: 100%; border-collapse: collapse; font-size: .92rem; text-align: right; }
+table.data-table th, table.data-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
+table.data-table th { background: var(--bg); color: var(--teal-dark); font-weight: bold; }
+table.data-table tr:hover { background: var(--teal-light); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 25, 22, 0.7);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-box {
+  background: var(--card);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.8rem;
+  box-shadow: 0 16px 50px rgba(0,0,0,.5);
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+.modal-head h3 { margin: 0; color: var(--teal-dark); font-size: 1.25rem; }
+.close-btn { background: none; border: none; font-size: 1.6rem; cursor: pointer; color: var(--muted); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background: #0a5c52;
+  color: #fff;
+  padding: .75rem 1.4rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 25px rgba(0,0,0,.3);
+  font-weight: bold;
+  display: none;
+  z-index: 300;
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@media(max-width: 768px) {
+  .admin-body { flex-direction: column; }
+  .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; }
+  .content-pane { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- 1. LOGIN SCREEN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="icon-192.png" alt="ئۇيغۇر تېبابىتى">
+    </div>
+    <h2>🔐 ئارقا سەھنە باشقۇرۇش مەركىزى</h2>
+    <p>«ئۇيغۇر تېبابىتى» دەرس، سوئال ۋە ئوقۇغۇچىلارنى باشقۇرۇش</p>
+    <div class="inp-group">
+      <label for="adminUserInp">باشقۇرغۇچى كىرىش نامى (ياكى بىۋاسىتە پارول):</label>
+      <input type="text" id="adminUserInp" class="inp" placeholder="مەسىلەن: admin (ئىختىيارىي)" style="margin-bottom:.6rem">
+      <label for="adminPass">باشقۇرغۇچى مەخپىي نومۇرى:</label>
+      <input type="password" id="adminPass" class="inp" placeholder="دەسلەپكى پارول: tibb2026" autofocus>
+    </div>
+    <button class="btn btn-teal btn-block" id="loginBtn">🔓 كىرىش</button>
+    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none">⚠️ مەخپىي نومۇر خاتا! قايتا كىرگۈزۈڭ.</p>
+    <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1rem">
+      <a href="index.html" class="btn btn-line btn-sm" style="width:100%;justify-content:center">🌐 ئوقۇغۇچى ئەپىگە قايتىش</a>
+    </div>
+  </div>
+</div>
+
+<!-- 2. ADMIN MAIN INTERFACE -->
+<div class="admin-app" id="adminApp">
+  <header class="topbar">
+    <div class="brand-box">
+      <img src="icon-192.png" alt="Logo">
+      <h1>🌿 ئۇيغۇر تېبابىتى — ئارقا سەھنە باشقۇرۇش مەركىزى</h1>
+    </div>
+    <div class="top-actions">
+      <span id="activeAdminBadge" style="background:rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:8px;font-size:.85rem">👤 باشقۇرغۇچى</span>
+      <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
+      <a href="index.html" target="_blank"><span>🌐</span> ئوقۇغۇچى بېتى</a>
+      <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
+      <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <button class="nav-item active" data-tab="dash"><span class="icon">📊</span> باش تاختا</button>
+      <button class="nav-item" data-tab="lessons"><span class="icon">📚</span> دەرس ۋە PDF تەھرىرلىگۈچ</button>
+      <button class="nav-item" data-tab="quiz"><span class="icon">✍️</span> سوئال ئامبىرى</button>
+      <button class="nav-item" data-tab="teachers"><span class="icon">👨‍🏫</span> ئۇستازلار قامۇسى</button>
+      <button class="nav-item" data-tab="students"><span class="icon">👥</span> ئوقۇغۇچىلار ۋە تەستىقلاش <span id="pendingBadgeSide" class="badge badge-gold" style="display:none;margin-right:.4rem">0</span></button>
+      <button class="nav-item" data-tab="feedback"><span class="icon">💬</span> سوئال-جاۋاب ۋە پىكىرلەر <span id="feedbackBadgeSide" class="badge badge-gold" style="display:none;margin-right:.4rem">0</span></button>
+      <button class="nav-item" data-tab="settings"><span class="icon">⚙️</span> سىستېما ۋە باشقۇرغۇچىلار</button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="content-pane">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section class="panel active" id="p-dash">
+        <div class="panel-title">
+          <span>📊 سىستېما باش تاختىسى</span>
+          <span style="font-size:.9rem;color:var(--muted)">ئەڭ يېڭى سانلىق مەلۇماتلار</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-data"><b id="stLessons">10</b><span>جەمئىي دەرسلەر</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fff4d9;color:#b28302">📄</div>
+            <div class="stat-data"><b id="stPdfs">2</b><span>PDF كىتاب بار دەرسلەر</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8">✍️</div>
+            <div class="stat-data"><b id="stQuestions">261</b><span>سوئال ئامبىرى</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fff2e6;color:#e67e22">⏳</div>
+            <div class="stat-data"><b id="stPendingStudents">0</b><span>تەستىق كۈتۈۋاتقان ئوقۇغۇچى</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e6f8ee;color:#1e8e4d">✅</div>
+            <div class="stat-data"><b id="stStudents">0</b><span>تەستىقلانغان ئوقۇغۇچى</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fce8e6;color:#c5221f">💬</div>
+            <div class="stat-data"><b id="stFeedbackCount">0</b><span>كەلگەن سوئاللار</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">🚀 تېز مەشغۇلاتلار</h3>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+            <button class="btn btn-teal" onclick="switchTab('lessons')">📄 بارلىق دەرسلەرنىڭ PDF سىنى باشقۇرۇش</button>
+            <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
+            <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
+            <button class="btn btn-line" onclick="openAddQuestionModal()">➕ يېڭى سىناق سوئالى قوشۇش</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">📌 سىستېما تەۋسىيەسى ۋە قولايلىقلار</h3>
+          <p style="margin:0;color:var(--muted);line-height:1.9">
+            مەزكۇر سىستېمىدا ھەرقانداق دەرسكە (1-، 2-، 9-، 10- ياكى يېڭى دەرسلەرگە) PDF كىتاب تاللىسىڭىز، سىستېما بارلىق مەزمۇنلارنى ئۆزلۈكىدىن تولدۇرۇپ بېرىدۇ. ئوقۇغۇچىلار تىزىملاتقاندا ئارقا بەتتىن سىز تەستىقلىغاندىن كېيىن دەرسلەر ئېچىلىدۇ، باش بەتتىن چۈشكەن سوئاللارغىمۇ بىۋاسىتە ئارقا بەتتىن جاۋاب يازالايسىز.
+          </p>
+        </div>
+      </section>
+
+      <!-- TAB 2: LESSONS & PDF EDITOR -->
+      <section class="panel" id="p-lessons">
+        <div class="panel-title">
+          <span>📚 بارلىق دەرسلەر ۋە PDF تەھرىرلىگۈچ</span>
+          <button class="btn btn-teal btn-sm" id="btnNewLesson">➕ يېڭى دەرس قوشۇش</button>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.2rem;flex-wrap:wrap">
+            <label style="font-weight:bold">تەھرىرلەيدىغان دەرسنى تاللاڭ:</label>
+            <select id="lessonSelect" class="inp" style="max-width:340px"></select>
+            <span id="lessonPdfBadge" class="badge badge-gold">📄 PDF بار</span>
+          </div>
+
+          <!-- PDF Management Box -->
+          <div class="pdf-manager-box">
+            <div class="pdf-status-row">
+              <div>
+                <b style="font-size:1.1rem;color:var(--teal-dark)">📄 دەرسلىككە PDF كىتاب كىرگۈزۈش (بارلىق دەرسلەرگە تولۇق ماس)</b>
+                <div style="font-size:.88rem;color:var(--muted);margin-top:.2rem">بۇ يەردە كىرگۈزۈلگەن PDF ئوقۇغۇچىلارغا «📄 كىتاب (PDF)» خەتكۈچى ئاستىدا تولۇق كۆرۈنىدۇ. PDF تاللىسىڭىزلا تۆۋەندىكى تېمىلار ئاپتوماتىك تولىدۇ!</div>
+              </div>
+              <div style="display:flex;gap:.5rem">
+                <button class="btn btn-line btn-sm" id="previewPdfBtn">👁️ PDF نى كۆرۈش</button>
+                <button class="btn btn-red btn-sm" id="removePdfBtn">🗑️ PDF نى چىقىرىۋېتىش</button>
+              </div>
+            </div>
+
+            <div class="pdf-dropzone" id="pdfDropzone">
+              <span style="font-size:2.2rem">📁</span>
+              <p style="margin:.4rem 0"><b>PDF ھۆججىتىنى سۆرەپ تاشلاڭ ياكى تاللاش ئۈچۈن چېكىڭ</b></p>
+              <small style="color:var(--muted)">ھەرقانداق دەرسلىك .pdf ھۆججىتىنى بىۋاسىتە باغلىيالايسىز (تاللىغان ھامان ئۇچۇرلار ئۆزلۈكىدىن تولىدۇ)</small>
+              <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+              <div class="inp-group" style="margin:0">
+                <label>PDF كىتاب نامى:</label>
+                <input type="text" id="pdfTitleInp" class="inp" placeholder="مەسىلەن: دەرسلىك كىتابى (PDF)">
+              </div>
+              <div class="inp-group" style="margin:0">
+                <label>PDF ئادرېسى / نىسپىي يولى:</label>
+                <input type="text" id="pdfUrlInp" class="inp" placeholder="pdf/lesson-9.pdf ياكى تور ئۇلانمىسى">
+              </div>
+            </div>
+          </div>
+
+          <!-- Basic Lesson Information -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="inp-group" style="margin:0">
+              <label>دەرس نامى (Title):</label>
+              <input type="text" id="lTitleInp" class="inp">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>تېما تارمىقى (Subtitle):</label>
+              <input type="text" id="lSubInp" class="inp">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div class="inp-group" style="margin:0">
+              <label>قىسقا نامى (Short):</label>
+              <input type="text" id="lShortInp" class="inp">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>ئومۇمىي چۈشەندۈرۈش (Description):</label>
+              <input type="text" id="lDescInp" class="inp">
+            </div>
+          </div>
+
+          <div class="inp-group">
+            <label>🎯 ئۆگىنىش مەقسىتى (ھەر قۇرغا بىردىن نۇقتا يېزىڭ):</label>
+            <textarea id="lGoalsInp" class="inp" rows="3"></textarea>
+          </div>
+
+          <!-- Sections -->
+          <h4 style="margin:1.4rem 0 .6rem;color:var(--teal-dark)">📖 دەرسلىك مەزمۇن بۆلەكلىرى (Sections)</h4>
+          <div id="sectionsWrap" style="display:flex;flex-direction:column;gap:.8rem;margin-bottom:1rem"></div>
+          <button class="btn btn-line btn-sm" id="btnAddSection" style="margin-bottom:1.5rem">➕ يېڭى بۆلەك قوشۇش</button>
+
+          <div style="display:flex;gap:.8rem;border-top:1px solid var(--line);padding-top:1.2rem;justify-content:space-between;flex-wrap:wrap">
+            <button class="btn btn-teal" id="saveLessonBtn">💾 بۇ دەرسنى ساقلاش</button>
+            <button class="btn btn-red" id="delLessonBtn">🗑️ بۇ دەرسنى ئۆچۈرۈش</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: QUESTION BANK -->
+      <section class="panel" id="p-quiz">
+        <div class="panel-title">
+          <span>✍️ ئەقلىي سوئال ئامبىرى</span>
+          <button class="btn btn-teal btn-sm" id="btnAddQuestion">➕ يېڭى سوئال كىرگۈزۈش</button>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;gap:.8rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+            <div style="flex:1;min-width:200px">
+              <input type="text" id="qSearchInp" class="inp" placeholder="🔍 سوئال تېكىستى بويىچە ئىزدەش...">
+            </div>
+            <select id="qFilterLesson" class="inp" style="width:160px">
+              <option value="all">ھەممە دەرس</option>
+            </select>
+            <select id="qFilterType" class="inp" style="width:160px">
+              <option value="all">ھەممە تۈرى</option>
+              <option value="choice">جاۋاب تاللاش</option>
+              <option value="tf">توغرا-خاتا</option>
+              <option value="blank">بوش ئورۇن</option>
+              <option value="match">تۇتاشتۇرۇش</option>
+              <option value="essay">بايان سوئال</option>
+            </select>
+            <span style="color:var(--muted);font-size:.9rem" id="qCountText">جەمئىي: 261 سوئال</span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:60px">دەرس</th>
+                  <th style="width:110px">تۈرى</th>
+                  <th>سوئال تېكىستى</th>
+                  <th>توغرا جاۋاب / چۈشەندۈرۈش</th>
+                  <th style="width:110px;text-align:center">مەشغۇلات</th>
+                </tr>
+              </thead>
+              <tbody id="qTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TEACHERS -->
+      <section class="panel" id="p-teachers">
+        <div class="panel-title">
+          <span>👨‍🏫 تېبابەت ئالىملىرى ۋە ئۇستازلار قامۇسى</span>
+          <button class="btn btn-teal btn-sm" id="btnAddTeacher">➕ يېڭى ئۇستاز قوشۇش</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ئىسمى</th>
+                  <th>يىللار</th>
+                  <th>ئىلىم ساھەسى</th>
+                  <th>تەۋە دەۋرى</th>
+                  <th>ئەسەرلىرى</th>
+                  <th style="width:90px;text-align:center">مەشغۇلات</th>
+                </tr>
+              </thead>
+              <tbody id="tTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: STUDENTS & APPROVALS -->
+      <section class="panel" id="p-students">
+        <div class="panel-title">
+          <span>👥 ئوقۇغۇچىلار ۋە كىرىش ئىجازىتىنى تەستىقلاش مەركىزى</span>
+          <button class="btn btn-line btn-sm" id="exportStudentsBtn">📋 تىزىملىكنى CSV قىلىپ چۈشۈرۈش</button>
+        </div>
+
+        <div class="card" style="border-right:5px solid var(--gold)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap">
+            <h4 style="margin:0;color:var(--teal-dark)">⏳ كىرىش ئىجازىتى كۈتۈۋاتقان يېڭى ئوقۇغۇچىلار (Pending Approval)</h4>
+            <small style="color:var(--muted)">ئوقۇغۇچىلار تىزىملاتقاندىن كېيىن، سىز «تەستىقلاش»نى باسسىڭىزلا دەرسلەر ئېچىلىدۇ.</small>
+          </div>
+          <div class="table-wrap" style="margin-bottom:.5rem">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ئوقۇغۇچى ئىسمى</th>
+                  <th>تېلېفون نومۇرى</th>
+                  <th>تىزىملاتقان ۋاقتى</th>
+                  <th>ھالىتى</th>
+                  <th style="text-align:center">مەشغۇلات (تەستىقلاش)</th>
+                </tr>
+              </thead>
+              <tbody id="pendingStudentsTableBody">
+                <tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 .8rem;color:var(--teal-dark)">✅ ئىجازەت بېرىلگەن ئوقۇغۇچىلار (Approved)</h4>
+          <div class="table-wrap" style="margin-bottom:1.5rem">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ئوقۇغۇچى ئىسمى</th>
+                  <th>تېلېفون نومۇرى</th>
+                  <th>تىزىملاتقان ۋاقتى</th>
+                  <th>ھالىتى</th>
+                  <th style="text-align:center">مەشغۇلات</th>
+                </tr>
+              </thead>
+              <tbody id="approvedStudentsTableBody">
+                <tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تەستىقلانغان ئوقۇغۇچى يوق.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 style="margin:0 0 .8rem;color:var(--teal-dark)">📝 تاپشۇرۇلغان ئىمتىھانلار ستاتىستىكىسى</h4>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ۋاقتى</th>
+                  <th>دائىرىسى</th>
+                  <th>سوئال سانى</th>
+                  <th>ئېرىشكەن نومۇرى</th>
+                  <th>نەتىجە</th>
+                </tr>
+              </thead>
+              <tbody id="examsTableBody">
+                <tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى ئىمتىھان خاتىرىسى يوق.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: Q&A / FEEDBACK MANAGER -->
+      <section class="panel" id="p-feedback">
+        <div class="panel-title">
+          <span>💬 باش بەت سوئال-جاۋاب ۋە پىكىرلەرنى باشقۇرۇش</span>
+          <button class="btn btn-teal btn-sm" id="btnRefreshFb">🔄 يېڭىلاش</button>
+        </div>
+        <div class="card">
+          <p style="margin:0 0 1rem;color:var(--muted)">
+            ئوقۇغۇچىلار ئەپنىڭ باش بېتىدىكى «💬 سوئال-پىكىر تاختىسى»دا قالدۇرغان سوئاللىرى بۇ يەردە كۆرۈنىدۇ. سىز قايتۇرغان جاۋاب دەرھال ئوقۇغۇچىغا ئالتۇن رەڭلىك «🌿 باشقۇرغۇچى جاۋابى» بولۇپ چىقىدۇ.
+          </p>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:120px">ئوقۇغۇچى</th>
+                  <th style="width:110px">ۋاقتى</th>
+                  <th>سوئال ياكى پىكىر</th>
+                  <th>قايتۇرۇلغان جاۋاب</th>
+                  <th style="width:160px;text-align:center">مەشغۇلات</th>
+                </tr>
+              </thead>
+              <tbody id="fbTableBody">
+                <tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى سوئال ياكى پىكىر چۈشمىدى.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: SETTINGS & MULTI-ADMIN -->
+      <section class="panel" id="p-settings">
+        <div class="panel-title"><span>⚙️ سىستېما ۋە باشقۇرغۇچىلارنى باشقۇرۇش</span></div>
+        
+        <!-- Admin Accounts Card -->
+        <div class="card">
+          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">👨‍💼 باشقۇرغۇچى ھېساباتلىرى (Admin Accounts)</h3>
+          <p style="margin:0 0 1.2rem;color:var(--muted);font-size:.9rem">سىستېمىغا ئوقۇتۇش مەسئۇللىرى ۋە باشقۇرغۇچىلارنى ئايرىم كىرىش ھېساباتى بىلەن قوشالايسىز.</p>
+          
+          <div class="table-wrap" style="margin-bottom:1.5rem">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>كىرىش نامى (Username)</th>
+                  <th>باشقۇرغۇچى ئىسمى</th>
+                  <th>ھوقۇق دەرىجىسى</th>
+                  <th style="width:110px;text-align:center">مەشغۇلات</th>
+                </tr>
+              </thead>
+              <tbody id="adminUsersTableBody"></tbody>
+            </table>
+          </div>
+
+          <h4 style="margin:0 0 .8rem;color:var(--teal-dark)">➕ يېڭى باشقۇرغۇچى قوشۇش</h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:.8rem;margin-bottom:1rem">
+            <div class="inp-group" style="margin:0">
+              <label>باشقۇرغۇچى تولۇق ئىسمى:</label>
+              <input type="text" id="newAdmFullName" class="inp" placeholder="مەسىلەن: ئەلى تېۋىپ">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>كىرىش نامى (Username):</label>
+              <input type="text" id="newAdmUsername" class="inp" placeholder="مەسىلەن: ali_tibb">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>مەخپىي نومۇر:</label>
+              <input type="password" id="newAdmPassword" class="inp" placeholder="مەخپىي نومۇر كىرگۈزۈڭ">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>ھوقۇق تۈرى:</label>
+              <select id="newAdmRole" class="inp">
+                <option value="super">ئالىي باشقۇرغۇچى (Super Admin)</option>
+                <option value="teacher">ئوقۇتۇش مەسئۇلى (Teacher)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-teal btn-sm" id="addNewAdminBtn">➕ باشقۇرغۇچىنى قوشۇش</button>
+        </div>
+
+        <!-- System Backup Card -->
+        <div class="card">
+          <h3 style="margin:0 0 1rem;color:var(--teal-dark)">💾 سانلىق مەلۇمات زاپاسلاش ۋە ئەسلىگە كەلتۈرۈش</h3>
+          <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">
+            بارلىق كىرگۈزگەن دەرسلىكلىرىڭىز، سوئال ئامبىرى ۋە ئۇستازلارنى بىر كۇنۇپكا بىلەن كومپىيوتېرىڭىزغا چۈشۈرۈۋالالايسىز ياكى قايتا ئەكىرەلەيسىز.
+          </p>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap">
+            <button class="btn btn-teal" id="backupJsonBtn">📥 پۈتۈن دەرس ۋە سوئاللارنى JSON قىلىپ ساقلاش</button>
+            <label class="btn btn-line" style="margin:0;cursor:pointer">
+              📂 JSON دىن ئەسلىگە كەلتۈرۈش
+              <input type="file" id="restoreJsonInput" accept=".json" style="display:none">
+            </label>
+            <button class="btn btn-red btn-sm" id="resetDefaultsBtn">⚠️ ئەسلى زاۋۇت ھالىتىگە قايتۇرۇش</button>
+          </div>
+        </div>
+
+        <!-- Cloud Architecture Card -->
+        <div class="card">
+          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">🌐 GitHub + Vercel + Supabase بۇلۇت ئۇلىنىشى</h3>
+          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;margin:0">
+            سىستېمىڭىز بىۋاسىتە <b>GitHub</b> ۋە <b>Vercel</b> غا باغلانغان بولۇپ، ھەر قېتىم كودلار ياكى ماتېرىياللار يېڭىلانغاندا Vercel ئاپتوماتىك دۇنياغا تارقىتىدۇ. پۈتكۈل ئوقۇغۇچىلار سانلىق مەلۇماتىنى مەڭگۈلۈك PostgreSQL غا ئۇلاش ئۈچۈن <b>Supabase</b> تەييارلاندى.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT QUESTION -->
+<div class="modal-overlay" id="qModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="qModalTitle">➕ سوئال قوشۇش</h3>
+      <button class="close-btn" onclick="closeQModal()">✕</button>
+    </div>
+    <div class="inp-group">
+      <label>قايسى دەرسكە تەۋە:</label>
+      <select id="qmLesson" class="inp"></select>
+    </div>
+    <div class="inp-group">
+      <label>سوئال تۈرى:</label>
+      <select id="qmType" class="inp" onchange="renderQModalTypeFields()">
+        <option value="choice">جاۋاب تاللاش (Choice)</option>
+        <option value="tf">توغرا-خاتا (True/False)</option>
+        <option value="blank">بوش ئورۇن تولدۇرۇش (Fill blank)</option>
+        <option value="match">ئۇقۇم تۇتاشتۇرۇش (Matching)</option>
+        <option value="essay">بايان سوئال (Essay)</option>
+      </select>
+    </div>
+    <div class="inp-group">
+      <label>سوئال تېكىستى:</label>
+      <textarea id="qmQ" class="inp" rows="2"></textarea>
+    </div>
+    <div id="qmTypeSpecific"></div>
+    <div class="inp-group">
+      <label>جاۋاب چۈشەندۈرۈشى (Explanation):</label>
+      <input type="text" id="qmExp" class="inp" placeholder="نېمە ئۈچۈن شۇنداقلىقى ھەققىدە قىسقا ئەسكەرتىش">
+    </div>
+    <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-line" onclick="closeQModal()">بىكار قىلىش</button>
+      <button class="btn btn-teal" id="qmSaveBtn">💾 ساقلاش</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REPLY TO FEEDBACK -->
+<div class="modal-overlay" id="replyModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>✍️ سوئالغا جاۋاب قايتۇرۇش</h3>
+      <button class="close-btn" onclick="closeReplyModal()">✕</button>
+    </div>
+    <div style="background:var(--bg);border-radius:12px;padding:1rem;margin-bottom:1rem">
+      <b id="replyAuthor" style="color:var(--teal-dark);display:block;margin-bottom:.3rem">ئوقۇغۇچى سوئالى:</b>
+      <p id="replyQuestionText" style="margin:0;font-size:.95rem"></p>
+    </div>
+    <div class="inp-group">
+      <label>باشقۇرغۇچىنىڭ جاۋابى:</label>
+      <textarea id="replyContentInp" class="inp" rows="4" placeholder="ئوقۇغۇچىنىڭ سوئالىغا چۈشىنىشلىك جاۋاب يېزىڭ..."></textarea>
+    </div>
+    <div style="display:flex;gap:.8rem;justify-content:flex-end">
+      <button class="btn btn-line" onclick="closeReplyModal()">بىكار قىلىش</button>
+      <button class="btn btn-teal" id="saveReplyBtn">📤 جاۋابنى يوللاش ۋە ساقلاش</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PDF PREVIEW -->
+<div class="modal-overlay" id="pdfPreviewModal">
+  <div class="modal-box" style="max-width:860px;height:88vh;display:flex;flex-direction:column">
+    <div class="modal-head">
+      <h3 id="pdfPrevTitle">👁️ PDF ئالدىن كۆرۈش</h3>
+      <button class="close-btn" onclick="document.getElementById('pdfPreviewModal').style.display='none'">✕</button>
+    </div>
+    <div style="flex:1;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#333">
+      <iframe id="pdfPrevFrame" style="width:100%;height:100%;border:none"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ مۇۋەپپەقىيەتلىك ساقلاندى!</div>
+
+<!-- DATA SCRIPT -->
+<script src="data.js"></script>
+<script>
+/* =========================================================
+   «ئۇيغۇر تېبابىتى» ئارقا سەھنە باشقۇرۇش مەركىزى JS ماتورى
+   ========================================================= */
+
+var LESSONS_DATA = [];
+var TEACHERS_DATA = [];
+var currentLessonId = 1;
+var editingFeedbackIdx = -1;
+
+function showToast(msg){
+  var t = document.getElementById("toast");
+  if(!t) return;
+  t.textContent = msg || "✅ ساقلاندى!";
+  t.style.display = "block";
+  setTimeout(function(){ t.style.display="none"; }, 2400);
+}
+
+/* 1. DARK THEME CONTROLLER */
+function initAdminTheme(){
+  var t = localStorage.getItem("uytibb_admin_theme") || "light";
+  applyAdminTheme(t);
+  var btn = document.getElementById("themeToggleBtn");
+  if(btn){
+    btn.onclick = function(){
+      var cur = document.documentElement.getAttribute("data-theme") || "light";
+      var next = cur === "dark" ? "light" : "dark";
+      localStorage.setItem("uytibb_admin_theme", next);
+      applyAdminTheme(next);
+    };
+  }
+}
+function applyAdminTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  var btn = document.getElementById("themeToggleBtn");
+  if(btn){
+    btn.innerHTML = t === "dark" ? "☀️ كۈندۈز" : "🌙 كېچە";
+  }
+}
+
+/* 2. AUTHENTICATION & MULTI-ADMIN ACCOUNTS */
+var DEFAULT_PASS = "tibb2026";
+function getAdmins(){
+  var raw = localStorage.getItem("uytibb_admins");
+  if(raw){
+    try { return JSON.parse(raw); } catch(e){}
+  }
+  var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
+  return [{ username: "admin", name: "ئاساسىي باشقۇرغۇچى", pass: singlePass, role: "super" }];
+}
+function saveAdmins(list){
+  localStorage.setItem("uytibb_admins", JSON.stringify(list));
+}
+
+function checkAuth(){
+  var authed = sessionStorage.getItem("uytibb_admin_auth") === "true";
+  if(authed){
+    document.getElementById("loginWrap").style.display = "none";
+    document.getElementById("adminApp").style.display = "flex";
+    var curName = sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
+    document.getElementById("activeAdminBadge").textContent = "👤 " + curName;
+    initAdmin();
+  } else {
+    document.getElementById("loginWrap").style.display = "flex";
+    document.getElementById("adminApp").style.display = "none";
+  }
+}
+
+document.getElementById("loginBtn").onclick = function(){
+  var userVal = document.getElementById("adminUserInp").value.trim();
+  var passVal = document.getElementById("adminPass").value.trim();
+  var admins = getAdmins();
+  var matched = null;
+
+  if(!userVal){
+    matched = admins.find(function(a){ return a.pass === passVal; });
+  } else {
+    matched = admins.find(function(a){ return (a.username.toLowerCase() === userVal.toLowerCase() || a.name === userVal) && a.pass === passVal; });
+  }
+
+  if(matched){
+    sessionStorage.setItem("uytibb_admin_auth", "true");
+    sessionStorage.setItem("uytibb_admin_user_name", matched.name);
+    sessionStorage.setItem("uytibb_admin_user_role", matched.role);
+    document.getElementById("loginErr").style.display = "none";
+    checkAuth();
+  } else {
+    document.getElementById("loginErr").style.display = "block";
+  }
+};
+document.getElementById("adminPass").onkeydown = function(e){
+  if(e.key === "Enter") document.getElementById("loginBtn").click();
+};
+document.getElementById("logoutBtn").onclick = function(){
+  sessionStorage.removeItem("uytibb_admin_auth");
+  sessionStorage.removeItem("uytibb_admin_user_name");
+  sessionStorage.removeItem("uytibb_admin_user_role");
+  checkAuth();
+};
+
+/* 3. TAB SWITCHING */
+function switchTab(tabId){
+  document.querySelectorAll(".nav-item").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
+  });
+  document.querySelectorAll(".panel").forEach(function(p){
+    p.classList.toggle("active", p.id === "p-" + tabId);
+  });
+  if(tabId === "feedback") renderFeedbackTable();
+  if(tabId === "students") loadStudentData();
+}
+document.querySelectorAll(".nav-item").forEach(function(b){
+  b.onclick = function(){ switchTab(this.getAttribute("data-tab")); };
+});
+
+/* 4. INITIALIZE DATA */
+function initAdmin(){
+  var rawL = localStorage.getItem("uytibb_custom_lessons");
+  if(rawL){
+    try { LESSONS_DATA = JSON.parse(rawL); } catch(e){ LESSONS_DATA = window.DEFAULT_LESSONS.slice(); }
+  } else {
+    LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice();
+  }
+
+  var rawT = localStorage.getItem("uytibb_custom_teachers");
+  if(rawT){
+    try { TEACHERS_DATA = JSON.parse(rawT); } catch(e){ TEACHERS_DATA = window.DEFAULT_TEACHERS.slice(); }
+  } else {
+    TEACHERS_DATA = (window.DEFAULT_TEACHERS || []).slice();
+  }
+
+  if(!currentLessonId || !getLessonById(currentLessonId)){
+    currentLessonId = LESSONS_DATA.length ? LESSONS_DATA[0].id : 1;
+  }
+
+  updateDashboardStats();
+  populateLessonSelector();
+  loadLessonToForm(currentLessonId);
+  renderQuestionTable();
+  renderTeachersTable();
+  loadStudentData();
+  renderFeedbackTable();
+  renderAdminsTable();
+}
+
+function saveAllCustomData(){
+  localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA));
+  localStorage.setItem("uytibb_custom_teachers", JSON.stringify(TEACHERS_DATA));
+  updateDashboardStats();
+  showToast("✅ بارلىق ئۆزگىرىشلەر ساقلاندى!");
+}
+document.getElementById("quickSaveBtn").onclick = saveAllCustomData;
+
+/* 5. DASHBOARD STATS */
+function updateDashboardStats(){
+  document.getElementById("stLessons").textContent = LESSONS_DATA.length;
+  var pdfCount = 0, qCount = 0;
+  LESSONS_DATA.forEach(function(L){
+    if(L.pdfUrl || L.pdfData) pdfCount++;
+    if(L.quiz) qCount += L.quiz.length;
+  });
+  document.getElementById("stPdfs").textContent = pdfCount;
+  document.getElementById("stQuestions").textContent = qCount;
+
+  try {
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var pending = allSt.filter(function(s){ return s.status === "pending"; }).length;
+    var approved = allSt.filter(function(s){ return s.status !== "pending"; }).length;
+    document.getElementById("stPendingStudents").textContent = pending;
+    document.getElementById("stStudents").textContent = approved;
+    
+    var b1 = document.getElementById("pendingBadgeSide");
+    if(b1){ b1.style.display = pending > 0 ? "inline-block" : "none"; b1.textContent = pending; }
+
+    var fbList = getFeedbackList();
+    document.getElementById("stFeedbackCount").textContent = fbList.length;
+    var unreplied = fbList.filter(function(f){ return !f.reply; }).length;
+    var b2 = document.getElementById("feedbackBadgeSide");
+    if(b2){ b2.style.display = unreplied > 0 ? "inline-block" : "none"; b2.textContent = unreplied; }
+  } catch(e){}
+}
+
+/* 6. LESSON & PDF MANAGER WITH AUTO-FILL & DELETE */
+function populateLessonSelector(){
+  var sel = document.getElementById("lessonSelect");
+  var qSel = document.getElementById("qFilterLesson");
+  var qmSel = document.getElementById("qmLesson");
+  sel.innerHTML = "";
+  qSel.innerHTML = '<option value="all">ھەممە دەرس</option>';
+  qmSel.innerHTML = "";
+
+  LESSONS_DATA.forEach(function(L){
+    var opt = document.createElement("option");
+    opt.value = L.id;
+    opt.textContent = L.id + "-دەرس: " + L.title;
+    sel.appendChild(opt);
+
+    var qOpt = document.createElement("option");
+    qOpt.value = L.id;
+    qOpt.textContent = L.id + "-دەرس";
+    qSel.appendChild(qOpt);
+
+    var qmOpt = document.createElement("option");
+    qmOpt.value = L.id;
+    qmOpt.textContent = L.id + "-دەرس: " + L.title;
+    qmSel.appendChild(qmOpt);
+  });
+
+  sel.value = currentLessonId;
+  sel.onchange = function(){
+    currentLessonId = parseInt(this.value, 10);
+    loadLessonToForm(currentLessonId);
+  };
+}
+
+function getLessonById(id){
+  for(var i=0; i<LESSONS_DATA.length; i++) if(LESSONS_DATA[i].id == id) return LESSONS_DATA[i];
+  return null;
+}
+
+function loadLessonToForm(id){
+  var L = getLessonById(id);
+  if(!L) return;
+
+  var hasPdf = !!(L.pdfUrl || L.pdfData);
+  var badge = document.getElementById("lessonPdfBadge");
+  badge.textContent = hasPdf ? "📄 PDF بار" : "⚠️ PDF يوق";
+  badge.className = hasPdf ? "badge badge-gold" : "badge";
+
+  document.getElementById("pdfTitleInp").value = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
+  document.getElementById("pdfUrlInp").value = L.pdfUrl || (L.pdfData ? "(يەرلىك PDF سانلىق مەلۇماتى)" : "");
+
+  document.getElementById("lTitleInp").value = L.title || "";
+  document.getElementById("lSubInp").value = L.subtitle || "";
+  document.getElementById("lShortInp").value = L.short || "";
+  document.getElementById("lDescInp").value = L.desc || "";
+  document.getElementById("lGoalsInp").value = (L.goals || []).join("\n");
+
+  renderSectionsEditor(L);
+}
+
+// PDF Uploader & SMART AUTO-FILL
+var pdfDropzone = document.getElementById("pdfDropzone");
+var pdfFileInput = document.getElementById("pdfFileInput");
+pdfDropzone.onclick = function(){ pdfFileInput.click(); };
+pdfFileInput.onchange = function(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var L = getLessonById(currentLessonId);
+  if(!L) return;
+
+  var rawName = file.name.replace(/\.[^/.]+$/, "").replace(/[\_\-]+/g, " ").trim();
+  var cleanTitle = rawName;
+  if(/^lesson\s*(\d+)$/i.test(rawName)){
+    cleanTitle = RegExp.$1 + "-دەرسلىك بىلىملىرى";
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(evt){
+    L.pdfData = evt.target.result;
+    L.pdfUrl = "pdf/" + file.name;
+    L.pdfTitle = (cleanTitle || (L.id + "-دەرس")) + " كىتابى (PDF)";
+
+    // AUTO-FILL LESSON FIELDS:
+    if(!L.title || L.title === (L.id + "-دەرسلىك بىلىملىرى") || L.title.indexOf("يېڭى دەرس") >= 0){
+      L.title = cleanTitle || (L.id + "-دەرسلىك تېبابەت بىلىملىرى");
+    }
+    if(!L.subtitle || L.subtitle === "يېڭى تولۇقلانغان دەرس مەزمۇنى"){
+      L.subtitle = "مەزكۇر دەرسلىكنىڭ كىتابتىكى ئەسلى مەزمۇنى، نەزەرىيەسى ۋە ئەمەلىي تەسىرى";
+    }
+    if(!L.short){
+      L.short = L.id + "-دەرس";
+    }
+    if(!L.desc || L.desc === "بۇ دەرس ئارقا سەھنىدىن يېڭىدىن قوشۇلدى"){
+      L.desc = "مەزكۇر دەرسلىككە تېبابەت دەرسلىك كىتابچىسى تولۇق كىرگۈزۈلگەن بولۇپ، ئۆگىنىش ۋە ئەمەلىيەتتە قوللىنىشقا مۇۋاپىق.";
+    }
+    if(!L.goals || !L.goals.length || (L.goals.length === 1 && L.goals[0] === "بۇ دەرسنىڭ ئاساسىي مەقسىتىنى بىلىش")){
+      L.goals = [
+        "دەرسلىك كىتابىنىڭ مەزمۇنى ۋە ئاساسىي پىرىنسىپلىرىنى تولۇق ئىگىلەش",
+        "مەزكۇر دەرسكە ئائىت مۇھىم ئاتالغۇ ۋە چۈشەنچىلەرنى پەرقلەندۈرۈش",
+        "دەرسلىككە چېتىشلىق تەكرارلاش مەشىق ۋە سىناق سوئاللىرىغا مۇستەقىل جاۋاب بېرىش"
+      ];
+    }
+    if(!L.sections || !L.sections.length || (L.sections.length === 1 && L.sections[0].h === "1. كىرىش سۆز")){
+      L.sections = [
+        {
+          h: "1. دەرسلىك كىتابى ھەققىدە ۋە مۇھىم بىلىم نۇقتىلىرى",
+          body: "<p>مەزكۇر دەرسكە مۇناسىپ <b>«" + esc(L.pdfTitle) + "»</b> سىستېمىغا مۇۋەپپەقىيەتلىك كىرگۈزۈلدى. دەرسلىك ئىچىدىكى <b>«📄 كىتاب (PDF)»</b> خەتكۈچى ئارقىلىق پۈتۈن كىتابنى تولۇق ئوقۇيالايسىز.</p>",
+          points: [
+            "دەرسلىك كىتابىدىكى مۇھىم تېبابەت بىلىملىرىنى ئەستايىدىل تەھلىل قىلىش",
+            "مۇھىم تېبابەت تەجرىبىلىرىنى دەپتەرگە قەرەللىك خاتىرىلەش"
+          ]
+        }
+      ];
+    }
+
+    loadLessonToForm(currentLessonId);
+    saveAllCustomData();
+    populateLessonSelector();
+    showToast("✅ PDF قوشۇلدى ۋە دەرس مەزمۇنلىرى ئاپتوماتىك تولدۇرۇلدى!");
+  };
+  reader.readAsDataURL(file);
+};
+
+document.getElementById("previewPdfBtn").onclick = function(){
+  var L = getLessonById(currentLessonId);
+  if(!L || (!L.pdfUrl && !L.pdfData)){
+    alert("بۇ دەرسكە تېخى PDF بېكىتىلمىگەن!");
+    return;
+  }
+  var url = L.pdfData || L.pdfUrl;
+  document.getElementById("pdfPrevTitle").textContent = "👁️ " + (L.pdfTitle || "دەرسلىك PDF");
+  document.getElementById("pdfPrevFrame").src = url;
+  document.getElementById("pdfPreviewModal").style.display = "flex";
+};
+
+document.getElementById("removePdfBtn").onclick = function(){
+  var L = getLessonById(currentLessonId);
+  if(!L) return;
+  if(confirm("بۇ دەرسلىكنىڭ PDF كىتابچىسىنى چىقىرىۋېتەمسىز؟")){
+    delete L.pdfUrl;
+    delete L.pdfData;
+    delete L.pdfTitle;
+    document.getElementById("pdfTitleInp").value = "";
+    document.getElementById("pdfUrlInp").value = "";
+    document.getElementById("lessonPdfBadge").textContent = "⚠️ PDF يوق";
+    document.getElementById("lessonPdfBadge").className = "badge";
+    showToast("🗑️ PDF چىقىرىۋېتىلدى.");
+  }
+};
+
+// Sections Editor
+function renderSectionsEditor(L){
+  var wrap = document.getElementById("sectionsWrap");
+  wrap.innerHTML = "";
+  (L.sections || []).forEach(function(sec, idx){
+    var d = document.createElement("div");
+    d.style.border = "1px solid var(--line)";
+    d.style.borderRadius = "10px";
+    d.style.padding = "1rem";
+    d.style.background = "var(--bg)";
+
+    d.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:.5rem">'
+      + '  <b>' + (idx+1) + '-بۆلەك تېمىسى:</b>'
+      + '  <button class="btn btn-red btn-sm" onclick="removeSection(' + idx + ')">🗑️ ئۆچۈرۈش</button>'
+      + '</div>'
+      + '<input type="text" class="inp sec-h" value="' + esc(sec.h || "") + '" style="margin-bottom:.6rem">'
+      + '<label style="font-size:.85rem;font-weight:bold">بۆلەك مەزمۇنى (HTML/تېكىست):</label>'
+      + '<textarea class="inp sec-body" rows="4" style="margin-bottom:.6rem">' + esc(sec.body || "") + '</textarea>'
+      + '<label style="font-size:.85rem;font-weight:bold">📌 مۇھىم نۇقتىلار (ھەر قۇردا بىردىن):</label>'
+      + '<textarea class="inp sec-points" rows="2">' + esc((sec.points || []).join("\n")) + '</textarea>';
+    wrap.appendChild(d);
+  });
+}
+
+function removeSection(idx){
+  var L = getLessonById(currentLessonId);
+  if(!L || !L.sections) return;
+  L.sections.splice(idx, 1);
+  renderSectionsEditor(L);
+}
+
+document.getElementById("btnAddSection").onclick = function(){
+  var L = getLessonById(currentLessonId);
+  if(!L) return;
+  L.sections = L.sections || [];
+  L.sections.push({ h: "يېڭى بۆلەك", body: "<p>بۆلەك مەزمۇنىنى بۇ يەرگە يېزىڭ...</p>", points: [] });
+  renderSectionsEditor(L);
+};
+
+document.getElementById("saveLessonBtn").onclick = function(){
+  var L = getLessonById(currentLessonId);
+  if(!L) return;
+
+  L.title = document.getElementById("lTitleInp").value.trim();
+  L.subtitle = document.getElementById("lSubInp").value.trim();
+  L.short = document.getElementById("lShortInp").value.trim();
+  L.desc = document.getElementById("lDescInp").value.trim();
+  L.pdfTitle = document.getElementById("pdfTitleInp").value.trim();
+  var pUrl = document.getElementById("pdfUrlInp").value.trim();
+  if(pUrl && pUrl !== "(يەرلىك PDF سانلىق مەلۇماتى)") L.pdfUrl = pUrl;
+
+  var goalsText = document.getElementById("lGoalsInp").value.trim();
+  L.goals = goalsText ? goalsText.split("\n").map(function(s){return s.trim();}).filter(Boolean) : [];
+
+  var wrap = document.getElementById("sectionsWrap");
+  var hInps = wrap.querySelectorAll(".sec-h");
+  var bInps = wrap.querySelectorAll(".sec-body");
+  var pInps = wrap.querySelectorAll(".sec-points");
+  L.sections = [];
+  hInps.forEach(function(hInp, i){
+    var points = (pInps[i].value.trim()) ? pInps[i].value.trim().split("\n").map(function(s){return s.trim();}).filter(Boolean) : [];
+    L.sections.push({
+      h: hInp.value.trim(),
+      body: bInps[i].value,
+      points: points
+    });
+  });
+
+  saveAllCustomData();
+  populateLessonSelector();
+};
+
+// DELETE LESSON WORKING FIX
+document.getElementById("delLessonBtn").onclick = function(){
+  if(LESSONS_DATA.length <= 1){
+    alert("كەم دېگەندە بىر دەرس قېلىشى كېرەك، ھەممە دەرسنى ئۆچۈرۈۋېتىشكە بولمايدۇ!");
+    return;
+  }
+  var L = getLessonById(currentLessonId);
+  if(!L) return;
+
+  var msg = L.id + "-دەرس («" + L.title + "») نى ئۆچۈرۈشنى راستىنلا جەزملەشتۈرەمسىز؟\nبۇ مەشغۇلاتتىن كېيىن مەزكۇر دەرس سىستېمىدىن ئۆچۈرۈلىدۇ.";
+  if(confirm(msg)){
+    var idx = -1;
+    for(var i=0; i<LESSONS_DATA.length; i++){
+      if(LESSONS_DATA[i].id == currentLessonId){ idx = i; break; }
+    }
+    if(idx >= 0){
+      LESSONS_DATA.splice(idx, 1);
+      currentLessonId = LESSONS_DATA[0].id;
+      saveAllCustomData();
+      populateLessonSelector();
+      loadLessonToForm(currentLessonId);
+      renderQuestionTable();
+      showToast("🗑️ " + L.id + "-دەرس مۇۋەپپەقىيەتلىك ئۆچۈرۈلدى!");
+    }
+  }
+};
+
+document.getElementById("btnNewLesson").onclick = function(){
+  var newId = LESSONS_DATA.length ? (Math.max.apply(null, LESSONS_DATA.map(function(l){return l.id;})) + 1) : 1;
+  var newL = {
+    id: newId,
+    title: newId + "-دەرسلىك بىلىملىرى",
+    short: newId + "-دەرس",
+    subtitle: "يېڭى تولۇقلانغان دەرس مەزمۇنى",
+    desc: "بۇ دەرس ئارقا سەھنىدىن يېڭىدىن قوشۇلدى",
+    goals: ["بۇ دەرسنىڭ ئاساسىي مەقسىتىنى بىلىش"],
+    sections: [{ h: "1. كىرىش سۆز", body: "<p>يېڭى دەرس مەزمۇنى...</p>", points: ["مۇھىم بىلىم نۇقتىسى"] }],
+    terms: [],
+    quiz: []
+  };
+  LESSONS_DATA.push(newL);
+  currentLessonId = newId;
+  saveAllCustomData();
+  populateLessonSelector();
+  loadLessonToForm(newId);
+  showToast("➕ " + newId + "-دەرس قوشۇلدى!");
+};
+
+/* 7. QUESTION BANK */
+function renderQuestionTable(){
+  var tbody = document.getElementById("qTableBody");
+  var fLesson = document.getElementById("qFilterLesson").value;
+  var fType = document.getElementById("qFilterType").value;
+  var search = document.getElementById("qSearchInp").value.trim().toLowerCase();
+
+  tbody.innerHTML = "";
+  var count = 0;
+
+  LESSONS_DATA.forEach(function(L){
+    if(fLesson !== "all" && L.id != fLesson) return;
+    (L.quiz || []).forEach(function(q, qIdx){
+      if(fType !== "all" && q.type !== fType) return;
+      if(search && (q.q||"").toLowerCase().indexOf(search) < 0 && (q.exp||"").toLowerCase().indexOf(search) < 0) return;
+
+      count++;
+      var tr = document.createElement("tr");
+      var typeNames = {choice:"تاللاش", tf:"ت/خ", blank:"بوش ئورۇن", match:"تۇتاشتۇرۇش", essay:"بايان"};
+      var badgeCls = q.type==="choice"?"badge-green":(q.type==="tf"?"badge-gold":"badge");
+
+      var answerText = "";
+      if(q.type==="choice") answerText = "جاۋاب: " + (q.opts ? q.opts[q.a] : q.a);
+      else if(q.type==="tf") answerText = q.a ? "توغرا (✓)" : "خاتا (✗)";
+      else if(q.type==="blank") answerText = "بوش: " + JSON.stringify(q.a);
+      else if(q.type==="match") answerText = "تۇتاشتۇرۇش (" + (q.pairs?q.pairs.length:0) + " جۈپ)";
+      else if(q.type==="essay") answerText = "مودېل جاۋاب بار";
+
+      tr.innerHTML = '<td><b>' + L.id + '</b></td>'
+        + '<td><span class="badge ' + badgeCls + '">' + (typeNames[q.type]||q.type) + '</span></td>'
+        + '<td><div style="font-weight:bold;margin-bottom:.2rem">' + esc(q.q||"") + '</div></td>'
+        + '<td><div style="color:var(--teal-dark);font-size:.85rem">' + esc(answerText) + '</div><small style="color:var(--muted)">' + esc(q.exp||"") + '</small></td>'
+        + '<td style="text-align:center"><button class="btn btn-red btn-sm" onclick="deleteQuestion(' + L.id + ',' + qIdx + ')">🗑️</button></td>';
+      tbody.appendChild(tr);
+    });
+  });
+
+  document.getElementById("qCountText").textContent = "سۈزۈلگەن سوئال: " + count + " دانە";
+}
+
+document.getElementById("qFilterLesson").onchange = renderQuestionTable;
+document.getElementById("qFilterType").onchange = renderQuestionTable;
+document.getElementById("qSearchInp").oninput = renderQuestionTable;
+
+function deleteQuestion(lessonId, qIdx){
+  var L = getLessonById(lessonId);
+  if(!L || !L.quiz) return;
+  if(confirm("بۇ سوئالنى ئۆچۈرەمسىز؟")){
+    L.quiz.splice(qIdx, 1);
+    saveAllCustomData();
+    renderQuestionTable();
+  }
+}
+
+function openAddQuestionModal(){
+  document.getElementById("qmLesson").value = currentLessonId;
+  document.getElementById("qmQ").value = "";
+  document.getElementById("qmExp").value = "";
+  renderQModalTypeFields();
+  document.getElementById("qModal").style.display = "flex";
+}
+function closeQModal(){ document.getElementById("qModal").style.display = "none"; }
+document.getElementById("btnAddQuestion").onclick = openAddQuestionModal;
+
+function renderQModalTypeFields(){
+  var type = document.getElementById("qmType").value;
+  var wrap = document.getElementById("qmTypeSpecific");
+  if(type === "choice"){
+    wrap.innerHTML = '<div class="inp-group"><label>تاللاش تۈرلىرى (4 دانە، ھەر قۇرغا بىردىن):</label>'
+      + '<textarea id="qmOpts" class="inp" rows="4">1-تاللاش\n2-تاللاش\n3-تاللاش\n4-تاللاش</textarea></div>'
+      + '<div class="inp-group"><label>توغرا تاللاش نومۇرى (0، 1، 2، 3):</label>'
+      + '<input type="number" id="qmA" class="inp" value="0" min="0" max="3"></div>';
+  } else if(type === "tf"){
+    wrap.innerHTML = '<div class="inp-group"><label>توغرا جاۋاب:</label>'
+      + '<select id="qmTfA" class="inp"><option value="true">توغرا (True)</option><option value="false">خاتا (False)</option></select></div>';
+  } else if(type === "blank"){
+    wrap.innerHTML = '<div class="inp-group"><label>توغرا بوش ئورۇن جاۋابى (ئۈزۈك چېكىت بىلەن ئايرىڭ):</label>'
+      + '<input type="text" id="qmBlankA" class="inp" placeholder="مەسىلەن: ئۆسۈملۈك, ھايۋان, مەدەن"></div>';
+  } else if(type === "essay"){
+    wrap.innerHTML = '<div class="inp-group"><label>مودېل توغرا جاۋاب (ئۆلچەم):</label>'
+      + '<textarea id="qmEssayA" class="inp" rows="3" placeholder="سوئالنىڭ ئۆلچەملىك بايان جاۋابى..."></textarea></div>';
+  } else {
+    wrap.innerHTML = '';
+  }
+}
+
+document.getElementById("qmSaveBtn").onclick = function(){
+  var lId = parseInt(document.getElementById("qmLesson").value, 10);
+  var type = document.getElementById("qmType").value;
+  var qText = document.getElementById("qmQ").value.trim();
+  var exp = document.getElementById("qmExp").value.trim();
+  if(!qText){ alert("سوئال تېكىستىنى كىرگۈزۈڭ!"); return; }
+
+  var L = getLessonById(lId);
+  if(!L) return;
+  L.quiz = L.quiz || [];
+
+  var newQ = { type: type, q: qText, exp: exp };
+  if(type === "choice"){
+    var opts = document.getElementById("qmOpts").value.split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    var a = parseInt(document.getElementById("qmA").value, 10) || 0;
+    newQ.opts = opts;
+    newQ.a = a;
+  } else if(type === "tf"){
+    newQ.a = document.getElementById("qmTfA").value === "true";
+  } else if(type === "blank"){
+    var parts = document.getElementById("qmBlankA").value.split(",").map(function(s){return [s.trim()];});
+    newQ.a = parts;
+  } else if(type === "essay"){
+    newQ.model = document.getElementById("qmEssayA").value.trim();
+  }
+
+  L.quiz.push(newQ);
+  saveAllCustomData();
+  closeQModal();
+  renderQuestionTable();
+  showToast("➕ يېڭى سوئال قوشۇلدى!");
+};
+
+/* 8. TEACHERS TABLE */
+function renderTeachersTable(){
+  var tbody = document.getElementById("tTableBody");
+  tbody.innerHTML = "";
+  TEACHERS_DATA.forEach(function(t, idx){
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td><b>' + esc(t.name) + '</b></td>'
+      + '<td>' + esc(t.years||"") + '</td>'
+      + '<td>' + esc(t.field||"") + '</td>'
+      + '<td><span class="badge badge-gold">' + esc(t.tag||"") + '</span></td>'
+      + '<td><small>' + esc(t.works||"") + '</small></td>'
+      + '<td style="text-align:center"><button class="btn btn-red btn-sm" onclick="deleteTeacher(' + idx + ')">🗑️</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+function deleteTeacher(idx){
+  if(confirm("بۇ ئۇستازنىڭ ئۇچۇرىنى ئۆچۈرەمسىز؟")){
+    TEACHERS_DATA.splice(idx, 1);
+    saveAllCustomData();
+    renderTeachersTable();
+  }
+}
+document.getElementById("btnAddTeacher").onclick = function(){
+  var nm = prompt("ئۇستازنىڭ تولۇق ئىسمى:");
+  if(!nm) return;
+  var yr = prompt("ياشىغان يىللىرى:", "مىلادى ...-يىللار");
+  var fd = prompt("ئىلىم ساھەسى:", "تېبابەت ئالىمى");
+  TEACHERS_DATA.unshift({ name: nm, years: yr||"", field: fd||"", bio: nm + " ئۇيغۇر تېبابىتىنىڭ ئەزىمەتلىرىدىندۇر.", works: "", tag: "تېبابەت تارىخى" });
+  saveAllCustomData();
+  renderTeachersTable();
+};
+
+/* 9. STUDENTS & APPROVAL GATEKEEPER */
+function loadStudentData(){
+  try {
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+
+    // Ensure student from uytibb_v1 is listed
+    if(prog.user && !allSt.some(function(u){return u.phone === prog.user.phone;})){
+      var stUser = Object.assign({ status: "approved" }, prog.user);
+      allSt.unshift(stUser);
+      localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+    }
+
+    var pendingTbody = document.getElementById("pendingStudentsTableBody");
+    var approvedTbody = document.getElementById("approvedStudentsTableBody");
+
+    var pendingList = allSt.filter(function(s){ return s.status === "pending"; });
+    var approvedList = allSt.filter(function(s){ return s.status !== "pending"; });
+
+    // Render Pending
+    if(!pendingList.length){
+      pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
+    } else {
+      pendingTbody.innerHTML = "";
+      pendingList.forEach(function(st){
+        var tr = document.createElement("tr");
+        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
+          + '<td style="direction:ltr;text-align:right"><b>' + esc(st.phone) + '</b></td>'
+          + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
+          + '<td><span class="badge badge-gold">⏳ تەستىق كۈتۈۋاتىدۇ</span></td>'
+          + '<td style="text-align:center;white-space:nowrap">'
+          + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">✅ تەستىقلاش (ئىجازەت)</button> '
+          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">❌ رەت قىلىش</button>'
+          + '</td>';
+        pendingTbody.appendChild(tr);
+      });
+    }
+
+    // Render Approved
+    if(!approvedList.length){
+      approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تەستىقلانغان ئوقۇغۇچى يوق.</td></tr>';
+    } else {
+      approvedTbody.innerHTML = "";
+      approvedList.forEach(function(st){
+        var isBlocked = st.status === "blocked";
+        var tr = document.createElement("tr");
+        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
+          + '<td style="direction:ltr;text-align:right">' + esc(st.phone) + '</td>'
+          + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
+          + '<td><span class="badge ' + (isBlocked ? 'badge-red' : 'badge-green') + '">' + (isBlocked ? '⛔ چەكلەنگەن' : '✅ ئىجازەت بېرىلدى') + '</span></td>'
+          + '<td style="text-align:center;white-space:nowrap">'
+          + (isBlocked ? 
+              '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">🔓 قايتا ئېچىش</button> ' : 
+              '  <button class="btn btn-line btn-sm" onclick="blockStudent(\'' + esc(st.phone) + '\')">⛔ توختىتىش</button> ')
+          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">🗑️ ئۆچۈرۈش</button>'
+          + '</td>';
+        approvedTbody.appendChild(tr);
+      });
+    }
+
+    // Exams
+    var exams = prog.exams || [];
+    var tbodyEx = document.getElementById("examsTableBody");
+    if(exams.length){
+      tbodyEx.innerHTML = "";
+      exams.forEach(function(ex){
+        var tr = document.createElement("tr");
+        var isPass = ex.pct >= 60;
+        tr.innerHTML = '<td>' + esc(ex.when||"") + '</td>'
+          + '<td>' + esc(ex.scope||"ئومۇمىي") + '</td>'
+          + '<td>' + ex.count + ' سوئال</td>'
+          + '<td><b>%' + ex.pct + '</b></td>'
+          + '<td><span class="badge ' + (isPass?'badge-green':'badge-red') + '">' + (isPass?'ئۆتتى ✅':'قايتا سىناڭ') + '</span></td>';
+        tbodyEx.appendChild(tr);
+      });
+    }
+
+    updateDashboardStats();
+  } catch(e){}
+}
+
+function approveStudent(phone){
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  var st = allSt.find(function(u){ return u.phone === phone; });
+  if(st){
+    st.status = "approved";
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
+    // Update current active student progress if matched
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+    if(prog.user && prog.user.phone === phone){
+      prog.user.status = "approved";
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
+    loadStudentData();
+    showToast("✅ «" + st.name + "» غا دەرس كۆرۈش ئىجازىتى بېرىلدى!");
+  }
+}
+
+function blockStudent(phone){
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  var st = allSt.find(function(u){ return u.phone === phone; });
+  if(st){
+    st.status = "blocked";
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+    if(prog.user && prog.user.phone === phone){
+      prog.user.status = "blocked";
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
+    loadStudentData();
+    showToast("⛔ «" + st.name + "» نىڭ ئىجازىتى توختىتىلدى.");
+  }
+}
+
+function deleteStudent(phone){
+  if(!confirm("بۇ ئوقۇغۇچىنىڭ ئۇچۇرىنى ئۆچۈرۈشنى جەزملەشتۈرەمسىز؟")) return;
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  allSt = allSt.filter(function(u){ return u.phone !== phone; });
+  localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
+  var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+  if(prog.user && prog.user.phone === phone){
+    delete prog.user;
+    localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+  }
+  loadStudentData();
+  showToast("🗑️ ئوقۇغۇچى ئۆچۈرۈلدى.");
+}
+
+document.getElementById("exportStudentsBtn").onclick = function(){
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  if(!allSt.length){ alert("تېخى ئوقۇغۇچى تىزىملاتمىدى!"); return; }
+  var csv = "\uFEFFئىسمى,تېلېفون نومۇرى,تىزىملاتقان ۋاقتى,ھالىتى\n";
+  allSt.forEach(function(s){
+    csv += '"' + (s.name||"") + '","' + (s.phone||"") + '","' + (s.when||"") + '","' + (s.status||"") + '"\n';
+  });
+  var blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "uyghur-tibb-okughuchilar-" + (new Date().toISOString().slice(0,10)) + ".csv";
+  a.click();
+};
+
+/* 10. Q&A / FEEDBACK MANAGER */
+function getFeedbackList(){
+  var raw = localStorage.getItem("uytibb_feedback");
+  if(raw){
+    try { return JSON.parse(raw); } catch(e){}
+  }
+  // Fallback to prog.fb
+  var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+  return prog.fb || [];
+}
+function saveFeedbackList(list){
+  localStorage.setItem("uytibb_feedback", JSON.stringify(list));
+  var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+  prog.fb = list;
+  localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+}
+
+function renderFeedbackTable(){
+  var tbody = document.getElementById("fbTableBody");
+  var list = getFeedbackList();
+  if(!list.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى سوئال ياكى پىكىر چۈشمىدى.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = "";
+  list.forEach(function(m, idx){
+    var tr = document.createElement("tr");
+    var hasReply = !!m.reply;
+    var replySnippet = hasReply ? 
+      '<div style="background:var(--gold-light);border:1px solid var(--gold);padding:.4rem .6rem;border-radius:8px;font-size:.85rem;color:#6b5600"><b>🌿 باشقۇرغۇچى جاۋابى:</b> ' + esc(m.reply) + (m.replyAt ? ('<br><small style="color:var(--muted)">' + esc(m.replyAt) + '</small>') : '') + '</div>' : 
+      '<span style="color:var(--red);font-size:.82rem">⚠️ جاۋاب قايتۇرۇلمىغان</span>';
+
+    tr.innerHTML = '<td><b>' + esc(m.n||"مېھمان") + '</b>' + (m.phone ? ('<br><small style="direction:ltr;display:inline-block">' + esc(m.phone) + '</small>') : '') + '</td>'
+      + '<td><small>' + esc(m.w||"") + '</small></td>'
+      + '<td><div style="font-weight:bold;line-height:1.7">' + esc(m.t||"") + '</div></td>'
+      + '<td>' + replySnippet + '</td>'
+      + '<td style="text-align:center;white-space:nowrap">'
+      + '  <button class="btn btn-teal btn-sm" onclick="openReplyModal(' + idx + ')">✍️ ' + (hasReply?'جاۋاب تەھرىرلەش':'جاۋاب بېرىش') + '</button> '
+      + '  <button class="btn btn-red btn-sm" onclick="deleteFeedback(' + idx + ')">🗑️</button>'
+      + '</td>';
+    tbody.appendChild(tr);
+  });
+  updateDashboardStats();
+}
+
+document.getElementById("btnRefreshFb").onclick = function(){
+  renderFeedbackTable();
+  showToast("🔄 سوئال-جاۋابلار يېڭىلاندى.");
+};
+
+function openReplyModal(idx){
+  var list = getFeedbackList();
+  var m = list[idx];
+  if(!m) return;
+  editingFeedbackIdx = idx;
+  document.getElementById("replyAuthor").textContent = (m.n || "ئوقۇغۇچى") + " سورايدۇ (" + (m.w||"") + "):";
+  document.getElementById("replyQuestionText").textContent = m.t || "";
+  document.getElementById("replyContentInp").value = m.reply || "";
+  document.getElementById("replyModal").style.display = "flex";
+}
+function closeReplyModal(){
+  document.getElementById("replyModal").style.display = "none";
+  editingFeedbackIdx = -1;
+}
+document.getElementById("saveReplyBtn").onclick = function(){
+  var text = document.getElementById("replyContentInp").value.trim();
+  if(!text){ alert("جاۋاب تېكىستىنى كىرگۈزۈڭ!"); return; }
+  var list = getFeedbackList();
+  if(editingFeedbackIdx < 0 || !list[editingFeedbackIdx]) return;
+
+  var d = new Date();
+  var dateStr = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + " " + d.getHours() + ":" + (d.getMinutes()<10?"0":"") + d.getMinutes();
+  list[editingFeedbackIdx].reply = text;
+  list[editingFeedbackIdx].replyAt = dateStr;
+
+  saveFeedbackList(list);
+  closeReplyModal();
+  renderFeedbackTable();
+  showToast("✅ جاۋاب قايتۇرۇلدى ۋە ئوقۇغۇچى باش بېتىگە چىقىرىلدى!");
+};
+
+function deleteFeedback(idx){
+  if(!confirm("بۇ سوئال ياكى پىكىرنى ئۆچۈرەمسىز؟")) return;
+  var list = getFeedbackList();
+  list.splice(idx, 1);
+  saveFeedbackList(list);
+  renderFeedbackTable();
+  showToast("🗑️ سوئال ئۆچۈرۈلدى.");
+}
+
+/* 11. MULTI-ADMIN ACCOUNTS MANAGEMENT */
+function renderAdminsTable(){
+  var tbody = document.getElementById("adminUsersTableBody");
+  var list = getAdmins();
+  tbody.innerHTML = "";
+  list.forEach(function(adm, idx){
+    var tr = document.createElement("tr");
+    var roleName = adm.role === "super" ? "ئالىي باشقۇرغۇچى (Super Admin)" : "ئوقۇتۇش مەسئۇلى (Teacher)";
+    tr.innerHTML = '<td><b>' + esc(adm.username) + '</b></td>'
+      + '<td>' + esc(adm.name) + '</td>'
+      + '<td><span class="badge ' + (adm.role==="super"?"badge-gold":"badge-green") + '">' + roleName + '</span></td>'
+      + '<td style="text-align:center">'
+      + (list.length > 1 ? ('<button class="btn btn-red btn-sm" onclick="deleteAdminAccount(' + idx + ')">🗑️</button>') : '<small style="color:var(--muted)">ئاساسىي</small>')
+      + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("addNewAdminBtn").onclick = function(){
+  var name = document.getElementById("newAdmFullName").value.trim();
+  var username = document.getElementById("newAdmUsername").value.trim();
+  var pass = document.getElementById("newAdmPassword").value.trim();
+  var role = document.getElementById("newAdmRole").value;
+
+  if(!name || !username || !pass){
+    alert("بارلىق سۆزنەكلەرنى (ئىسمى، كىرىش نامى ۋە مەخپىي نومۇر) تولدۇرۇڭ!");
+    return;
+  }
+  if(pass.length < 4){
+    alert("مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
+    return;
+  }
+
+  var list = getAdmins();
+  if(list.some(function(a){ return a.username.toLowerCase() === username.toLowerCase(); })){
+    alert("بۇ كىرىش نامى (Username) ئاللىقاچان بار! باشقا نام تاللاڭ.");
+    return;
+  }
+
+  list.push({ username: username, name: name, pass: pass, role: role });
+  saveAdmins(list);
+  document.getElementById("newAdmFullName").value = "";
+  document.getElementById("newAdmUsername").value = "";
+  document.getElementById("newAdmPassword").value = "";
+  renderAdminsTable();
+  showToast("➕ يېڭى باشقۇرغۇچى («" + name + "») قوشۇلدى!");
+};
+
+function deleteAdminAccount(idx){
+  var list = getAdmins();
+  if(list.length <= 1){
+    alert("كەم دېگەندە بىر ئاساسىي باشقۇرغۇچى ھېساباتى قېلىشى كېرەك!");
+    return;
+  }
+  if(!confirm("بۇ باشقۇرغۇچى ھېساباتىنى ئۆچۈرەمسىز؟")) return;
+  list.splice(idx, 1);
+  saveAdmins(list);
+  renderAdminsTable();
+  showToast("🗑️ باشقۇرغۇچى ھېساباتى ئۆچۈرۈلدى.");
+}
+
+/* 12. BACKUP & RESTORE */
+document.getElementById("backupJsonBtn").onclick = function(){
+  var data = {
+    version: "2.0",
+    exportDate: new Date().toISOString(),
+    lessons: LESSONS_DATA,
+    teachers: TEACHERS_DATA,
+    students: JSON.parse(localStorage.getItem("uytibb_all_students")||"[]"),
+    feedback: getFeedbackList()
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "uyghur-tibb-full-backup-" + (new Date().toISOString().slice(0,10)) + ".json";
+  a.click();
+};
+
+document.getElementById("restoreJsonInput").onchange = function(e){
+  var f = e.target.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(evt){
+    try {
+      var imported = JSON.parse(evt.target.result);
+      if(imported.lessons && Array.isArray(imported.lessons)){
+        LESSONS_DATA = imported.lessons;
+        if(imported.teachers) TEACHERS_DATA = imported.teachers;
+        if(imported.students) localStorage.setItem("uytibb_all_students", JSON.stringify(imported.students));
+        if(imported.feedback) saveFeedbackList(imported.feedback);
+        saveAllCustomData();
+        initAdmin();
+        alert("✅ بارلىق دەرسلەر، سوئاللار ۋە سانلىق مەلۇماتلار ئەسلىگە كەلتۈرۈلدى!");
+      } else {
+        alert("خاتا زاپاس ھۆججەت فورماتى!");
+      }
+    }catch(err){ alert("ھۆججەتنى ئوقۇشتا خاتالىق: " + err.message); }
+  };
+  reader.readAsText(f);
+};
+
+document.getElementById("resetDefaultsBtn").onclick = function(){
+  if(confirm("ھەقىقەتەن بارلىق ئۆزگەرتىشلەرنى ئۆچۈرۈپ ئەسلىدىكى ھالەتكە قايتۇرامسىز؟")){
+    localStorage.removeItem("uytibb_custom_lessons");
+    localStorage.removeItem("uytibb_custom_teachers");
+    initAdmin();
+    showToast("⚠️ ئەسلى زاۋۇت ھالىتىگە قايتۇرۇلدى.");
+  }
+};
+
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// Initialization
+initAdminTheme();
+checkAuth();
+</script>
+</body>
+</html>
