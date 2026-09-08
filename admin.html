@@ -354,18 +354,18 @@ table.data-table tr:hover { background: var(--teal-light); }
       <input type="text" id="adminUserInp" class="inp" placeholder="admin" value="admin" style="margin-bottom:.6rem" dir="ltr">
       <label for="adminPass">مەخپىي نومۇر (پارول):</label>
       <div style="position:relative;display:flex;align-items:center">
-        <input type="password" id="adminPass" class="inp" placeholder="tibb2026" value="tibb2026" autofocus dir="ltr" style="padding-left:42px">
+        <input type="password" id="adminPass" class="inp" placeholder="123456" value="123456" autofocus dir="ltr" style="padding-left:42px">
         <button type="button" id="togglePassVisBtn" style="position:absolute;left:8px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px;color:var(--muted)" title="كۆرسىتىش/يوشۇرۇش">👁️</button>
       </div>
     </div>
     <button class="btn btn-teal btn-block" id="loginBtn" style="margin-top:.6rem">🔓 كىرىش</button>
     <div style="margin-top:.8rem;display:flex;justify-content:center">
       <button type="button" class="btn btn-line btn-sm" id="quickLoginBtn" style="font-size:.85rem;border-color:var(--teal)">
-        🔑 دەسلەپكى پارول (tibb2026) بىلەن كىرىش
+        🔑 دەسلەپكى پارول (123456) بىلەن كىرىش
       </button>
     </div>
     <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center">
-      ⚠️ مەخپىي نومۇر ماس كەلمىدى. دەسلەپكى پارول: <b dir="ltr">tibb2026</b>
+      ⚠️ مەخپىي نومۇر ماس كەلمىدى. دەسلەپكى پارول: <b dir="ltr">123456</b>
     </p>
     <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1rem">
       <a href="index.html" class="btn btn-line btn-sm" style="width:100%;justify-content:center">🌐 ئوقۇغۇچى ئەپىگە قايتىش</a>
@@ -949,7 +949,7 @@ function applyAdminTheme(t){
 }
 
 /* 2. AUTHENTICATION & MULTI-ADMIN ACCOUNTS */
-var DEFAULT_PASS = "tibb2026";
+var DEFAULT_PASS = "123456";
 function getAdmins(){
   var raw = localStorage.getItem("uytibb_admins");
   if(raw){
@@ -999,7 +999,7 @@ function doAdminLogin(){
 
   var matched = null;
   // Master fallback: tibb2026 always works!
-  if(passVal === "tibb2026"){
+  if(passVal === "123456" || passVal === "tibb2026"){
     matched = { username: "admin", name: "ئاساسىي باشقۇرغۇچى", role: "super" };
   } else {
     var admins = getAdmins();
@@ -1063,8 +1063,8 @@ var quickLoginBtn = document.getElementById("quickLoginBtn");
 if(quickLoginBtn){
   quickLoginBtn.onclick = function(){
     if(userInpEl) userInpEl.value = "admin";
-    if(passInpEl) passInpEl.value = "tibb2026";
-    localStorage.setItem("uytibb_admin_pass", "tibb2026");
+    if(passInpEl) passInpEl.value = "123456";
+    localStorage.setItem("uytibb_admin_pass", "123456");
     doAdminLogin();
   };
 }

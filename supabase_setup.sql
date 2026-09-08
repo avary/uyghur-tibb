@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS public.admins (
 
 -- دەسلەپكى ئاساسىي باشقۇرغۇچىنى قىستۇرۇش (ئەگەر بولمىسا)
 INSERT INTO public.admins (username, full_name, password_hash, role)
-VALUES ('admin', 'ئاساسىي باشقۇرغۇچى', 'tibb2026', 'super')
+VALUES ('admin', 'ئاساسىي باشقۇرغۇچى', '123456', 'super')
 ON CONFLICT (username) DO NOTHING;
 
 -- 4. دەرسلىك ۋە PDF كىتابلار جەدۋىلى (Lessons & PDFs)
