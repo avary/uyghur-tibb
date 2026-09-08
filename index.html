@@ -556,7 +556,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
     <a class="aicon" href="#/books" title="دەرسلىك PDF كىتابلىرى" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.88rem;width:auto;padding:0 .9rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.2)">📖 PDF كىتابلار</a>
     <a class="aicon" href="admin.html" title="ئارقا سەھنە باشقۇرۇش مەركىزى" style="background:var(--teal-light);color:var(--teal-dark);font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--teal)">⚙️ ئارقا بەت</a>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
-    <button class="aicon" id="qrBtn" title="تېلېفوندا ئېچىش كودى">📲</button>
+    
     <button class="aicon" id="themeBtn" title="كېچە / كۈندۈز ھالى">🌙</button>
     <button class="aicon" id="regBtn" title="تىزىملىتىش">📝</button>
   </div>
@@ -578,22 +578,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 <button class="topbtn" id="topbtn" title="يۇقىرىغا">▲</button>
 <a class="fab" href="#/ai" title="ئەقىللىق ياردەمچى"><svg viewBox="0 0 48 48" fill="currentColor"><path d="M24 4c1 8 4 13 6 15-2 2-5 7-6 15-1-8-4-13-6-15 2-2 5-7 6-15z"/><path d="M38 25c.5 4 2 6.5 3 7.5-1 1-2.5 3.5-3 7.5-.5-4-2-6.5-3-7.5 1-1 2.5-3.5 3-7.5z"/><path d="M10 29c.5 4 2 6.5 3 7.5-1 1-2.5 3.5-3 7.5-.5-4-2-6.5-3-7.5 1-1 2.5-3.5 3-7.5z"/><circle cx="36" cy="11" r="3"/><circle cx="11" cy="13" r="2.4"/></svg></a>
 
-<div class="cardov" id="qrModal" style="display:none">
-  <div class="cardbox" style="background:#fff;padding:1.6rem 1.4rem;border-radius:22px;max-width:440px;color:var(--ink);text-align:center;position:relative;box-shadow:0 16px 50px rgba(0,0,0,.5);margin:1rem">
-    <button id="closeQrModal" style="position:absolute;top:12px;left:14px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted)">✕</button>
-    <h3 style="margin:0 0 .4rem;color:var(--teal-dark);font-size:1.3rem">📲 تېلېفوندا ئېچىش</h3>
-    <p style="font-size:.88rem;color:var(--muted);margin:0 0 1rem;line-height:1.6">تېلېفونىڭىزنىڭ كامېراسى ياكى Safari / Chrome / WeChat بىلەن بۇ كودنى سايىلەڭ:</p>
-    <div id="qrCanvasWrap" style="display:flex;justify-content:center;margin:.8rem 0"></div>
-    <div id="qrUrlText" style="direction:ltr;background:#f0f5f4;border:1px dashed var(--teal);border-radius:10px;padding:.5rem .8rem;font-family:Consolas,monospace;font-size:.92rem;word-break:break-all;margin-bottom:.8rem;color:var(--teal-dark);font-weight:bold"></div>
-    <div id="fileNotice" style="display:none;background:#fff8e6;border:1px solid #e6c875;color:#8a6000;border-radius:10px;padding:.6rem .8rem;font-size:.84rem;line-height:1.6;margin-bottom:.8rem;text-align:right">
-      ⚠️ <b>ئەسكەرتىش:</b> سىز ھازىر يەرلىك ھۆججەت (<code style="direction:ltr">file://</code>) سۈپىتىدە ئاچتىڭىز. تېلېفوندا ئېچىش ئۈچۈن قىسقۇچتىكى <b>«تېلېفوندا_ۋە_كومپىيوتېردا_ئاچقۇچ.bat»</b> نى قوش چېكىپ قوزغىتىڭ.
-    </div>
-    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-teal btn-sm" id="copyQrUrl">📋 ئۇلانمىنى كۆچۈرۈش</button>
-      <a class="btn btn-line btn-sm" href="#/install" onclick="$('qrModal').style.display='none'">📖 قاچىلاش قوللانمىسى</a>
-    </div>
-  </div>
-</div>
+
 
 <script src="qrcode.min.js"></script>
 <script src="supabase.js"></script>
@@ -1901,7 +1886,7 @@ function applyViewMode(mode){
 }
 
 /* ===== تېلېفوندا ئېچىش كودى (QR Modal) 📲 ===== */
-function initQrModal(){
+function initQrModal(){ var btn = $("qrBtn"), modal = $("qrModal"); if(!btn || !modal) return;
   var btn = $("qrBtn"), modal = $("qrModal"), closeBtn = $("closeQrModal");
   var wrap = $("qrCanvasWrap"), urlText = $("qrUrlText"), fileNotice = $("fileNotice"), copyBtn = $("copyQrUrl");
   if(!btn || !modal) return;
