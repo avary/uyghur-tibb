@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v3-20260908';
+const CACHE_NAME = 'uytibb-v4-20260909';
 const ASSETS = [
   './',
   './index.html',
@@ -6,17 +6,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
-  './icon.svg',
-  './pdf/lesson-1.pdf',
-  './pdf/lesson-2.pdf',
-  './pdf/lesson-3.pdf',
-  './pdf/lesson-4.pdf',
-  './pdf/lesson-5.pdf',
-  './pdf/lesson-6.pdf',
-  './pdf/lesson-7.pdf',
-  './pdf/lesson-8.pdf',
-  './pdf/lesson-9.pdf',
-  './pdf/lesson-10.pdf'
+  './icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,7 +14,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS).catch((err) => {
-        console.warn('SW cache addAll warning:', err);
+        console.warn('SW pre-cache warning:', err);
       });
     })
   );
@@ -36,7 +26,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('Purging old SW cache:', key);
+            console.log('Purging legacy cache:', key);
             return caches.delete(key);
           }
         })
@@ -70,18 +60,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets: Network with cache fallback or stale-while-revalidate
+  // 2. Static Assets & PDFs: Network with Cache Fallback (cache on-demand)
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const toCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, toCache));
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200 && (response.type === 'basic' || response.type === 'cors')) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return response;
-      }).catch(() => cached);
-
-      return cached || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
