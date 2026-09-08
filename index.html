@@ -553,6 +553,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
       <small>نەزەرىيە قىسمى • 10 دەرس</small>
     </div>
     <button class="aicon" id="pwaHeaderBtn" title="تېلېفونغا قاچىلاش" style="background:#c9a227;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;gap:.3rem">📲 قاچىلاش</button>
+    <a class="aicon" href="#/books" title="دەرسلىك PDF كىتابلىرى" style="background:rgba(201,162,39,.18);color:#b45309;font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--gold)">📄 PDF كىتابلار</a>
     <a class="aicon" href="admin.html" title="ئارقا سەھنە باشقۇرۇش مەركىزى" style="background:var(--teal-light);color:var(--teal-dark);font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--teal)">⚙️ ئارقا بەت</a>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     <button class="aicon" id="qrBtn" title="تېلېفوندا ئېچىش كودى">📲</button>
@@ -567,6 +568,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 <nav class="tabbar" id="tabbar">
   <a class="tabitem" href="#/" data-t="home"><span class="ic">🏠</span>باش بەت</a>
   <a class="tabitem" href="#/lessons" data-t="lessons"><span class="ic">📚</span>دەرسلەر</a>
+  <a class="tabitem" href="#/books" data-t="books" style="color:#b45309"><span class="ic">📄</span>PDF كىتاب</a>
   <a class="tabitem" href="#/exam" data-t="exam"><span class="ic">📝</span>سىناق</a>
   <a class="tabitem" href="#/teachers" data-t="teachers"><span class="ic">👨‍🏫</span>ئۇستازلار</a>
   <a class="tabitem" href="admin.html" data-t="admin" style="color:var(--gold)"><span class="ic">⚙️</span>ئارقا بەت</a>
@@ -636,7 +638,7 @@ function todayTip(){ var d=new Date(); return TIPS[(d.getFullYear()*372+d.getMon
 /* --- ئاستى ناۋىگاتسىيە --- */
 function renderNav(){
   var hash=location.hash||"#/";
-  var map={"#/":"home","#/lessons":"lessons","#/exam":"exam","#/teachers":"teachers","#/me":"me","#/search":"home","#/ai":"ai","#/install":"me","#/wrong":"me","#/marks":"me","#/tehlil":"me"};
+  var map={"#/":"home","#/lessons":"lessons","#/books":"books","#/pdf":"books","#/exam":"exam","#/teachers":"teachers","#/me":"me","#/search":"home","#/ai":"ai","#/install":"me","#/wrong":"me","#/marks":"me","#/tehlil":"me"};
   var cur="home";
   if(hash.indexOf("#/lesson/")===0) cur="lessons";
   else { for(var k in map){ if(hash===k||hash.indexOf(k+"/")===0) cur=map[k]; } }
@@ -654,13 +656,24 @@ function vHome(){
     +'<p>ئۇيغۇر تېبابىتى نەزەرىيە قىسمى — '+LESSONS.length+' دەرس • '+total+' مەشىق سوئالى</p>'
     +'<div class="gprog"><i style="width:'+pct+'%"></i></div>'
     +'<div class="grow"><span>ئومۇمىي ئىلگىرىلەش</span><span>%'+pct+' ('+done+'/'+LESSONS.length+' دەرس)</span></div></div>';
+  var pdfCountHome = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); }).length;
+  h+='<div class="home-pdf-hero" style="margin:.7rem 0;padding:.85rem 1rem;background:linear-gradient(135deg,#07332c,#12876f);color:#fff;border-radius:14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">'
+    +'  <div style="display:flex;align-items:center;gap:.7rem">'
+    +'    <span style="font-size:1.9rem">📖</span>'
+    +'    <div><b style="font-size:1.02rem;color:#fef08a">دەرسلىك كىتابلىرى (PDF كۇتۇپخانىسى)</b>'
+    +'    <small style="opacity:.9;display:block;font-size:.82rem">بارلىق ئەسلى كىتابلارنى يانفون ياكى كومپيۇتېردا تولۇق ئوقۇڭ</small></div>'
+    +'  </div>'
+    +'  <a class="btn btn-gold btn-sm" href="#/books" style="color:#2e2200;font-weight:bold;text-decoration:none;padding:.4rem .9rem;border-radius:8px;font-size:.85rem;white-space:nowrap">📄 كىتابلارنى كۆرۈش ('+pdfCountHome+') ›</a>'
+    +'</div>';
   h+='<div class="mstats"><div class="mstat"><b>'+LESSONS.length+'</b><span>دەرس</span></div>'
     +'<div class="mstat"><b>'+auto+'</b><span>ئاپتومات سوئال</span></div>'
     +'<div class="mstat"><b>'+(total-auto)+'</b><span>بايان سوئال</span></div>'
     +'<div class="mstat"><b>'+s.exams.length+'</b><span>سىناق</span></div>'
     +'<div class="mstat"><b>🔥'+(s.streak.n||0)+'</b><span>كۈن داۋام</span></div></div>';
+  var pdfLessonsHome = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); });
   h+='<div class="menu-grid">'
-    +'<a class="menu-tile" href="#/lessons"><span class="mi">📚</span><b>دەرسلەر</b><small>10 دەرس</small></a>'
+    +'<a class="menu-tile" href="#/lessons"><span class="mi">📚</span><b>دەرسلەر</b><small>'+LESSONS.length+' دەرس</small></a>'
+    +'<a class="menu-tile" href="#/books" style="border:1.5px solid rgba(201,162,39,.5);background:linear-gradient(180deg,rgba(201,162,39,.08),transparent)"><span class="mi">📄</span><b style="color:#b45309">PDF كىتابلار</b><small>'+pdfLessonsHome.length+' كىتاب (تولۇق)</small></a>'
     +'<a class="menu-tile" href="#/exam"><span class="mi">📝</span><b>سىناق</b><small>ۋاقىتلىق سىناق</small></a>'
     +'<a class="menu-tile" href="#/teachers"><span class="mi">👨‍🏫</span><b>ئۇستازلار</b><small>'+TEACHERS.length+' تەرجىمىھال</small></a>'
     +'<a class="menu-tile" href="#/search"><span class="mi">🔍</span><b>ئىزدەش</b><small>مەزمۇن ئىزدەش</small></a></div>';
@@ -678,27 +691,64 @@ function vHome(){
 }
 
 /* ===== دەرسلەر تىزىملىكى ===== */
+var _pdfOnlyFilter = false;
+function setPdfFilter(pdfOnly){
+  _pdfOnlyFilter = pdfOnly;
+  var bAll = document.getElementById("btnFilterAll");
+  var bPdf = document.getElementById("btnFilterPdf");
+  if(bAll && bPdf){
+    bAll.className = !pdfOnly ? "btn btn-teal btn-sm" : "btn btn-line btn-sm";
+    bPdf.className = pdfOnly ? "btn btn-gold btn-sm" : "btn btn-line btn-sm";
+  }
+  var inp = document.getElementById("linp");
+  renderLessonList(inp ? inp.value : "");
+}
+
 function vLessons(){
   var s=getProg();
-  var h='<h2 class="pagettl">📚 دەرسلەر</h2><p class="pagesub">تەرتىپ بويىچە ئۆگىنىڭ — ھەر دەرسنىڭ ئۆز مەشىقى بار</p>';
-  h+='<div class="sbox"><input id="linp" placeholder="دەرس ئىزدەش… (مەسىلەن: خىلىت، تومۇر)"></div><div id="llist"></div>';
+  var pdfCnt = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); }).length;
+  var h='<h2 class="pagettl">📚 دەرسلەر ۋە كىتابلار</h2><p class="pagesub">تەرتىپ بويىچە ئۆگىنىڭ — ھەر دەرسنىڭ ئۆز مەشىقى ۋە كىتاب (PDF) ى بار</p>';
+  h+='<div class="sbox"><input id="linp" placeholder="دەرس ياكى كىتاب ئىزدەش… (مەسىلەن: ساقلىقنى ساقلاش، خام دورىلار)"></div>';
+  h+='<div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap;align-items:center">'
+    +'  <button class="btn btn-teal btn-sm" id="btnFilterAll" onclick="setPdfFilter(false)" style="font-size:.84rem;padding:.3rem .75rem;cursor:pointer">📚 بارلىق دەرسلەر ('+LESSONS.length+')</button>'
+    +'  <button class="btn btn-line btn-sm" id="btnFilterPdf" onclick="setPdfFilter(true)" style="font-size:.84rem;padding:.3rem .75rem;cursor:pointer">📄 پەقەت كىتابى (PDF) بار دەرسلەر ('+pdfCnt+')</button>'
+    +'  <a class="btn btn-line btn-sm" href="#/books" style="font-size:.84rem;padding:.3rem .75rem;margin-right:auto;text-decoration:none;color:#b45309;border-color:var(--gold)">📖 PDF كۇتۇپخانىسى ›</a>'
+    +'</div>'
+    +'<div id="llist"></div>';
   return h;
 }
 function renderLessonList(filter){
   var s=getProg(), h="";
   LESSONS.forEach(function(L){
     if(filter && norm(L.title+" "+(L.desc||"")+" "+L.id).indexOf(norm(filter))<0) return;
-    var p=s.lessons[L.id]||{};
     var hasPdf = !!(L.pdfUrl || L.pdfData);
-    h+='<a class="lrow'+(p.read?" done":"")+'" href="#/lesson/'+L.id+'"><div class="lnum">'+(p.read?"✓":L.id)+'</div>'
+    if(typeof _pdfOnlyFilter !== "undefined" && _pdfOnlyFilter && !hasPdf) return;
+    var p=s.lessons[L.id]||{};
+    h+='<div class="lrow-wrap" style="background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:.7rem;box-shadow:var(--shadow);overflow:hidden">'
+      +'<a class="lrow'+(p.read?" done":"")+'" href="#/lesson/'+L.id+'" style="border:none;box-shadow:none;border-radius:0;margin:0">'
+      +'<div class="lnum">'+(p.read?"✓":L.id)+'</div>'
       +'<div class="linfo"><b>'+L.id+'-دەرس: '+esc(L.title)+'</b><small>'+esc(L.desc||"")+'</small>'
       +'<div class="lmeta"><span class="badge">'+L.quiz.length+' سوئال</span>'
       +(hasPdf ? '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:bold">📄 PDF كىتاب بار</span>' : '')
       +(p.best!=null?'<span class="badge '+(p.best>=60?"done":"")+'">%'+p.best+'</span>':"")
       +(p.read?'<span class="badge done">ئوقۇلغان</span>':"")+'</div></div>'
       +'<span class="lgo">‹</span></a>';
+    if(hasPdf){
+      h+='<div style="background:rgba(201,162,39,.07);border-top:1px dashed var(--line);padding:.4rem .9rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem">'
+        +'  <span style="font-size:.8rem;color:#b45309;display:inline-flex;align-items:center;gap:.3rem"><b>📄 «'+esc(L.pdfTitle || (L.id+'-دەرس كىتابى (PDF)'))+'»</b></span>'
+        +'  <div style="display:flex;gap:.4rem">'
+        +'    <a class="btn btn-sm btn-gold" href="#/lesson/'+L.id+'/pdf" style="color:#2e2200;font-weight:bold;text-decoration:none;padding:.25rem .75rem;font-size:.8rem;border-radius:8px">'
+        +'      📖 PDF نى ئوقۇش ›'
+        +'    </a>'
+        +'    <a class="btn btn-sm btn-line" href="'+esc(L.pdfData||L.pdfUrl)+'" target="_blank" style="padding:.25rem .65rem;font-size:.8rem;border-radius:8px;text-decoration:none">'
+        +'      ⛶ ئېچىش'
+        +'    </a>'
+        +'  </div>'
+        +'</div>';
+    }
+    h+='</div>';
   });
-  $("llist").innerHTML = h||"<p>ھېچقانداق دەرس تېپىلمىدى.</p>";
+  $("llist").innerHTML = h||"<p style='text-align:center;color:var(--muted);padding:1.5rem'>ھېچقانداق دەرس تېپىلمىدى.</p>";
 }
 
 /* ===== مەن (ئىلگىرىلەش) ===== */
@@ -749,6 +799,22 @@ function vLesson(id, tab){
     h+='<div class="goals"><b>🎯 ئۆگىنىش مەقسىتى:</b><ul>';
     L.goals.forEach(function(g){ h+='<li>'+esc(g)+'</li>'; });
     h+='</ul></div>';
+  }
+  if(L.pdfUrl || L.pdfData){
+    var pUrlHead = L.pdfData || L.pdfUrl;
+    var pTitleHead = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
+    h+='<div class="lesson-pdf-cta" style="margin:.8rem 0;padding:.85rem 1.1rem;background:linear-gradient(135deg,rgba(18,135,111,.12),rgba(201,162,39,.18));border:1.5px solid var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;box-shadow:var(--shadow)">'
+      +'  <div style="display:flex;align-items:center;gap:.7rem">'
+      +'    <span style="font-size:1.9rem">📖</span>'
+      +'    <div><b style="color:var(--teal-dark);font-size:1.02rem;display:block">بۇ دەرسلىكنىڭ تولۇق ئەسلى كىتابى (PDF) بار!</b>'
+      +'    <small style="color:var(--muted);font-size:.82rem">«'+esc(pTitleHead)+'» نى قەغەزدەك ئوقۇڭ ياكى يانفونىڭىزغا ساقلىۋېلىڭ</small></div>'
+      +'  </div>'
+      +'  <div style="display:flex;gap:.5rem;flex-wrap:wrap">'
+      +'    <a class="btn btn-gold btn-sm" href="#/lesson/'+L.id+'/pdf" style="font-weight:bold;color:#2e2200;text-decoration:none;padding:.45rem 1rem;border-radius:9px;white-space:nowrap;font-size:.88rem">📄 كىتابنى ئوقۇش (PDF)</a>'
+      +'    <a class="btn btn-teal btn-sm" href="'+esc(pUrlHead)+'" target="_blank" style="font-weight:bold;text-decoration:none;padding:.45rem 1rem;border-radius:9px;white-space:nowrap;font-size:.88rem">⛶ يېڭى كۆزنەكتە ئېچىش</a>'
+      +'    <a class="btn btn-line btn-sm" href="'+esc(pUrlHead)+'" download="'+esc(pTitleHead)+'.pdf" style="text-decoration:none;padding:.45rem .8rem;border-radius:9px;white-space:nowrap;font-size:.88rem">⬇️ چۈشۈرۈش</a>'
+      +'  </div>'
+      +'</div>';
   }
   var nq=L.quiz.length, nterms=(L.terms||[]).length;
   var hasPdf = !!(L.pdfUrl || L.pdfData);
@@ -1603,6 +1669,54 @@ function checkStudentApproval(){
 }
 
 /* ===== يول باشقۇرۇش ===== */
+/* =========================================================
+   📚 PDF كۇتۇپخانىسى (STUDENT PDF LIBRARY)
+   ========================================================= */
+function vBooks(){
+  var pdfLessons = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); });
+  var h = '<a class="backlink" href="#/lessons">› دەرسلەرگە قايتىش</a>';
+  h += '<div class="lhead" style="margin-bottom:1rem"><h2 style="display:flex;align-items:center;gap:.5rem"><span>📖</span> دەرسلىك كىتابلىرى (PDF كۇتۇپخانىسى)</h2>'
+    + '<p class="sub">ئۇيغۇر تېبابىتى دەرسلىك كىتابلىرىنىڭ ئەسلى نەشرى — ھەرقانداق ئوقۇغۇچى چەكلىمىسىز، بىۋاسىتە پۈتۈن ئېكراندا ئوقۇيالايدۇ ياكى چۈشۈرەلەيدۇ</p></div>';
+
+  if(!pdfLessons.length){
+    h += '<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2.5rem;text-align:center;color:var(--muted)">'
+      + '<span style="font-size:2.5rem;display:block;margin-bottom:.6rem">📁</span>'
+      + '<b>ھازىرچە سىستېمىغا كىرگۈزۈلگەن PDF دەرسلىك كىتابى يوق.</b>'
+      + '</div>';
+    return h;
+  }
+
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:1rem">';
+  pdfLessons.forEach(function(L){
+    var pUrl = L.pdfData || L.pdfUrl || "";
+    var pTitle = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
+    h += '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
+      + '<div>'
+      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">'
+      + '    <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:bold">📄 ' + L.id + '-دەرس كىتابى</span>'
+      + '    <span style="font-size:1.6rem">📚</span>'
+      + '  </div>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.12rem;color:var(--teal-dark)">' + esc(pTitle) + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.5;margin-bottom:.8rem">' + esc(L.desc || (L.title + " ھەققىدىكى ئەسلى كىتاب نۇسخىسى")) + '</p>'
+      + '</div>'
+      + '<div style="border-top:1px solid var(--line);padding-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">'
+      + '  <a class="btn btn-gold btn-sm" href="#/lesson/' + L.id + '/pdf" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#2e2200;border-radius:8px;padding:.45rem">'
+      + '    📖 كىتابنى ئوقۇش'
+      + '  </a>'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="text-align:center;justify-content:center;text-decoration:none;font-weight:bold;border-radius:8px;padding:.45rem .8rem">'
+      + '    ⛶ يېڭى كۆزنەك'
+      + '  </a>'
+      + '  <a class="btn btn-line btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="text-align:center;justify-content:center;text-decoration:none;border-radius:8px;padding:.45rem .8rem">'
+      + '    ⬇️ چۈشۈرۈش'
+      + '  </a>'
+      + '</div>'
+      + '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+
 function router(){
   stopTimer(); updStreak();
   var hash = location.hash || "#/";
@@ -1660,7 +1774,11 @@ function router(){
     main.innerHTML=vLesson(L.id, lessonTab);
     renderTabBody(L);
     bindTabs();
-  } else if(hash==="#/lessons"){ main.innerHTML=vLessons(); renderLessonList(""); $("linp").addEventListener("input",function(){renderLessonList(this.value);}); }
+  } else if(hash==="#/books" || hash==="#/pdf"){
+    main.innerHTML = vBooks();
+    window.scrollTo(0, 0);
+  }
+  else if(hash==="#/lessons"){ main.innerHTML=vLessons(); renderLessonList(""); $("linp").addEventListener("input",function(){renderLessonList(this.value);}); }
   else if(hash==="#/teachers"){ main.innerHTML=vTeachers(); }
   else if(hash==="#/exam"){ main.innerHTML=vExam(); $("exStart").onclick=startExam; $("exScope").onchange=updExPool; $("exTypes").onchange=updExPool; updExPool(); }
   else if(hash==="#/me"){
