@@ -553,6 +553,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
       <small>نەزەرىيە قىسمى • 10 دەرس</small>
     </div>
     <button class="aicon" id="pwaHeaderBtn" title="تېلېفونغا قاچىلاش" style="background:#c9a227;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;gap:.3rem">📲 قاچىلاش</button>
+    <a class="aicon" href="admin.html" title="ئارقا سەھنە باشقۇرۇش مەركىزى" style="background:var(--teal-light);color:var(--teal-dark);font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--teal)">⚙️ ئارقا بەت</a>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     <button class="aicon" id="qrBtn" title="تېلېفوندا ئېچىش كودى">📲</button>
     <button class="aicon" id="themeBtn" title="كېچە / كۈندۈز ھالى">🌙</button>
@@ -568,6 +569,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
   <a class="tabitem" href="#/lessons" data-t="lessons"><span class="ic">📚</span>دەرسلەر</a>
   <a class="tabitem" href="#/exam" data-t="exam"><span class="ic">📝</span>سىناق</a>
   <a class="tabitem" href="#/teachers" data-t="teachers"><span class="ic">👨‍🏫</span>ئۇستازلار</a>
+  <a class="tabitem" href="admin.html" data-t="admin" style="color:var(--gold)"><span class="ic">⚙️</span>ئارقا بەت</a>
   <a class="tabitem" href="#/me" data-t="me"><span class="ic">👤</span>مەن</a>
 </nav>
 </div>
@@ -1524,7 +1526,8 @@ function vWaitingApproval(user, status){
     + '  <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem">'
     + '    <button class="btn btn-teal btn-sm" onclick="checkStudentApproval()">🔄 تەستىق ھالىتىنى تەكشۈرۈش</button>'
     + '    <button class="btn btn-line btn-sm" onclick="showRegModal(\'edit\', true)">✏️ نومۇر ئۆزگەرتىش</button>'
-    + '    <a class="btn btn-line btn-sm" href="#/">🏠 باش بەتكە قايتىش</a>'
+    + '    <a class="btn btn-line btn-sm" href="#/" onclick="location.hash=\'#/\';router();return false;">🏠 باش بەتكە قايتىش</a>'
+    + '    <a class="btn btn-gold btn-sm" href="admin.html">⚙️ باشقۇرغۇچى ئارقا بېتى</a>'
     + '  </div>'
     + '  <small style="color:var(--muted)">تېز تەستىقلىتىش ئۈچۈن مەكتەپ ياكى كۇرس باشقۇرغۇچىسى بىلەن ئالاقىلىشىڭ.</small>'
     + '</div></div>';
@@ -1600,25 +1603,50 @@ function checkStudentApproval(){
 /* ===== يول باشقۇرۇش ===== */
 function router(){
   stopTimer(); updStreak();
-  var hash=location.hash||"#/";
-  var _s0=getProg();
-  if(!(hash==="#/"||hash===""||hash==="#")){
+  var hash = location.hash || "#/";
+  var main = $("main");
+  if(!main) return;
+
+  // 1. GUARANTEED HOME PAGE ACCESS: #/, empty or # always renders vHome() directly without any block!
+  if(!hash || hash === "#/" || hash === "" || hash === "#"){
+    main.innerHTML = vHome();
+    bindHome();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 2. CHECK ADMIN STATUS (Admins can browse ALL lessons freely without gatekeeper)
+  var _s0 = getProg();
+  var isAdmin = sessionStorage.getItem("uytibb_admin_auth") === "true" || localStorage.getItem("uytibb_is_admin") === "true";
+  
+  if(isAdmin){
     if(!_s0.user){
-      var _m0=$("main");
-      _m0.innerHTML=vHome(); bindHome();
-      renderNav(); window.scrollTo(0,0);
-      var _tb=$("topbtn"); if(_tb) _tb.style.display="none";
-      showRegModal("reg",false);
+      _s0.user = { name: "ئاساسىي باشقۇرغۇچى", phone: "admin", status: "approved" };
+      saveProg(_s0);
+    } else if(_s0.user.status !== "approved"){
+      _s0.user.status = "approved";
+      saveProg(_s0);
+    }
+  } else {
+    // Regular Student Gatekeeper Check for non-home routes
+    if(!_s0.user){
+      main.innerHTML = vHome();
+      bindHome();
+      renderNav();
+      window.scrollTo(0,0);
+      var _tb = $("topbtn"); if(_tb) _tb.style.display = "none";
+      showRegModal("reg", false);
       return;
     }
-    // Check student approval gatekeeper
-    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students") || "[]");
     var curSt = allSt.find(function(u){ return u.phone === _s0.user.phone; });
     var currentStatus = curSt ? curSt.status : (_s0.user.status || "pending");
     if(currentStatus !== "approved"){
-      var _m0=$("main");
-      _m0.innerHTML=vWaitingApproval(_s0.user, currentStatus);
-      renderNav(); window.scrollTo(0,0);
+      main.innerHTML = vWaitingApproval(_s0.user, currentStatus);
+      renderNav();
+      window.scrollTo(0,0);
       return;
     }
   }
