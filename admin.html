@@ -384,9 +384,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       <h1>🌿 ئۇيغۇر تېبابىتى — ئارقا سەھنە باشقۇرۇش مەركىزى</h1>
     </div>
     <div class="top-actions">
-      <span id="activeAdminBadge" style="background:rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:8px;font-size:.85rem">👤 باشقۇرغۇچى</span>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
-      <button type="button" onclick="goToStudentPage('#/books')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>📚</span> 📖 دەرسلىك PDF كۇتۇپخانىسى</button> <button type="button" onclick="goToStudentPage('#/')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
     </div>
@@ -418,24 +416,12 @@ table.data-table tr:hover { background: var(--teal-light); }
         </div>
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-icon">📚</div>
-            <div class="stat-data"><b id="stLessons">10</b><span>جەمئىي دەرسلەر</span></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#fff4d9;color:#b28302">📄</div>
-            <div class="stat-data"><b id="stPdfs">2</b><span>PDF كىتاب بار دەرسلەر</span></div>
-          </div>
-          <div class="stat-card">
             <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8">✍️</div>
             <div class="stat-data"><b id="stQuestions">261</b><span>سوئال ئامبىرى</span></div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon" style="background:#fff2e6;color:#e67e22">⏳</div>
-            <div class="stat-data"><b id="stPendingStudents">0</b><span>تەستىق كۈتۈۋاتقان ئوقۇغۇچى</span></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon" style="background:#e6f8ee;color:#1e8e4d">✅</div>
-            <div class="stat-data"><b id="stStudents">0</b><span>تەستىقلانغان ئوقۇغۇچى</span></div>
+            <div class="stat-icon" style="background:#fff4d9;color:#b28302">📄</div>
+            <div class="stat-data"><b id="stPdfs">10</b><span>PDF كىتاب بار دەرسلەر</span></div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background:#fce8e6;color:#c5221f">💬</div>
@@ -726,21 +712,25 @@ table.data-table tr:hover { background: var(--teal-light); }
       <section class="panel" id="p-settings">
         <div class="panel-title"><span>⚙️ سىستېما ۋە باشقۇرغۇچىلارنى باشقۇرۇش</span></div>
         
-                <!-- Change Primary Admin Password Card -->
+                <!-- Change Primary Admin Name and Password Card -->
         <div class="card" style="border-right:4px solid var(--gold)">
-          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">🔑 ئاساسىي باشقۇرغۇچى مەخپىي نومۇرىنى ئۆزگەرتىش</h3>
-          <p style="color:var(--muted);font-size:.9rem;margin:0 0 1.2rem">ئارقا سەھنىگە كىرىش مەخپىي نومۇرىڭىزنى بۇ يەردىن خالىغان ۋاقىتتا يېڭىلىيالايسىز.</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:.8rem;margin-bottom:1rem;max-width:560px">
+          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">👤 ئاساسىي باشقۇرغۇچى تەڭشىكى (نامى ۋە مەخپىي نومۇرى)</h3>
+          <p style="color:var(--muted);font-size:.9rem;margin:0 0 1.2rem">باشقۇرغۇچى نامىنى خالىغانچە ئۆزگەرتەلەيسىز، شۇنداقلا كىرىش پارولىنى يېڭىلىيالايسىز.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:.8rem;margin-bottom:1rem;max-width:760px">
             <div class="inp-group" style="margin:0">
-              <label>يېڭى مەخپىي نومۇر (پارول):</label>
-              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: 123456 ياكى ئۆزىڭىز خالىغان بىر نېمە" dir="ltr">
+              <label>باشقۇرغۇچى نامى (ئىسمى):</label>
+              <input type="text" id="adminDisplayNameInp" class="inp" placeholder="مەسىلەن: ئەلى تېۋىپ ياكى ئاساسىي باشقۇرغۇچى">
             </div>
             <div class="inp-group" style="margin:0">
-              <label>يېڭى مەخپىي نومۇرنى قايتا يېزىڭ:</label>
+              <label>يېڭى مەخپىي نومۇر (پارول ئۆزگەرمىسە بوش قالسۇن):</label>
+              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: 123456" dir="ltr">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>پارولنى قايتا يېزىڭ:</label>
               <input type="text" id="newMasterPassConfirmInp" class="inp" placeholder="قايتا كىرگۈزۈڭ" dir="ltr">
             </div>
           </div>
-          <button class="btn btn-teal btn-sm" id="saveMasterPassBtn">💾 يېڭى مەخپىي نومۇرنى ساقلاش</button>
+          <button class="btn btn-teal btn-sm" id="saveMasterPassBtn">💾 نام ۋە مەخپىي نومۇرنى ساقلاش</button>
           <div id="masterPassStatusMsg" style="margin-top:.8rem;display:none;font-weight:bold;font-size:.9rem"></div>
         </div>
 
@@ -804,49 +794,55 @@ table.data-table tr:hover { background: var(--teal-light); }
           </div>
         </div>
 
-        <!-- Supabase Cloud Database Card -->
-        <div class="card" id="sbCard" style="border:2px solid var(--teal)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem">
-            <h3 style="margin:0;color:var(--teal-dark)">⚡ Supabase بۇلۇت ساندانىنى ئۇلاش (PostgreSQL)</h3>
-            <span id="sbStatusBadge" class="badge badge-gold">⏳ تەكشۈرۈلىۋاتىدۇ...</span>
-          </div>
-          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;margin:0 0 1.2rem">
-            بۇلۇت ساندانى ئۇلانغاندىن كېيىن بارلىق تېلېفونلاردىن تىزىملاتقان ئوقۇغۇچىلار، تەستىقلار ۋە سوئال-جاۋابلار مەڭگۈلۈك كۈچلۈك PostgreSQL ساندىنىدا ساقلىنىدۇ.
-          </p>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:.8rem;margin-bottom:1rem">
-            <div class="inp-group" style="margin:0">
-              <label>Supabase Project URL:</label>
-              <input type="text" id="sbUrlInp" class="inp" placeholder="https://xxxx.supabase.co" dir="ltr">
-            </div>
-            <div class="inp-group" style="margin:0">
-              <label>Supabase Anon Public Key:</label>
-              <input type="password" id="sbKeyInp" class="inp" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." dir="ltr">
-            </div>
-          </div>
-
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:center">
-            <button class="btn btn-teal" id="sbTestSaveBtn">⚡ ئۇلىنىشنى سىناش ۋە ساقلاش</button>
-            <button class="btn btn-line" id="sbCopySqlBtn">📋 جەدۋەل قۇرۇش SQL كودىنى كۆچۈرۈش</button>
-            <button class="btn btn-line btn-sm" id="sbClearBtn" style="color:var(--red)">ئۇلىنىشنى ئۈزۈش</button>
-          </div>
-
-          <div id="sbMsgBox" style="margin-top:1rem;display:none;padding:.8rem 1rem;border-radius:12px;font-size:.9rem;line-height:1.8"></div>
-
-          <div style="margin-top:1.2rem;background:var(--bg);padding:1rem;border-radius:14px;border:1px dashed var(--line);font-size:.88rem;color:var(--muted);line-height:1.9">
-            <b style="color:var(--teal-dark)">💡 3 باسقۇچتا ئۇلاش قوللانمىسى:</b><br>
-            1. <b><a href="https://supabase.com" target="_blank" style="color:var(--teal)">supabase.com</a></b> تورىغا كىرىپ ھەقسىز بىر تۈر (Project) قۇرۇڭ.<br>
-            2. سول تەرەپتىكى <b>«SQL Editor»</b> غا يۇقىرىدىكى «جەدۋەل قۇرۇش SQL كودىنى كۆچۈرۈش» نى بېسىپ كۆچۈرۈۋالغان كودنى چاپلاپ <b>«RUN»</b> كۇنۇپكىسىنى بېسىڭ.<br>
-            3. تۈر تەڭشىكىدىن (Project Settings ➡️ API) <b>Project URL</b> بىلەن <b>anon public key</b> نى كۆچۈرۈپ يۇقىرىغا چاپلاپ <b>«ئۇلىنىشنى سىناش ۋە ساقلاش»</b> نى بېسىڭ!
-          </div>
-        </div>
-      </section>
+        </section>
 
     </main>
   </div>
 </div>
 
 <!-- MODAL: ADD/EDIT QUESTION -->
+<!-- MODAL: ADD/EDIT TEACHER -->
+<div class="modal-overlay" id="teacherModal">
+  <div class="modal-box" style="max-width:640px">
+    <div class="modal-head">
+      <h3 id="tmModalTitle">➕ ئۇستاز قوشۇش</h3>
+      <button class="close-btn" onclick="closeTeacherModal()">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+      <div class="inp-group">
+        <label>ئۇستاز تولۇق ئىسمى:</label>
+        <input type="text" id="tmName" class="inp" placeholder="مەسىلەن: غازباي">
+      </div>
+      <div class="inp-group">
+        <label>ياشىغان يىللىرى:</label>
+        <input type="text" id="tmYears" class="inp" placeholder="مەسىلەن: مىلادىدىن بۇرۇنقى ...">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+      <div class="inp-group">
+        <label>ئىلىم ساھەسى:</label>
+        <input type="text" id="tmField" class="inp" placeholder="مەسىلەن: تېبابەت پېشۋاسى">
+      </div>
+      <div class="inp-group">
+        <label>دەۋر تەۋەلىكى:</label>
+        <input type="text" id="tmTag" class="inp" placeholder="مەسىلەن: قەدىمكى دەۋر">
+      </div>
+    </div>
+    <div class="inp-group">
+      <label>قىسقىچە تەرجىمىھالى:</label>
+      <textarea id="tmBio" class="inp" rows="3" placeholder="تەرجىمىھال مەزمۇنى..."></textarea>
+    </div>
+    <div class="inp-group">
+      <label>ئاساسلىق ئەسەرلىرى:</label>
+      <input type="text" id="tmWorks" class="inp" placeholder="مەسىلەن: «يۈرەك كېسەللىكلىرى»...">
+    </div>
+    <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-line" onclick="closeTeacherModal()">بىكار قىلىش</button>
+      <button class="btn btn-teal" id="tmSaveBtn">💾 ساقلاش</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="qModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -989,7 +985,7 @@ function getAdmins(){
     try { return JSON.parse(raw); } catch(e){}
   }
   var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
-  return [{ username: "admin", name: "ئاساسىي باشقۇرغۇچى", pass: singlePass, role: "super" }];
+  return [{ username: "admin", name: localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى", pass: singlePass, role: "super" }];
 }
 function saveAdmins(list){
   localStorage.setItem("uytibb_admins", JSON.stringify(list));
@@ -1001,7 +997,7 @@ function checkAuth(){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
     var curName = sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
-    document.getElementById("activeAdminBadge").textContent = "👤 " + curName;
+    var b = document.getElementById("activeAdminBadge"); if(b) b.textContent = "👤 " + curName;
     initAdmin();
   } else {
     document.getElementById("loginWrap").style.display = "flex";
@@ -1126,16 +1122,7 @@ document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
 function goToStudentPage(route){
   localStorage.setItem("uytibb_is_admin", "true");
   sessionStorage.setItem("uytibb_admin_auth", "true");
-  try {
-    var prog = JSON.parse(localStorage.getItem("uytibb_v1") || "{}");
-    if(!prog.user){
-      prog.user = { name: "ئاساسىي باشقۇرغۇچى", phone: "admin", status: "approved" };
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    } else if(prog.user.status !== "approved"){
-      prog.user.status = "approved";
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }
-  } catch(e){}
+  // Navigating to student page does not overwrite student user profile
   window.location.href = "index.html" + (route || "#/");
 }
 
@@ -1508,21 +1495,66 @@ document.getElementById("btnNewLesson").onclick = function(){
   var newId = LESSONS_DATA.length ? (Math.max.apply(null, LESSONS_DATA.map(function(l){return l.id;})) + 1) : 1;
   var newL = {
     id: newId,
-    title: newId + "-دەرسلىك بىلىملىرى",
+    title: newId + "-دەرسلىك: ئۇيغۇر تېبابىتى يېڭى نەزەرىيە بىلىملىرى",
     short: newId + "-دەرس",
-    subtitle: "يېڭى تولۇقلانغان دەرس مەزمۇنى",
-    desc: "بۇ دەرس ئارقا سەھنىدىن يېڭىدىن قوشۇلدى",
-    goals: ["بۇ دەرسنىڭ ئاساسىي مەقسىتىنى بىلىش"],
-    sections: [{ h: "1. كىرىش سۆز", body: "<p>يېڭى دەرس مەزمۇنى...</p>", points: ["مۇھىم بىلىم نۇقتىسى"] }],
-    terms: [],
-    quiz: []
+    subtitle: newId + "-دەرسلىكنىڭ تېبابەت قائىدىلىرى ۋە تەن پەرۋىشى",
+    desc: "بۇ دەرسلىكتە ئۇيغۇر تېبابىتى نەزەرىيىسى ۋە ساقلىقنى ساقلاش چارىلىرى تەپسىلىي بايان قىلىنىدۇ.",
+    goals: [
+      newId + "-دەرسلىكنىڭ تۈپ نەزەرىيە بىلىملىرىنى تولۇق ئۆزلەشتۈرۈش",
+      "تېبابەتتىكى ئاساسلىق ئاتالغۇلار ۋە پەرۋىش تەدبىرلىرىنى پەرقلەندۈرۈش",
+      "دەرسكە چېتىشلىق تەكرارلاش سوئاللىرىغا مۇستەقىل جاۋاب بېرىش"
+    ],
+    sections: [
+      {
+        h: "1. كىرىش سۆز ۋە ئاساسىي پىرىنسىپلار",
+        body: "<p>ئۇيغۇر تېبابىتى مىڭ يىللاردىن بۇيان ئەجدادلىرىمىزنىڭ ئەمەلىي تەجرىبىلىرى ئاساسىدا شەكىللەنگەن مۇكەممەل داۋالاش ۋە ساقلىق ساقلاش سىستېمىسىدۇر.</p><p>بۇ " + newId + "-دەرسلىكتە بايان قىلىنغان پرىنسىپلار ئارقىلىق تەن ساغلاملىقىنى قوغداش ۋە كېسەللىكلەرنىڭ ئالدىنى ئېلىش چارىلىرى چوڭقۇر ئۆگىنىلىدۇ.</p>",
+        points: ["تەن تەبىئىتىنى ئاسراش", "كېسەللىكلەرنىڭ ئالدىنى ئېلىش تەدبىرلىرى"]
+      },
+      {
+        h: "2. موھىم نۇقتىلار ۋە تەتبىقلىنىشى",
+        body: "<p>ئۇيغۇر تېبابىتىدە مىزاج، بەدەن ئورگانلىرى ۋە روھنىڭ ماسلىقى تەبىئىي كۈچنى قۇۋۋەتلەشنىڭ ئاساسى ھېسابلىنىدۇ.</p><p>كۈندىلىك پەرۋىشتە يېمەك-ئىچمەك ۋە ئادەتلەرنى مۇۋاپىق تەڭشەش كېرەك.</p>",
+        points: ["قائىدىگە قاتتىق رىئايە قىلىش", "ئەمەلىيەت بىلەن بىرلەشتۈرۈش"]
+      }
+    ],
+    terms: [
+      { w: newId + "-دەرس ئاتالغۇسى", m: "بۇ دەرسلىكتە بايان قىلىنغان ئاساسلىق تېبابەت كەسپىي ئۇقۇمى." }
+    ],
+    quiz: [
+      {
+        type: "choice",
+        q: "بۇ " + newId + "-دەرسلىكنىڭ ئاساسىي ئۆگىنىش مەقسىتى نېمە؟",
+        opts: ["تېبابەت نەزەرىيە قائىدىلىرىنى ئۆگىنىش ۋە ئەمەلىيەتكە تەتبىقلاش", "پەقەت يادلاپ قويۇش", "سەل قاراش", "ھېچقايسىسى ئەمەس"],
+        a: 0,
+        exp: "دەرسنىڭ تۈپ مەقسىتى تېبابەت ئىلمىنى توغرا ئۆگىنىش ۋە كۈندىلىك ساغلاملىققا تەتبىقلاش."
+      },
+      {
+        type: "tf",
+        q: "ئۇيغۇر تېبابىتى تەننىڭ تەبىئىي كۈچىگە تايىنىپ ساقلىقنى ساقلاشنى ئاساس قىلىدۇ.",
+        a: true,
+        exp: "بەدەننىڭ تەبىئىي كۈچى ۋە قۇۋۋىتى تېبابەتنىڭ ئەڭ موھىم ئاساسىدۇر."
+      },
+      {
+        type: "blank",
+        q: "ئۇيغۇر تېبابىتىنىڭ ئەڭ تۈپ پىرىنسىپى: ساقلىقنى ساقلاش ۋە كېسەللىكنىڭ ___ ئېلىشتۇر.",
+        a: [["ئالدىنى", "ئالدىنى ئېلىش"]],
+        exp: "ساقلىقنى ساقلاش ۋە كېسەللىكلەرنىڭ ئالدىنى ئېلىش تۈپ پىرىنسىپتۇر."
+      },
+      {
+        type: "essay",
+        q: "بۇ " + newId + "-دەرسلىكتىن ئىگىلىگەن مۇھىم نەزەرىيە بىلىملىرىنى يىغىنچاقلاڭ.",
+        model: "بۇ دەرستە تېبابەت نەزەرىيىسى، تەن ئاسراش ۋە كېسەللىكنىڭ ئالدىنى ئېلىشنىڭ مۇھىملىقى بايان قىلىندى."
+      }
+    ],
+    pdfUrl: "pdf/lesson-" + newId + ".pdf",
+    pdfTitle: newId + "-دەرسلىك كىتابى (PDF)"
   };
   LESSONS_DATA.push(newL);
   currentLessonId = newId;
   saveAllCustomData();
   populateLessonSelector();
   loadLessonToForm(newId);
-  showToast("➕ " + newId + "-دەرس قوشۇلدى!");
+  renderQuestionTable();
+  showToast("➕ " + newId + "-دەرس مەزمۇن ۋە تەييار سوئاللىرى بىلەن مۇۋەپپەقىيەتلىك قوشۇلدى!");
 };
 
 /* 7. QUESTION BANK */
@@ -1557,7 +1589,7 @@ function renderQuestionTable(){
         + '<td><span class="badge ' + badgeCls + '">' + (typeNames[q.type]||q.type) + '</span></td>'
         + '<td><div style="font-weight:bold;margin-bottom:.2rem">' + esc(q.q||"") + '</div></td>'
         + '<td><div style="color:var(--teal-dark);font-size:.85rem">' + esc(answerText) + '</div><small style="color:var(--muted)">' + esc(q.exp||"") + '</small></td>'
-        + '<td style="text-align:center"><button class="btn btn-red btn-sm" onclick="deleteQuestion(' + L.id + ',' + qIdx + ')">🗑️</button></td>';
+        + '<td style="text-align:center;white-space:nowrap"><button class="btn btn-gold btn-sm" onclick="openEditQuestionModal(' + L.id + ',' + qIdx + ')">✏️ تەھرىرلەش</button> <button class="btn btn-red btn-sm" onclick="deleteQuestion(' + L.id + ',' + qIdx + ')">🗑️</button></td>';
       tbody.appendChild(tr);
     });
   });
@@ -1579,14 +1611,56 @@ function deleteQuestion(lessonId, qIdx){
   }
 }
 
+var _editingQuestion = null; // { lessonId: 1, qIdx: 0 }
+
 function openAddQuestionModal(){
+  _editingQuestion = null;
+  document.getElementById("qModalTitle").textContent = "➕ يېڭى سوئال كىرگۈزۈش";
   document.getElementById("qmLesson").value = currentLessonId;
+  document.getElementById("qmType").value = "choice";
   document.getElementById("qmQ").value = "";
   document.getElementById("qmExp").value = "";
   renderQModalTypeFields();
   document.getElementById("qModal").style.display = "flex";
 }
-function closeQModal(){ document.getElementById("qModal").style.display = "none"; }
+function openEditQuestionModal(lessonId, qIdx){
+  _editingQuestion = { lessonId: lessonId, qIdx: qIdx };
+  var L = getLessonById(lessonId);
+  if(!L || !L.quiz || !L.quiz[qIdx]) return;
+  var q = L.quiz[qIdx];
+  document.getElementById("qModalTitle").textContent = "✏️ سوئالنى تەھرىرلەش";
+  document.getElementById("qmLesson").value = lessonId;
+  document.getElementById("qmType").value = q.type || "choice";
+  document.getElementById("qmQ").value = q.q || "";
+  document.getElementById("qmExp").value = q.exp || "";
+  renderQModalTypeFields();
+  
+  setTimeout(function(){
+    if(q.type === "choice"){
+      var optsEl = document.getElementById("qmOpts");
+      var ansEl = document.getElementById("qmAnsChoice");
+      if(optsEl && q.opts) optsEl.value = q.opts.join("\n");
+      if(ansEl) ansEl.value = q.a != null ? q.a : 0;
+    } else if(q.type === "tf"){
+      var tfEl = document.getElementById("qmAnsTf");
+      if(tfEl) tfEl.value = q.a ? "true" : "false";
+    } else if(q.type === "blank"){
+      var blEl = document.getElementById("qmAnsBlank");
+      if(blEl && q.a){
+        blEl.value = Array.isArray(q.a) ? q.a.map(function(item){ return Array.isArray(item)?item.join(" / "):item; }).join(", ") : q.a;
+      }
+    } else if(q.type === "essay"){
+      var esEl = document.getElementById("qmAnsEssay");
+      if(esEl) esEl.value = q.model || "";
+    }
+  }, 50);
+
+  document.getElementById("qModal").style.display = "flex";
+}
+function closeQModal(){
+  _editingQuestion = null;
+  document.getElementById("qModal").style.display = "none";
+}
 document.getElementById("btnAddQuestion").onclick = openAddQuestionModal;
 
 function renderQModalTypeFields(){
@@ -1637,11 +1711,16 @@ document.getElementById("qmSaveBtn").onclick = function(){
     newQ.model = document.getElementById("qmEssayA").value.trim();
   }
 
-  L.quiz.push(newQ);
+  if(_editingQuestion && _editingQuestion.lessonId === lId && L.quiz[_editingQuestion.qIdx]){
+    L.quiz[_editingQuestion.qIdx] = newQ;
+    showToast("✏️ سوئال مۇۋەپپەقىيەتلىك تەھرىرلەندى!");
+  } else {
+    L.quiz.push(newQ);
+    showToast("➕ يېڭى سوئال قوشۇلدى!");
+  }
   saveAllCustomData();
   closeQModal();
   renderQuestionTable();
-  showToast("➕ يېڭى سوئال قوشۇلدى!");
 };
 
 /* 8. TEACHERS TABLE */
@@ -1655,7 +1734,7 @@ function renderTeachersTable(){
       + '<td>' + esc(t.field||"") + '</td>'
       + '<td><span class="badge badge-gold">' + esc(t.tag||"") + '</span></td>'
       + '<td><small>' + esc(t.works||"") + '</small></td>'
-      + '<td style="text-align:center"><button class="btn btn-red btn-sm" onclick="deleteTeacher(' + idx + ')">🗑️</button></td>';
+      + '<td style="text-align:center;white-space:nowrap"><button class="btn btn-gold btn-sm" onclick="openEditTeacherModal(' + idx + ')">✏️ تەھرىرلەش</button> <button class="btn btn-red btn-sm" onclick="deleteTeacher(' + idx + ')">🗑️</button></td>';
     tbody.appendChild(tr);
   });
 }
@@ -1666,13 +1745,68 @@ function deleteTeacher(idx){
     renderTeachersTable();
   }
 }
-document.getElementById("btnAddTeacher").onclick = function(){
-  var nm = prompt("ئۇستازنىڭ تولۇق ئىسمى:");
-  if(!nm) return;
-  var yr = prompt("ياشىغان يىللىرى:", "مىلادى ...-يىللار");
-  var fd = prompt("ئىلىم ساھەسى:", "تېبابەت ئالىمى");
-  TEACHERS_DATA.unshift({ name: nm, years: yr||"", field: fd||"", bio: nm + " ئۇيغۇر تېبابىتىنىڭ ئەزىمەتلىرىدىندۇر.", works: "", tag: "تېبابەت تارىخى" });
+var _editingTeacherIdx = null;
+
+function openAddTeacherModal(){
+  _editingTeacherIdx = null;
+  document.getElementById("tmModalTitle").textContent = "➕ يېڭى ئۇستاز قوشۇش";
+  document.getElementById("tmName").value = "";
+  document.getElementById("tmYears").value = "";
+  document.getElementById("tmField").value = "تېبابەت ئالىمى";
+  document.getElementById("tmTag").value = "تېبابەت پېشۋاسى";
+  document.getElementById("tmBio").value = "";
+  document.getElementById("tmWorks").value = "";
+  document.getElementById("teacherModal").style.display = "flex";
+}
+
+function openEditTeacherModal(idx){
+  _editingTeacherIdx = idx;
+  var t = TEACHERS_DATA[idx];
+  if(!t) return;
+  document.getElementById("tmModalTitle").textContent = "✏️ ئۇستاز ئۇچۇرىنى تەھرىرلەش";
+  document.getElementById("tmName").value = t.name || "";
+  document.getElementById("tmYears").value = t.years || "";
+  document.getElementById("tmField").value = t.field || "";
+  document.getElementById("tmTag").value = t.tag || "";
+  document.getElementById("tmBio").value = t.bio || "";
+  document.getElementById("tmWorks").value = t.works || "";
+  document.getElementById("teacherModal").style.display = "flex";
+}
+
+function closeTeacherModal(){
+  _editingTeacherIdx = null;
+  document.getElementById("teacherModal").style.display = "none";
+}
+
+document.getElementById("btnAddTeacher").onclick = openAddTeacherModal;
+
+document.getElementById("tmSaveBtn").onclick = function(){
+  var nm = document.getElementById("tmName").value.trim();
+  if(!nm){ alert("ئۇستازنىڭ ئىسمىنى كىرگۈزۈڭ!"); return; }
+  var yr = document.getElementById("tmYears").value.trim();
+  var fd = document.getElementById("tmField").value.trim();
+  var tg = document.getElementById("tmTag").value.trim();
+  var bio = document.getElementById("tmBio").value.trim();
+  var wrk = document.getElementById("tmWorks").value.trim();
+
+  var teacherObj = {
+    name: nm,
+    years: yr,
+    field: fd,
+    tag: tg,
+    bio: bio || (nm + " ئۇيغۇر تېبابىتىنىڭ ئەزىمەتلىرىدىندۇر."),
+    works: wrk
+  };
+
+  if(_editingTeacherIdx != null && TEACHERS_DATA[_editingTeacherIdx]){
+    TEACHERS_DATA[_editingTeacherIdx] = teacherObj;
+    showToast("✏️ «" + nm + "» ئۇستاز ئۇچۇرى تەھرىرلەندى!");
+  } else {
+    TEACHERS_DATA.unshift(teacherObj);
+    showToast("➕ «" + nm + "» ئۇستاز سىستېمىغا قوشۇلدى!");
+  }
   saveAllCustomData();
+  closeTeacherModal();
   renderTeachersTable();
 };
 
@@ -1727,7 +1861,7 @@ function initPasswordChangeUI(){
   };
 }
 
-function initSupabaseAdminUI(){
+function initSupabaseAdminUI(){ return; 
   if(typeof Supabase === "undefined") return;
   var cfg = Supabase.getConfig();
   var urlInp = document.getElementById("sbUrlInp");
@@ -1853,6 +1987,11 @@ function syncStudentsFromServer(){
 function renderStudentsTableOnly(){
   try {
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    allSt = allSt.filter(function(st){
+      var nm = (st.name || "").trim();
+      return nm !== "سىناق ئوقۇغۇچى" && nm !== "سىناق" && !nm.startsWith("سىناق") && st.phone !== "13800000000" && st.phone !== "admin";
+    });
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
     var pendingTbody = document.getElementById("pendingStudentsTableBody");
     var approvedTbody = document.getElementById("approvedStudentsTableBody");
     if(!pendingTbody || !approvedTbody) return;

@@ -566,10 +566,8 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
     <div class="alogo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><radialGradient id="tg" cx="38%" cy="30%" r="95%"><stop offset="0" stop-color="#18a184"/><stop offset="1" stop-color="#07332c"/></radialGradient></defs><rect x="8" y="8" width="496" height="496" rx="120" fill="url(#tg)"/><rect x="32" y="32" width="448" height="448" rx="98" fill="none" stroke="#c9a227" stroke-width="15"/><g fill="#c9a227"><rect x="234" y="58" width="44" height="44"/><rect x="234" y="58" width="44" height="44" transform="rotate(45 256 80)"/></g><circle cx="256" cy="80" r="8" fill="#07332c"/><path d="M256 268 C214 224 208 170 222 126 C262 160 274 218 256 268 Z" fill="#2bb673"/><path d="M256 268 C298 224 304 170 290 126 C250 160 238 218 256 268 Z" fill="#7ed6a5"/><path d="M256 262 C243 222 243 184 256 150 C269 184 269 222 256 262 Z" fill="#1e8e4d"/><rect x="272" y="140" width="38" height="150" rx="19" transform="rotate(28 291 215)" fill="#f6f4ec" stroke="#c9a227" stroke-width="9"/><path d="M128 296 h256 c0 68 -58 116 -128 116 s-128 -48 -128 -116 z" fill="#f6f4ec" stroke="#c9a227" stroke-width="11"/><rect x="112" y="276" width="288" height="36" rx="18" fill="#c9a227"/><rect x="214" y="406" width="84" height="26" rx="10" fill="#a8861c"/><path d="M158 352 h36 l14 -26 20 52 15 -34 11 8 h44" fill="none" stroke="#0a5c52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="abrand">
       <b>ئۇيغۇر تېبابىتى ئۆگىنىش</b>
-      <small>نەزەرىيە قىسمى • 10 دەرس</small>
+      <small id="appbarLessonCount">نەزەرىيە قىسمى</small>
     </div>
-    
-    <a class="aicon" href="#/books" title="دەرسلىك PDF كىتابلىرى" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.88rem;width:auto;padding:0 .9rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.2)">📖 PDF كىتابلار</a>
     
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     
@@ -584,7 +582,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 <nav class="tabbar" id="tabbar">
   <a class="tabitem" href="#/" data-t="home"><span class="ic">🏠</span>باش بەت</a>
   <a class="tabitem" href="#/lessons" data-t="lessons"><span class="ic">📚</span>دەرسلەر</a>
-  <a class="tabitem" href="#/books" data-t="books" style="color:#b45309"><span class="ic">📄</span>PDF كىتاب</a>
+  <a class="tabitem" href="#/install" data-t="install"><span class="ic">📲</span>تېلېفونغا قاچىلاش</a>
   <a class="tabitem" href="#/exam" data-t="exam"><span class="ic">📝</span>سىناق</a>
   <a class="tabitem" href="#/teachers" data-t="teachers"><span class="ic">👨‍🏫</span>ئۇستازلار</a>
   
@@ -608,8 +606,26 @@ var store = {
   get: function(){ try{ return JSON.parse(localStorage.getItem("uytibb_v1")||"{}"); }catch(e){ return {}; } },
   set: function(d){ try{ localStorage.setItem("uytibb_v1", JSON.stringify(d)); }catch(e){} }
 };
-function getProg(){ var s=store.get(); s.lessons=s.lessons||{}; s.exams=s.exams||[]; s.streak=s.streak||{d:0,n:0,best:0}; s.badges=s.badges||[]; s.wrong=s.wrong||[]; s.marks=s.marks||[]; return s; }
-function saveProg(s){ store.set(s); }
+function getProg(){
+  var s = store.get();
+  s.lessons = s.lessons || {};
+  s.exams = s.exams || [];
+  s.streak = s.streak || {d:0, n:0, best:0};
+  s.badges = s.badges || [];
+  s.wrong = s.wrong || [];
+  s.marks = s.marks || [];
+  return s;
+}
+function saveProg(s){
+  var existing = store.get();
+  var merged = Object.assign({}, existing, s);
+  merged.lessons = Object.assign({}, existing.lessons || {}, s.lessons || {});
+  merged.exams = s.exams || existing.exams || [];
+  merged.badges = s.badges || existing.badges || [];
+  merged.wrong = s.wrong || existing.wrong || [];
+  merged.marks = s.marks || existing.marks || [];
+  store.set(merged);
+}
 function markRead(id){ var s=getProg(); s.lessons[id]=s.lessons[id]||{}; s.lessons[id].read=true; saveProg(s); }
 function saveBest(id, pct){ var s=getProg(); s.lessons[id]=s.lessons[id]||{}; if(!s.lessons[id].best||pct>s.lessons[id].best){s.lessons[id].best=pct;} saveProg(s); }
 function saveLast(id){ var s=getProg(); s.lastLesson=id; saveProg(s); }
@@ -639,7 +655,7 @@ function todayTip(){ var d=new Date(); return TIPS[(d.getFullYear()*372+d.getMon
 /* --- ئاستى ناۋىگاتسىيە --- */
 function renderNav(){
   var hash=location.hash||"#/";
-  var map={"#/":"home","#/lessons":"lessons","#/books":"books","#/pdf":"books","#/exam":"exam","#/teachers":"teachers","#/me":"me","#/search":"home","#/ai":"ai","#/install":"me","#/wrong":"me","#/marks":"me","#/tehlil":"me"};
+  var map={"#/":"home","#/lessons":"lessons","#/books":"lessons","#/pdf":"lessons","#/exam":"exam","#/teachers":"teachers","#/me":"me","#/search":"home","#/ai":"ai","#/install":"install","#/wrong":"me","#/marks":"me","#/tehlil":"me"};
   var cur="home";
   if(hash.indexOf("#/lesson/")===0) cur="lessons";
   else { for(var k in map){ if(hash===k||hash.indexOf(k+"/")===0) cur=map[k]; } }
@@ -652,27 +668,12 @@ function renderNav(){
 function vHome(){
   var s=getProg(), total=countQ(), auto=countQ(function(q){return q.type!=="essay";});
   var done=readCount(), pct=Math.round(done/LESSONS.length*100);
-  var uname=s.user?esc(s.user.name):"";
+  var uname=(s.user && s.user.name !== "ئاساسىي باشقۇرغۇچى" && s.user.name.indexOf("باشقۇرغۇچى") === -1)?esc(s.user.name):"";
   var h='<div class="greet"><div class="hlogo">'+LOGO_SVG+'</div><h2>ئەسسالامۇ ئەلەيكۇم'+(uname?('، '+uname):"")+'!</h2>'
     +'<p>ئۇيغۇر تېبابىتى نەزەرىيە قىسمى — '+LESSONS.length+' دەرس • '+total+' مەشىق سوئالى</p>'
     +'<div class="gprog"><i style="width:'+pct+'%"></i></div>'
     +'<div class="grow"><span>ئومۇمىي ئىلگىرىلەش</span><span>%'+pct+' ('+done+'/'+LESSONS.length+' دەرس)</span></div></div>';
-  var pdfCountHome = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); }).length;
-  h+='<div class="home-pdf-hero" style="margin:.8rem 0;padding:1rem 1.1rem;background:linear-gradient(135deg,#0a5c52,#137762);color:#fff;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.15);border:2px solid #eab308">'
-    +'  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">'
-    +'    <div style="display:flex;align-items:center;gap:.7rem">'
-    +'      <span style="font-size:2.2rem">📖</span>'
-    +'      <div><b style="font-size:1.08rem;color:#fef08a">دەرسلىك ئەسلى كىتابلىرى (PDF كۇتۇپخانىسى)</b>'
-    +'      <small style="opacity:.92;display:block;font-size:.83rem">بارلىق 10 دەرسلىكنىڭ تولۇق PDF كىتابى تەييارلاندى</small></div>'
-    +'    </div>'
-    +'    <a class="btn btn-gold btn-sm" href="#/books" style="color:#2e2200;font-weight:bold;text-decoration:none;padding:.45rem 1.1rem;border-radius:9px;font-size:.88rem;white-space:nowrap">📚 كىتابلارنى ئېچىش ('+LESSONS.length+' كىتاب) ›</a>'
-    +'  </div>'
-    +'  <div style="display:flex;gap:.5rem;margin-top:.8rem;overflow-x:auto;padding-bottom:.4rem;width:100%">'
-    +'    <span style="align-self:center;font-size:.8rem;opacity:.9;white-space:nowrap;margin-left:.3rem">تېز ئېچىش:</span>';
-  LESSONS.forEach(function(pl){
-    h+='<a href="#/lesson/'+pl.id+'/pdf" style="flex:none;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;padding:.35rem .75rem;border-radius:8px;font-size:.8rem;display:inline-flex;align-items:center;gap:.3rem;border:1px solid rgba(255,255,255,.3);white-space:nowrap">📄 '+pl.id+'-دەرس PDF ›</a>';
-  });
-  h+='</div></div>';
+  
   h+='<div class="mstats"><div class="mstat"><b>'+LESSONS.length+'</b><span>دەرس</span></div>'
     +'<div class="mstat"><b>'+auto+'</b><span>ئاپتومات سوئال</span></div>'
     +'<div class="mstat"><b>'+(total-auto)+'</b><span>بايان سوئال</span></div>'
@@ -684,7 +685,7 @@ function vHome(){
     +'<a class="menu-tile" href="#/books" style="border:1.5px solid rgba(201,162,39,.5);background:linear-gradient(180deg,rgba(201,162,39,.08),transparent)"><span class="mi">📄</span><b style="color:#b45309">PDF كىتابلار</b><small>'+pdfLessonsHome.length+' كىتاب (تولۇق)</small></a>'
     +'<a class="menu-tile" href="#/exam"><span class="mi">📝</span><b>سىناق</b><small>ۋاقىتلىق سىناق</small></a>'
     +'<a class="menu-tile" href="#/teachers"><span class="mi">👨‍🏫</span><b>ئۇستازلار</b><small>'+TEACHERS.length+' تەرجىمىھال</small></a>'
-    +'<a class="menu-tile" href="#/search"><span class="mi">🔍</span><b>ئىزدەش</b><small>مەزمۇن ئىزدەش</small></a></div>';
+    +'</div>';
   h+='<div class="secttl">🎯 بۈگۈنكى سوئال</div><div id="dqbox"></div>';
   h+='<div class="secttl">📘 بۈگۈنكى ئاتالغۇ</div><div id="dtbox"></div>';
   h+='<div class="tip">💡 <b>بۈگۈنكى تەۋسىيە:</b> '+todayTip()+'</div>';
@@ -767,7 +768,7 @@ function vMe(){
   var h='<h2 class="pagettl">👤 مېنىڭ ئۆگىنىشىم</h2>';
   h+='<div class="me-hero"><div>ئومۇمىي ئىلگىرىلەش</div><div class="big">%'+Math.round(done/LESSONS.length*100)+'</div>'
     +'<div>'+done+'/'+LESSONS.length+' دەرس ئوقۇلغان • مەشىق ئوتتۇرىچە: %'+avg+' • سىناق: '+s.exams.length+'</div></div>';
-  if(s.user) h+='<div class="me-row"><span class="n">👤</span><div class="inf"><b>'+esc(s.user.name)+'</b><br><small>📞 '+esc(s.user.phone)+'</small></div></div>';
+  if(s.user && s.user.name && s.user.name !== "ئاساسىي باشقۇرغۇچى" && s.user.phone !== "admin" && s.user.name.indexOf("باشقۇرغۇچى") === -1) h+='<div class="me-row"><span class="n">👤</span><div class="inf"><b>'+esc(s.user.name)+'</b><br><small>📞 '+esc(s.user.phone)+'</small></div></div>';
   h+='<div class="me-row"><span class="n">🔥</span><div class="inf"><b>داۋاملاشتۇرۇش: '+s.streak.n+' كۈن</b><br><small>ئەڭ ئۇزۇن: '+s.streak.best+' كۈن • ھەر كۈنى كىرىپ داۋاملاشتۇرۇڭ!</small></div></div>';
   h+='<div class="me-row"><span class="n">📊</span><div class="inf"><b>ئۆگىنىش تەھلىلى</b><br><small>ئاجىز نۇقتىلىرىڭىز ۋە تەكلىپلەر</small></div><a class="btn btn-teal btn-sm" href="#/tehlil">كۆرۈش</a></div>';
   h+='<div class="secttl">🏆 مۇكاپاتلىرىم ('+s.badges.length+'/'+BADGES.length+')</div><div class="bgrid">';
@@ -809,7 +810,7 @@ function vLesson(id, tab){
     h+='</ul></div>';
   }
   if(L.pdfUrl || L.pdfData){
-    var pUrlHead = L.pdfData || L.pdfUrl;
+    var pUrlHead = (L.id >= 1 && L.id <= 10) ? ("pdf/lesson-" + L.id + ".pdf") : (L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf"));
     var pTitleHead = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
     h+='<div class="lesson-pdf-cta" style="margin:.8rem 0;padding:.85rem 1.1rem;background:linear-gradient(135deg,rgba(18,135,111,.15),rgba(201,162,39,.18));border:1.5px solid var(--gold);border-radius:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;box-shadow:var(--shadow)">'
       +'  <div style="display:flex;align-items:center;gap:.7rem">'
@@ -853,7 +854,7 @@ function renderTabBody(L){
     bindMark(box, L); jumpFlash(box, L);
     var br=$("btnRead"); if(br) br.onclick=function(){ markRead(L.id); checkBadges(); br.textContent="✓ بەلگىلەندى — رەھمەت!"; br.disabled=true; };
   } else if(lessonTab==="pdf"){
-    var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf");
+    var pUrl = (L.id >= 1 && L.id <= 10) ? ("pdf/lesson-" + L.id + ".pdf") : (L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf"));
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
     window.open(pUrl, "_blank");
     lessonTab = "content";
@@ -1225,7 +1226,7 @@ function toast(msg){
 var BADGES=[
  {id:"read1",ic:"📖",t:"باشلىنىش",d:"1 دەرس ئوقۇش"},
  {id:"read5",ic:"📚",t:"تىرىشچان",d:"5 دەرس ئوقۇش"},
- {id:"read10",ic:"🎓",t:"پۈتتۈرگۈچى",d:"10 دەرس ئوقۇش"},
+ {id:"read10",ic:"🎓",t:"پۈتتۈرگۈچى",d:"بارلىق دەرسلەرنى تولۇق ئوقۇش"},
  {id:"quiz60",ic:"✍️",t:"مەشىقچى",d:"بىر مەشىقتىن %60+"},
  {id:"quizall",ic:"🌟",t:"ئەلاچى",d:"ھەممە دەرس مەشىق %60+"},
  {id:"pass",ic:"✅",t:"ئۆتكۈچى",d:"سىناقتىن ئۆتۈش"},
@@ -1816,10 +1817,41 @@ function router(){
   var tb=$("topbtn"); if(tb) tb.style.display="none";
 }
 function loadCustomData(){
+  try {
+    // Purge any mock/test students from local storage
+    var rawSt = localStorage.getItem("uytibb_all_students");
+    if(rawSt){
+      var parsedSt = JSON.parse(rawSt);
+      if(Array.isArray(parsedSt)){
+        var filteredSt = parsedSt.filter(function(st){
+          var nm = (st.name || "").trim();
+          return nm !== "سىناق ئوقۇغۇچى" && nm !== "سىناق" && !nm.startsWith("سىناق") && st.phone !== "13800000000" && st.phone !== "admin";
+        });
+        if(filteredSt.length !== parsedSt.length){
+          localStorage.setItem("uytibb_all_students", JSON.stringify(filteredSt));
+        }
+      }
+    }
+  }catch(e){}
+
+  try {
+    // Remove admin profile if saved into student progress
+    var curProg = store.get();
+    if(curProg.user && (curProg.user.name === "ئاساسىي باشقۇرغۇچى" || curProg.user.phone === "admin" || (curProg.user.name||"").indexOf("باشقۇرغۇچى") >= 0)){
+      delete curProg.user;
+      store.set(curProg);
+    }
+  }catch(e){}
 
   (LESSONS || []).forEach(function(L, idx){
-    if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + (L.id || (idx+1)) + ".pdf";
-    if(!L.pdfTitle) L.pdfTitle = (L.title ? ((L.id || (idx+1)) + "-دەرسلىك: " + L.title) : ((L.id || (idx+1)) + "-دەرس")) + " كىتابى (PDF)";
+    var lid = L.id || (idx+1);
+    if(lid >= 1 && lid <= 10){
+      L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+      delete L.pdfData;
+    } else {
+      if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+    }
+    if(!L.pdfTitle) L.pdfTitle = (L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)";
   });
 
   try {
@@ -1829,9 +1861,14 @@ function loadCustomData(){
         var custom = JSON.parse(raw);
         if(Array.isArray(custom) && custom.length){
           LESSONS = custom.map(function(L, idx){
-            var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]) || {};
-            L.pdfUrl = L.pdfUrl || (def && def.pdfUrl) || ("pdf/lesson-" + (L.id || (idx+1)) + ".pdf");
-            L.pdfTitle = L.pdfTitle || (def && def.pdfTitle) || ((L.title ? ((L.id||(idx+1)) + "-دەرسلىك: " + L.title) : ((L.id||(idx+1)) + "-دەرس")) + " كىتابى (PDF)");
+            var lid = L.id || (idx+1);
+            if(lid >= 1 && lid <= 10){
+              L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+              delete L.pdfData;
+            } else {
+              L.pdfUrl = L.pdfUrl || ("pdf/lesson-" + lid + ".pdf");
+            }
+            L.pdfTitle = L.pdfTitle || ((L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)");
             return L;
           });
         }
@@ -1845,6 +1882,9 @@ function loadCustomData(){
       }
     }
   }catch(e){}
+
+  var hCount = document.getElementById("appbarLessonCount");
+  if(hCount) hCount.textContent = "نەزەرىيە قىسمى • " + LESSONS.length + " دەرس";
 }
 function bindTabs(){
   var main=$("main");

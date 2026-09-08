@@ -134,6 +134,10 @@ module.exports = async (req, res) => {
     // Fetch live from Supabase
     let sbStudents = await sbFetch('/rest/v1/students?select=*&order=registered_at.desc');
     let list = Array.isArray(sbStudents) && sbStudents.length ? sbStudents : inMemoryStudents;
+    list = (list || []).filter(s => {
+      const nm = (s.name || '').trim();
+      return nm !== 'سىناق ئوقۇغۇچى' && nm !== 'سىناق' && !nm.startsWith('سىناق') && s.phone !== '13800000000' && s.phone !== 'admin';
+    });
     return res.status(200).json({
       status: 'ok',
       students: list,
