@@ -711,7 +711,25 @@ table.data-table tr:hover { background: var(--teal-light); }
       <section class="panel" id="p-settings">
         <div class="panel-title"><span>⚙️ سىستېما ۋە باشقۇرغۇچىلارنى باشقۇرۇش</span></div>
         
-        <!-- Admin Accounts Card -->
+                <!-- Change Primary Admin Password Card -->
+        <div class="card" style="border-right:4px solid var(--gold)">
+          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">🔑 ئاساسىي باشقۇرغۇچى مەخپىي نومۇرىنى ئۆزگەرتىش</h3>
+          <p style="color:var(--muted);font-size:.9rem;margin:0 0 1.2rem">ئارقا سەھنىگە كىرىش مەخپىي نومۇرىڭىزنى بۇ يەردىن خالىغان ۋاقىتتا يېڭىلىيالايسىز.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:.8rem;margin-bottom:1rem;max-width:560px">
+            <div class="inp-group" style="margin:0">
+              <label>يېڭى مەخپىي نومۇر (پارول):</label>
+              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: 123456 ياكى ئۆزىڭىز خالىغان بىر نېمە" dir="ltr">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>يېڭى مەخپىي نومۇرنى قايتا يېزىڭ:</label>
+              <input type="text" id="newMasterPassConfirmInp" class="inp" placeholder="قايتا كىرگۈزۈڭ" dir="ltr">
+            </div>
+          </div>
+          <button class="btn btn-teal btn-sm" id="saveMasterPassBtn">💾 يېڭى مەخپىي نومۇرنى ساقلاش</button>
+          <div id="masterPassStatusMsg" style="margin-top:.8rem;display:none;font-weight:bold;font-size:.9rem"></div>
+        </div>
+
+<!-- Admin Accounts Card -->
         <div class="card">
           <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">👨‍💼 باشقۇرغۇچى ھېساباتلىرى (Admin Accounts)</h3>
           <p style="margin:0 0 1.2rem;color:var(--muted);font-size:.9rem">سىستېمىغا ئوقۇتۇش مەسئۇللىرى ۋە باشقۇرغۇچىلارنى ئايرىم كىرىش ھېساباتى بىلەن قوشالايسىز.</p>
@@ -1562,6 +1580,55 @@ document.getElementById("btnAddTeacher").onclick = function(){
 
 
 /* ===== 10. SUPABASE CLOUD DATABASE INTEGRATION ===== */
+
+/* ===== CHANGE MASTER PASSWORD ===== */
+function initPasswordChangeUI(){
+  var btn = document.getElementById("saveMasterPassBtn");
+  if(!btn) return;
+  btn.onclick = function(){
+    var p1 = (document.getElementById("newMasterPassInp").value || "").trim();
+    var p2 = (document.getElementById("newMasterPassConfirmInp").value || "").trim();
+    var msg = document.getElementById("masterPassStatusMsg");
+    if(!p1){
+      showToast("⚠️ يېڭى مەخپىي نومۇرنى يېزىڭ!");
+      return;
+    }
+    if(p1.length < 4){
+      showToast("⚠️ مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
+      return;
+    }
+    if(p1 !== p2){
+      showToast("⚠️ ئىككى قېتىم كىرگۈزگەن مەخپىي نومۇر ئوخشاش چىقمىدى!");
+      return;
+    }
+    localStorage.setItem("uytibb_admin_pass", p1);
+    var admins = getAdmins();
+    var root = admins.find(function(a){ return a.username === "admin"; });
+    if(root) root.pass = p1;
+    saveAdmins(admins);
+    
+    // Also try updating Supabase admins table if connected!
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      fetch(Supabase.getConfig().url + "/rest/v1/admins?username=eq.admin", {
+        method: "PATCH",
+        headers: {
+          "apikey": Supabase.getConfig().key,
+          "Authorization": "Bearer " + Supabase.getConfig().key,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password_hash: p1 })
+      }).catch(function(){});
+    }
+
+    document.getElementById("newMasterPassInp").value = "";
+    document.getElementById("newMasterPassConfirmInp").value = "";
+    msg.style.display = "block";
+    msg.style.color = "var(--teal-dark)";
+    msg.textContent = "✅ مەخپىي نومۇرىڭىز مۇۋەپپەقىيەتلىك ئۆزگەرتىلدى! كېيىنكى قېتىم «" + p1 + "» بىلەن كىرىسىز.";
+    showToast("🎉 مەخپىي نومۇر مۇۋەپپەقىيەتلىك ئۆزگەرتىلدى!");
+  };
+}
+
 function initSupabaseAdminUI(){
   if(typeof Supabase === "undefined") return;
   var cfg = Supabase.getConfig();
