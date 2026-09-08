@@ -2341,24 +2341,11 @@ var LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><d
 
 /* ===== سوئال-پىكىر تاختىسى ===== */
 function renderFb(){
-  var box=$("fblist"); if(!box) return;
-  var rawFb = localStorage.getItem("uytibb_feedback");
-  var s=getProg();
-  if(rawFb){
-    try { s.fb = JSON.parse(rawFb); } catch(e){}
-  }
-  if(s.fb===undefined || !s.fb.length){ 
-    s.fb=[{n:"باشقۇرغۇچى",t:"خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷",w:"",reply:"ھەر ۋاقىت سوئالىڭىز بولسا يېزىڭ، دوختۇرلار جاۋاب قايتۇرىدۇ."}]; 
-    saveProg(s); 
-  }
-  box.innerHTML = s.fb.length ? s.fb.map(function(m,i){
-    var replyHtml = m.reply ? ('<div style="background:var(--gold-light);border:1px solid var(--gold);border-radius:10px;padding:.5rem .8rem;margin-top:.4rem;font-size:.88rem;color:#6b5600">'
-      + '<b>🌿 باشقۇرغۇچىنىڭ جاۋابى:</b><br>' + esc(m.reply)
-      + (m.replyAt ? ('<div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">📅 ' + esc(m.replyAt) + '</div>') : '')
-      + '</div>') : '';
-
-    return '<div class="fbm"><div class="fbh"><b>'+esc(m.n)+'</b><span>'+esc(m.w||"")+'</span><button class="fbx" data-fbdel="'+i+'" title="ئۆچۈرۈش">✕</button></div><p>'+esc(m.t)+'</p>' + replyHtml + '</div>';
-  }).join("") : '<p class="pagesub">ھازىرچە پىكىر يوق — بىرىنچى بولۇپ يېزىڭ!</p>';
+  var box = $("fblist");
+  if(!box) return;
+  box.innerHTML = '<div class="tip" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.15rem 1.3rem;box-shadow:var(--shadow);font-size:1.02rem;color:var(--teal-dark);line-height:1.8;margin-bottom:1.2rem;cursor:pointer" onclick="handleFbClick()">'
+    + 'خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷'
+    + '</div>';
 }
 function dayNum(){ var n=new Date(); return n.getFullYear()*372+n.getMonth()*31+n.getDate(); }
 function allChoiceTf(){ var p=[]; LESSONS.forEach(function(L){ (L.quiz||[]).forEach(function(q){ if(q.type==="choice"||q.type==="tf") p.push({q:q,lid:L.id}); }); }); return p; }
