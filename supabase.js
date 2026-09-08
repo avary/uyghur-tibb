@@ -10,7 +10,7 @@ var Supabase = (function(){
     try {
       var saved = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
       return {
-        url: saved.url || "",
+        url: saved.url || "https://voupxaqyaywhldazvklj.supabase.co",
         key: saved.key || "",
         connected: !!(saved.url && saved.key)
       };
