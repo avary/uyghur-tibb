@@ -1499,16 +1499,53 @@ function vWaitingApproval(user, status){
 function checkStudentApproval(){
   var s = getProg();
   if(!s.user){ router(); return; }
-  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
-  if(curSt && curSt.status === "approved"){
-    s.user.status = "approved";
-    saveProg(s);
-    toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
-    router();
-  } else {
-    toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
-  }
+  toast("⏳ تەكشۈرۈلىۋاتىدۇ...");
+  fetch("/api/students")
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.students){
+        var cur = d.students.find(function(u){ return u.phone === s.user.phone; });
+        if(cur && cur.status === "approved"){
+          s.user.status = "approved";
+          saveProg(s);
+          var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+          var localCur = allSt.find(function(u){ return u.phone === s.user.phone; });
+          if(localCur) localCur.status = "approved";
+          else allSt.unshift(cur);
+          localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+          toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
+          router();
+          return;
+        } else if(cur && cur.status === "blocked"){
+          s.user.status = "blocked";
+          saveProg(s);
+          router();
+          return;
+        }
+      }
+      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+      var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
+      if(curSt && curSt.status === "approved"){
+        s.user.status = "approved";
+        saveProg(s);
+        toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
+        router();
+      } else {
+        toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
+      }
+    })
+    .catch(function(){
+      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+      var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
+      if(curSt && curSt.status === "approved"){
+        s.user.status = "approved";
+        saveProg(s);
+        toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
+        router();
+      } else {
+        toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
+      }
+    });
 }
 
 /* ===== يول باشقۇرۇش ===== */
