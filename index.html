@@ -1476,6 +1476,37 @@ function cardShare(){
 
 
 /* ===== كىرىش تەستىق كۈتۈش دەرۋازىسى ===== */
+var _approvalPollTimer = null;
+function startApprovalPoll(){
+  if(_approvalPollTimer) clearInterval(_approvalPollTimer);
+  _approvalPollTimer = setInterval(function(){
+    var s = getProg();
+    if(!s.user || s.user.status === "approved"){
+      clearInterval(_approvalPollTimer);
+      return;
+    }
+    fetch("/api/students")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.students){
+          var cur = d.students.find(function(u){ return u.phone === s.user.phone; });
+          if(cur && cur.status === "approved"){
+            clearInterval(_approvalPollTimer);
+            s.user.status = "approved";
+            saveProg(s);
+            var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+            var localCur = allSt.find(function(u){ return u.phone === s.user.phone; });
+            if(localCur) localCur.status = "approved";
+            else allSt.unshift(cur);
+            localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+            toast("🎉 تەستىقلاندىڭىز! دەرسلەر ئېچىلدى!");
+            router();
+          }
+        }
+      }).catch(function(){});
+  }, 7000);
+}
+
 function vWaitingApproval(user, status){
   var isBlocked = (status === "blocked");
   var title = isBlocked ? "⛔ ھېساباتىڭىز ۋاقىتلىق توختىتىلدى" : "⏳ كىرىش ئىجازىتى كۈتۈۋاتىدۇ";
@@ -1483,6 +1514,7 @@ function vWaitingApproval(user, status){
     ("ھۆرمەتلىك <b>" + esc(user.name) + "</b>! باشقۇرغۇچى مەزكۇر تېلېفون نومۇرى («<b dir='ltr'>" + esc(user.phone) + "</b>») ئۈچۈن دەرس كۆرۈش ھوقۇقىنى ۋاقىتلىق توختاتتى.") : 
     ("ھۆرمەتلىك <b>" + esc(user.name) + "</b>!<br>سىزنىڭ تىزىملاتقان تېلېفون نومۇرىڭىز: <b dir='ltr'>" + esc(user.phone) + "</b>.<br>ئوقۇتۇش باشقۇرغۇچىسى كىرىش ئىجازىتىڭىزنى تەستىقلىغاندىن كېيىن، بارلىق دەرسلەر، سىناقلار ۋە پدف كىتابلار ئاپتوماتىك ئېچىلىدۇ.");
 
+  if(!isBlocked) startApprovalPoll();
   return '<div class="cardov" style="position:static;background:none;padding:1.2rem 1rem">'
     + '<div class="cardbox" style="background:var(--card);border:2px solid ' + (isBlocked?'var(--red)':'var(--gold)') + ';border-radius:24px;padding:2rem 1.4rem;max-width:480px;margin:1.5rem auto;box-shadow:var(--shadow);text-align:center">'
     + '  <div style="font-size:3.6rem;margin-bottom:.5rem">' + (isBlocked?'🚫':'⏳') + '</div>'
