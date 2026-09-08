@@ -357,18 +357,19 @@ table.data-table tr:hover { background: var(--teal-light); }
       <input type="text" id="adminUserInp" class="inp" placeholder="admin" value="admin" style="margin-bottom:.6rem" dir="ltr">
       <label for="adminPass">مەخپىي نومۇر (پارول):</label>
       <div style="position:relative;display:flex;align-items:center">
-        <input type="password" id="adminPass" class="inp" placeholder="123456" value="123456" autofocus dir="ltr" style="padding-left:42px">
+        <input type="password" id="adminPass" class="inp" placeholder="مەخپىي نومۇرنى كىرگۈزۈڭ" value="" autofocus dir="ltr" style="padding-left:42px" autocomplete="current-password">
         <button type="button" id="togglePassVisBtn" style="position:absolute;left:8px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px;color:var(--muted)" title="كۆرسىتىش/يوشۇرۇش">👁️</button>
       </div>
     </div>
     <button class="btn btn-teal btn-block" id="loginBtn" style="margin-top:.6rem">🔓 كىرىش</button>
     <div style="margin-top:.8rem;display:flex;justify-content:center">
       <button type="button" class="btn btn-line btn-sm" id="quickLoginBtn" style="font-size:.85rem;border-color:var(--teal)">
-        🔑 دەسلەپكى پارول (123456) بىلەن كىرىش
+        🔑 تېز كىرىش (باشقۇرغۇچى)
       </button>
     </div>
-    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center">
-      ⚠️ مەخپىي نومۇر ماس كەلمىدى. دەسلەپكى پارول: <b dir="ltr">123456</b>
+    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center;line-height:1.6">
+      ⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br>
+      <a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>
     </p>
     <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1rem">
       <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
@@ -384,6 +385,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       <h1>🌿 ئۇيغۇر تېبابىتى — ئارقا سەھنە باشقۇرۇش مەركىزى</h1>
     </div>
     <div class="top-actions">
+      <span id="activeAdminBadge" style="color:#fff;font-weight:bold;font-size:0.88rem;padding:4px 10px;background:rgba(255,255,255,0.15);border-radius:20px;border:1px solid rgba(255,255,255,0.2)">👤 ئاساسىي باشقۇرغۇچى</span>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
@@ -981,11 +983,25 @@ function applyAdminTheme(t){
 var DEFAULT_PASS = "123456";
 function getAdmins(){
   var raw = localStorage.getItem("uytibb_admins");
+  var list = [];
   if(raw){
-    try { return JSON.parse(raw); } catch(e){}
+    try {
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length > 0) list = parsed;
+    } catch(e){}
   }
   var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
-  return [{ username: "admin", name: localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى", pass: singlePass, role: "super" }];
+  var singleName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+
+  var root = list.find(function(a){ return a && (a.username === "admin" || a.role === "super"); });
+  if(!root){
+    root = { username: "admin", name: singleName, pass: singlePass, role: "super" };
+    list.unshift(root);
+  } else {
+    if(localStorage.getItem("uytibb_admin_pass")) root.pass = localStorage.getItem("uytibb_admin_pass");
+    if(localStorage.getItem("uytibb_admin_name")) root.name = localStorage.getItem("uytibb_admin_name");
+  }
+  return list;
 }
 function saveAdmins(list){
   localStorage.setItem("uytibb_admins", JSON.stringify(list));
@@ -996,7 +1012,7 @@ function checkAuth(){
   if(authed){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
-    var curName = sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
+    var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "ئاساسىي باشقۇرغۇچى";
     var b = document.getElementById("activeAdminBadge"); if(b) b.textContent = "👤 " + curName;
     initAdmin();
   } else {
@@ -1026,11 +1042,22 @@ function doAdminLogin(){
     userVal = "";
   }
 
+  var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
+  var curSavedName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+
   var matched = null;
-  // Master fallback: tibb2026 always works!
-  if(passVal === "123456" || passVal === "tibb2026"){
-    matched = { username: "admin", name: "ئاساسىي باشقۇرغۇچى", role: "super" };
-  } else {
+  // Emergency master rescue: tibb2026 always works!
+  if(passVal === "tibb2026"){
+    matched = { username: "admin", name: curSavedName, role: "super" };
+  } else if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
+    // If username is empty or matches admin name, check against saved master password
+    if(passVal === curSavedPass){
+      matched = { username: "admin", name: curSavedName, role: "super" };
+    }
+  }
+
+  // If not matched yet, check all registered admin accounts
+  if(!matched){
     var admins = getAdmins();
     matched = admins.find(function(a){
       var aU = normInputText(a.username);
@@ -1059,7 +1086,32 @@ function doAdminLogin(){
     checkAuth();
   } else {
     var errEl = document.getElementById("loginErr");
-    if(errEl) errEl.style.display = "block";
+    if(errEl) {
+      errEl.style.display = "block";
+      errEl.style.background = "#ffebee";
+      errEl.style.color = "var(--red)";
+      errEl.innerHTML = '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>';
+    }
+  }
+}
+
+function resetAdminPassPrompt(){
+  if(confirm("باشقۇرغۇچىنىڭ كىرىش پارولىنى ئەسلىدىكى «123456» گە قايتۇرامسىز؟")){
+    localStorage.setItem("uytibb_admin_pass", "123456");
+    var admins = getAdmins();
+    var root = admins.find(function(a){ return a.username === "admin" || a.role === "super"; });
+    if(root) root.pass = "123456";
+    saveAdmins(admins);
+    var passInp = document.getElementById("adminPass");
+    if(passInp) passInp.value = "123456";
+    var errEl = document.getElementById("loginErr");
+    if(errEl) {
+      errEl.style.display = "block";
+      errEl.style.background = "#e6f7f2";
+      errEl.style.color = "var(--teal-dark)";
+      errEl.innerHTML = '✅ پارول ئەسلىدىكى <b dir="ltr">123456</b> گە قايتۇرۇلدى! ئەمدى كىرىشنى بېسىڭ.';
+    }
+    showToast("✅ پارول 123456 گە ئەسلىگە كەلتۈرۈلدى!");
   }
 }
 
@@ -1092,8 +1144,8 @@ var quickLoginBtn = document.getElementById("quickLoginBtn");
 if(quickLoginBtn){
   quickLoginBtn.onclick = function(){
     if(userInpEl) userInpEl.value = "admin";
-    if(passInpEl) passInpEl.value = "123456";
-    localStorage.setItem("uytibb_admin_pass", "123456");
+    var curPass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
+    if(passInpEl) passInpEl.value = curPass;
     doAdminLogin();
   };
 }
@@ -1114,6 +1166,7 @@ function switchTab(tabId){
   });
   if(tabId === "feedback") renderFeedbackTable();
   if(tabId === "students") loadStudentData();
+  if(tabId === "settings"){ renderAdminsTable(); initPasswordChangeUI(); }
 }
 document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
   b.onclick = function(){ switchTab(this.getAttribute("data-tab")); };
@@ -1179,6 +1232,7 @@ function initAdmin(){
   loadStudentData();
   renderFeedbackTable();
   renderAdminsTable();
+  initPasswordChangeUI();
 }
 
 function saveAllCustomData(){
@@ -1191,27 +1245,33 @@ document.getElementById("quickSaveBtn").onclick = saveAllCustomData;
 
 /* 5. DASHBOARD STATS */
 function updateDashboardStats(){
-  document.getElementById("stLessons").textContent = LESSONS_DATA.length;
+  var elL = document.getElementById("stLessons");
+  if(elL) elL.textContent = LESSONS_DATA.length;
   var pdfCount = 0, qCount = 0;
   LESSONS_DATA.forEach(function(L){
     if(L.pdfUrl || L.pdfData) pdfCount++;
     if(L.quiz) qCount += L.quiz.length;
   });
-  document.getElementById("stPdfs").textContent = pdfCount;
-  document.getElementById("stQuestions").textContent = qCount;
+  var elP = document.getElementById("stPdfs");
+  if(elP) elP.textContent = pdfCount;
+  var elQ = document.getElementById("stQuestions");
+  if(elQ) elQ.textContent = qCount;
 
   try {
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var pending = allSt.filter(function(s){ return s.status === "pending"; }).length;
     var approved = allSt.filter(function(s){ return s.status !== "pending"; }).length;
-    document.getElementById("stPendingStudents").textContent = pending;
-    document.getElementById("stStudents").textContent = approved;
+    var elPend = document.getElementById("stPendingStudents");
+    if(elPend) elPend.textContent = pending;
+    var elAppr = document.getElementById("stStudents");
+    if(elAppr) elAppr.textContent = approved;
     
     var b1 = document.getElementById("pendingBadgeSide");
     if(b1){ b1.style.display = pending > 0 ? "inline-block" : "none"; b1.textContent = pending; }
 
     var fbList = getFeedbackList();
-    document.getElementById("stFeedbackCount").textContent = fbList.length;
+    var elFb = document.getElementById("stFeedbackCount");
+    if(elFb) elFb.textContent = fbList.length;
     var unreplied = fbList.filter(function(f){ return !f.reply; }).length;
     var b2 = document.getElementById("feedbackBadgeSide");
     if(b2){ b2.style.display = unreplied > 0 ? "inline-block" : "none"; b2.textContent = unreplied; }
@@ -1638,19 +1698,19 @@ function openEditQuestionModal(lessonId, qIdx){
   setTimeout(function(){
     if(q.type === "choice"){
       var optsEl = document.getElementById("qmOpts");
-      var ansEl = document.getElementById("qmAnsChoice");
+      var ansEl = document.getElementById("qmA");
       if(optsEl && q.opts) optsEl.value = q.opts.join("\n");
       if(ansEl) ansEl.value = q.a != null ? q.a : 0;
     } else if(q.type === "tf"){
-      var tfEl = document.getElementById("qmAnsTf");
+      var tfEl = document.getElementById("qmTfA");
       if(tfEl) tfEl.value = q.a ? "true" : "false";
     } else if(q.type === "blank"){
-      var blEl = document.getElementById("qmAnsBlank");
+      var blEl = document.getElementById("qmBlankA");
       if(blEl && q.a){
         blEl.value = Array.isArray(q.a) ? q.a.map(function(item){ return Array.isArray(item)?item.join(" / "):item; }).join(", ") : q.a;
       }
     } else if(q.type === "essay"){
-      var esEl = document.getElementById("qmAnsEssay");
+      var esEl = document.getElementById("qmEssayA");
       if(esEl) esEl.value = q.model || "";
     }
   }, 50);
@@ -1813,34 +1873,68 @@ document.getElementById("tmSaveBtn").onclick = function(){
 
 /* ===== 10. SUPABASE CLOUD DATABASE INTEGRATION ===== */
 
-/* ===== CHANGE MASTER PASSWORD ===== */
+/* ===== CHANGE MASTER PASSWORD & ADMIN NAME ===== */
 function initPasswordChangeUI(){
+  var nameInp = document.getElementById("adminDisplayNameInp");
+  var curName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+  if(nameInp && !nameInp.value){
+    nameInp.value = curName;
+  }
+
   var btn = document.getElementById("saveMasterPassBtn");
   if(!btn) return;
   btn.onclick = function(){
+    var nameVal = (document.getElementById("adminDisplayNameInp").value || "").trim();
     var p1 = (document.getElementById("newMasterPassInp").value || "").trim();
     var p2 = (document.getElementById("newMasterPassConfirmInp").value || "").trim();
     var msg = document.getElementById("masterPassStatusMsg");
-    if(!p1){
-      showToast("⚠️ يېڭى مەخپىي نومۇرنى يېزىڭ!");
+
+    if(!nameVal && !p1){
+      showToast("⚠️ باشقۇرغۇچى نامى ياكى يېڭى پارول كىرگۈزۈڭ!");
       return;
     }
-    if(p1.length < 4){
-      showToast("⚠️ مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
-      return;
+
+    var didChangeName = false;
+    var didChangePass = false;
+
+    if(nameVal && nameVal !== localStorage.getItem("uytibb_admin_name")){
+      localStorage.setItem("uytibb_admin_name", nameVal);
+      sessionStorage.setItem("uytibb_admin_user_name", nameVal);
+      var b = document.getElementById("activeAdminBadge");
+      if(b) b.textContent = "👤 " + nameVal;
+      didChangeName = true;
     }
-    if(p1 !== p2){
-      showToast("⚠️ ئىككى قېتىم كىرگۈزگەن مەخپىي نومۇر ئوخشاش چىقمىدى!");
-      return;
+
+    if(p1){
+      if(p1.length < 4){
+        showToast("⚠️ مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
+        return;
+      }
+      if(p1 !== p2){
+        showToast("⚠️ ئىككى قېتىم كىرگۈزگەن مەخپىي نومۇر ئوخشاش چىقمىدى!");
+        return;
+      }
+      localStorage.setItem("uytibb_admin_pass", p1);
+      didChangePass = true;
     }
-    localStorage.setItem("uytibb_admin_pass", p1);
+
+    // Synchronize to multi-admins list
     var admins = getAdmins();
-    var root = admins.find(function(a){ return a.username === "admin"; });
-    if(root) root.pass = p1;
+    var root = admins.find(function(a){ return a.username === "admin" || a.role === "super"; });
+    if(root){
+      if(nameVal) root.name = nameVal;
+      if(p1) root.pass = p1;
+    } else {
+      root = { username: "admin", name: nameVal || "ئاساسىي باشقۇرغۇچى", pass: p1 || (localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS), role: "super" };
+      admins.unshift(root);
+    }
     saveAdmins(admins);
-    
-    // Also try updating Supabase admins table if connected!
-    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+
+    // Also try updating Supabase admins table if connected
+    if(typeof Supabase !== "undefined" && Supabase.getConfig && Supabase.getConfig().connected){
+      var patchData = {};
+      if(p1) patchData.password_hash = p1;
+      if(nameVal) patchData.full_name = nameVal;
       fetch(Supabase.getConfig().url + "/rest/v1/admins?username=eq.admin", {
         method: "PATCH",
         headers: {
@@ -1848,16 +1942,30 @@ function initPasswordChangeUI(){
           "Authorization": "Bearer " + Supabase.getConfig().key,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ password_hash: p1 })
+        body: JSON.stringify(patchData)
       }).catch(function(){});
     }
 
     document.getElementById("newMasterPassInp").value = "";
     document.getElementById("newMasterPassConfirmInp").value = "";
-    msg.style.display = "block";
-    msg.style.color = "var(--teal-dark)";
-    msg.textContent = "✅ مەخپىي نومۇرىڭىز مۇۋەپپەقىيەتلىك ئۆزگەرتىلدى! كېيىنكى قېتىم «" + p1 + "» بىلەن كىرىسىز.";
-    showToast("🎉 مەخپىي نومۇر مۇۋەپپەقىيەتلىك ئۆزگەرتىلدى!");
+
+    if(msg){
+      msg.style.display = "block";
+      msg.style.color = "#085041";
+      msg.style.background = "#e6f7f2";
+      msg.style.border = "1px solid #79d4bd";
+      msg.style.padding = "0.7rem 1rem";
+      msg.style.borderRadius = "8px";
+      msg.style.lineHeight = "1.7";
+
+      var statusText = "✅ تەڭشەك مۇۋەپپەقىيەتلىك ساقلاندى!";
+      if(didChangeName) statusText += " باشقۇرغۇچى نامى: «" + nameVal + "».";
+      if(didChangePass) statusText += " يېڭى كىرىش پارولى: «" + p1 + "» (كېيىنكى قېتىم بۇ پارول بىلەن كىرىسىز).";
+      msg.textContent = statusText;
+    }
+
+    renderAdminsTable();
+    showToast("🎉 باشقۇرغۇچى تەڭشەكلىرى ساقلاندى!");
   };
 }
 
@@ -2427,6 +2535,7 @@ function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,
 // Initialization
 initAdminTheme();
 checkAuth();
+initPasswordChangeUI();
 </script>
 </body>
 </html>
