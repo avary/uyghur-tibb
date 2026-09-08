@@ -386,7 +386,7 @@ table.data-table tr:hover { background: var(--teal-light); }
     <div class="top-actions">
       <span id="activeAdminBadge" style="background:rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:8px;font-size:.85rem">👤 باشقۇرغۇچى</span>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
-      <button type="button" onclick="goToStudentPage('#/')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)</button>
+      <button type="button" onclick="goToStudentPage('#/books')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>📚</span> 📖 دەرسلىك PDF كۇتۇپخانىسى</button> <button type="button" onclick="goToStudentPage('#/')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
     </div>
@@ -1272,8 +1272,9 @@ function getLessonById(id){
 function loadLessonToForm(id){
   var L = getLessonById(id);
   if(!L) return;
-
-  var hasPdf = !!(L.pdfUrl || L.pdfData);
+  if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + L.id + ".pdf";
+  if(!L.pdfTitle) L.pdfTitle = (L.title ? (L.id + "-دەرسلىك: " + L.title) : (L.id + "-دەرسلىك")) + " كىتابى (PDF)";
+  var hasPdf = true;
   var badge = document.getElementById("lessonPdfBadge");
   badge.textContent = hasPdf ? "📄 PDF بار" : "⚠️ PDF يوق";
   badge.className = hasPdf ? "badge badge-gold" : "badge";
@@ -1358,8 +1359,8 @@ document.getElementById("previewPdfBtn").onclick = function(){
   var curInpUrl = (document.getElementById("pdfUrlInp") ? document.getElementById("pdfUrlInp").value.trim() : "");
   if(curInpUrl === "(يەرلىك PDF سانلىق مەلۇماتى)") curInpUrl = "";
 
-  var url = (L && L.pdfData) || curInpUrl || (L && L.pdfUrl);
-  var pTitle = (L && L.pdfTitle) || (document.getElementById("pdfTitleInp") ? document.getElementById("pdfTitleInp").value.trim() : "") || (currentLessonId + "-دەرسلىك PDF");
+  var url = (L && L.pdfData) || curInpUrl || (L && L.pdfUrl) || ("pdf/lesson-" + currentLessonId + ".pdf");
+  var pTitle = (L && L.pdfTitle) || (document.getElementById("pdfTitleInp") ? document.getElementById("pdfTitleInp").value.trim() : "") || (currentLessonId + "-دەرسلىك كىتابى (PDF)");
 
   if(!url){
     if(confirm("⚠️ مەزكۇر " + currentLessonId + "-دەرسكە تېخى PDF بېكىتىلمىگەن.\n\n💡 9-دەرسلىك ۋە 10-دەرسلىكتە تەييار PDF كىتاب بايلىقى بار.\n9-دەرسلىكنىڭ PDF كىتابىنى ھازىر كۆرەمسىز؟")){
