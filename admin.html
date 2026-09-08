@@ -333,9 +333,12 @@ table.data-table tr:hover { background: var(--teal-light); }
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @media(max-width: 768px) {
+  .topbar { flex-wrap: wrap; gap: .6rem; padding: .6rem .8rem; }
+  .top-actions { flex-wrap: wrap; gap: .4rem; width: 100%; justify-content: flex-end; }
   .admin-body { flex-direction: column; }
-  .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; }
-  .content-pane { padding: 1rem; }
+  .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; padding: .5rem; gap: .4rem; }
+  .sidebar .nav-student-link { width: auto !important; white-space: nowrap; margin-bottom: 0 !important; }
+  .content-pane { padding: .8rem; }
 }
 </style>
 </head>
@@ -368,7 +371,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       ⚠️ مەخپىي نومۇر ماس كەلمىدى. دەسلەپكى پارول: <b dir="ltr">123456</b>
     </p>
     <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1rem">
-      <a href="index.html" class="btn btn-line btn-sm" style="width:100%;justify-content:center">🌐 ئوقۇغۇچى ئەپىگە قايتىش</a>
+      <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
     </div>
   </div>
 </div>
@@ -383,7 +386,7 @@ table.data-table tr:hover { background: var(--teal-light); }
     <div class="top-actions">
       <span id="activeAdminBadge" style="background:rgba(255,255,255,.2);padding:.3rem .7rem;border-radius:8px;font-size:.85rem">👤 باشقۇرغۇچى</span>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
-      <a href="index.html#/" class="btn-gold" style="text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200" onclick="localStorage.setItem('uytibb_is_admin','true')"><span>🏠</span> 🌐 ئالدى بەتكە كىرىش</a>
+      <button type="button" onclick="goToStudentPage('#/')" class="btn-gold" style="font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;border-radius:10px;color:#2e2200;border:none"><span>🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
     </div>
@@ -392,7 +395,9 @@ table.data-table tr:hover { background: var(--teal-light); }
   <div class="admin-body">
     <!-- Sidebar -->
     <nav class="sidebar">
-      <a href="index.html#/" class="nav-item" style="color:var(--gold);text-decoration:none;font-weight:bold" onclick="localStorage.setItem('uytibb_is_admin','true')"><span class="icon">🏠</span> 🌐 ئالدى بەت (باش بەت)</a>
+      <button type="button" onclick="goToStudentPage('#/')" class="nav-student-link" style="width:100%;text-align:right;color:var(--gold);text-decoration:none;font-weight:bold;background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.3);padding:.75rem 1rem;border-radius:10px;display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;cursor:pointer;font-family:inherit;font-size:.95rem">
+        <span class="icon">🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)
+      </button>
       <button class="nav-item active" data-tab="dash"><span class="icon">📊</span> باش تاختا</button>
       <button class="nav-item" data-tab="lessons"><span class="icon">📚</span> دەرس ۋە PDF تەھرىرلىگۈچ</button>
       <button class="nav-item" data-tab="quiz"><span class="icon">✍️</span> سوئال ئامبىرى</button>
@@ -488,6 +493,16 @@ table.data-table tr:hover { background: var(--teal-light); }
               <p style="margin:.4rem 0"><b>PDF ھۆججىتىنى سۆرەپ تاشلاڭ ياكى تاللاش ئۈچۈن چېكىڭ</b></p>
               <small style="color:var(--muted)">ھەرقانداق دەرسلىك .pdf ھۆججىتىنى بىۋاسىتە باغلىيالايسىز (تاللىغان ھامان ئۇچۇرلار ئۆزلۈكىدىن تولىدۇ)</small>
               <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none">
+            </div>
+
+            <div style="margin-top:.6rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+              <span style="font-size:.82rem;font-weight:bold;color:var(--teal-dark)">💡 تەييار PDF كىتابى بار دەرسلەر:</span>
+              <button type="button" class="btn btn-line btn-sm" onclick="switchLessonPdf(9)" style="font-size:.82rem;padding:.3rem .7rem;border-color:var(--teal);cursor:pointer">
+                📄 9-دەرس: ساقلىقنى ساقلاش (PDF)
+              </button>
+              <button type="button" class="btn btn-line btn-sm" onclick="switchLessonPdf(10)" style="font-size:.82rem;padding:.3rem .7rem;border-color:var(--teal);cursor:pointer">
+                📄 10-دەرس: خام دورىلار (PDF)
+              </button>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
@@ -892,13 +907,31 @@ table.data-table tr:hover { background: var(--teal-light); }
 
 <!-- MODAL: PDF PREVIEW -->
 <div class="modal-overlay" id="pdfPreviewModal">
-  <div class="modal-box" style="max-width:860px;height:88vh;display:flex;flex-direction:column">
-    <div class="modal-head">
-      <h3 id="pdfPrevTitle">👁️ PDF ئالدىن كۆرۈش</h3>
-      <button class="close-btn" onclick="document.getElementById('pdfPreviewModal').style.display='none'">✕</button>
+  <div class="modal-box" style="max-width:940px;width:95%;height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div class="modal-head" style="padding:.9rem 1.2rem;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--card);flex-wrap:wrap;gap:.6rem">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span style="font-size:1.4rem">📄</span>
+        <div>
+          <h3 id="pdfPrevTitle" style="margin:0;font-size:1.05rem;color:var(--teal-dark)">PDF ئالدىن كۆرۈش</h3>
+          <small id="pdfPrevSubtitle" style="color:var(--muted);font-size:.8rem">تولۇق كىتابنى يېڭى كۆزنەكتە ئوقۇش ياكى چۈشۈرۈۋېلىش مۇمكىن</small>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+        <a id="pdfOpenDirectBtn" href="#" target="_blank" class="btn btn-teal btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;font-weight:bold;cursor:pointer">
+          🔗 يېڭى كۆزنەكتە تولۇق ئېچىش
+        </a>
+        <a id="pdfDownloadBtn" href="#" download class="btn btn-gold btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:.3rem;font-weight:bold;color:#2e2200;cursor:pointer">
+          ⬇️ كىتابنى چۈشۈرۈش
+        </a>
+        <button class="close-btn" onclick="closePdfModal()" style="font-size:1.2rem;cursor:pointer;border:none;background:none;padding:.2rem .6rem">✕</button>
+      </div>
     </div>
-    <div style="flex:1;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#333">
-      <iframe id="pdfPrevFrame" style="width:100%;height:100%;border:none"></iframe>
+    <div style="flex:1;position:relative;background:#2b2b2b;overflow:hidden">
+      <iframe id="pdfPrevFrame" style="width:100%;height:100%;border:none;display:block"></iframe>
+    </div>
+    <div style="padding:.6rem 1rem;background:var(--card);border-top:1px solid var(--line);font-size:.85rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <span>💡 يانفونلاردا كۆزنەك ئىچىدە بىۋاسىتە كۆرۈنمىسە، يۇقىرىدىكى <b>«🔗 يېڭى كۆزنەكتە تولۇق ئېچىش»</b> كۇنۇپكىسىنى بېسىڭ.</span>
+      <button class="btn btn-line btn-sm" onclick="closePdfModal()">ياپقۇچنى تاقاش</button>
     </div>
   </div>
 </div>
@@ -1086,9 +1119,40 @@ function switchTab(tabId){
   if(tabId === "feedback") renderFeedbackTable();
   if(tabId === "students") loadStudentData();
 }
-document.querySelectorAll(".nav-item").forEach(function(b){
+document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
   b.onclick = function(){ switchTab(this.getAttribute("data-tab")); };
 });
+
+function goToStudentPage(route){
+  localStorage.setItem("uytibb_is_admin", "true");
+  sessionStorage.setItem("uytibb_admin_auth", "true");
+  try {
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1") || "{}");
+    if(!prog.user){
+      prog.user = { name: "ئاساسىي باشقۇرغۇچى", phone: "admin", status: "approved" };
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    } else if(prog.user.status !== "approved"){
+      prog.user.status = "approved";
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
+  } catch(e){}
+  window.location.href = "index.html" + (route || "#/");
+}
+
+function switchLessonPdf(id){
+  currentLessonId = id;
+  var sel = document.getElementById("lessonSelect");
+  if(sel) sel.value = id;
+  loadLessonToForm(id);
+  showToast("📖 " + id + "-دەرس ۋە PDF تەڭشەلدى");
+}
+
+function closePdfModal(){
+  var frame = document.getElementById("pdfPrevFrame");
+  if(frame) frame.src = "about:blank";
+  var m = document.getElementById("pdfPreviewModal");
+  if(m) m.style.display = "none";
+}
 
 /* 4. INITIALIZE DATA */
 function initAdmin(){
@@ -1170,7 +1234,7 @@ function populateLessonSelector(){
   LESSONS_DATA.forEach(function(L){
     var opt = document.createElement("option");
     opt.value = L.id;
-    opt.textContent = L.id + "-دەرس: " + L.title;
+    opt.textContent = L.id + "-دەرس: " + L.title + ((L.pdfUrl || L.pdfData) ? " 📄 [PDF كىتاب بار]" : "");
     sel.appendChild(opt);
 
     var qOpt = document.createElement("option");
@@ -1282,13 +1346,37 @@ pdfFileInput.onchange = function(e){
 
 document.getElementById("previewPdfBtn").onclick = function(){
   var L = getLessonById(currentLessonId);
-  if(!L || (!L.pdfUrl && !L.pdfData)){
-    alert("بۇ دەرسكە تېخى PDF بېكىتىلمىگەن!");
+  var curInpUrl = (document.getElementById("pdfUrlInp") ? document.getElementById("pdfUrlInp").value.trim() : "");
+  if(curInpUrl === "(يەرلىك PDF سانلىق مەلۇماتى)") curInpUrl = "";
+
+  var url = (L && L.pdfData) || curInpUrl || (L && L.pdfUrl);
+  var pTitle = (L && L.pdfTitle) || (document.getElementById("pdfTitleInp") ? document.getElementById("pdfTitleInp").value.trim() : "") || (currentLessonId + "-دەرسلىك PDF");
+
+  if(!url){
+    if(confirm("⚠️ مەزكۇر " + currentLessonId + "-دەرسكە تېخى PDF بېكىتىلمىگەن.\n\n💡 9-دەرسلىك ۋە 10-دەرسلىكتە تەييار PDF كىتاب بايلىقى بار.\n9-دەرسلىكنىڭ PDF كىتابىنى ھازىر كۆرەمسىز؟")){
+      switchLessonPdf(9);
+      setTimeout(function(){
+        document.getElementById("previewPdfBtn").click();
+      }, 150);
+    }
     return;
   }
-  var url = L.pdfData || L.pdfUrl;
-  document.getElementById("pdfPrevTitle").textContent = "👁️ " + (L.pdfTitle || "دەرسلىك PDF");
+
+  document.getElementById("pdfPrevTitle").textContent = "👁️ " + pTitle;
   document.getElementById("pdfPrevFrame").src = url;
+
+  var openBtn = document.getElementById("pdfOpenDirectBtn");
+  if(openBtn){
+    openBtn.href = url;
+    openBtn.onclick = function(){ window.open(url, "_blank"); return false; };
+  }
+
+  var downBtn = document.getElementById("pdfDownloadBtn");
+  if(downBtn){
+    downBtn.href = url;
+    downBtn.download = (pTitle.replace(/[\\/:*?"<>|]/g, "_") || "دەرسلىك") + ".pdf";
+  }
+
   document.getElementById("pdfPreviewModal").style.display = "flex";
 };
 

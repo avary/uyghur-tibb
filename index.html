@@ -689,9 +689,11 @@ function renderLessonList(filter){
   LESSONS.forEach(function(L){
     if(filter && norm(L.title+" "+(L.desc||"")+" "+L.id).indexOf(norm(filter))<0) return;
     var p=s.lessons[L.id]||{};
+    var hasPdf = !!(L.pdfUrl || L.pdfData);
     h+='<a class="lrow'+(p.read?" done":"")+'" href="#/lesson/'+L.id+'"><div class="lnum">'+(p.read?"✓":L.id)+'</div>'
       +'<div class="linfo"><b>'+L.id+'-دەرس: '+esc(L.title)+'</b><small>'+esc(L.desc||"")+'</small>'
       +'<div class="lmeta"><span class="badge">'+L.quiz.length+' سوئال</span>'
+      +(hasPdf ? '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:bold">📄 PDF كىتاب بار</span>' : '')
       +(p.best!=null?'<span class="badge '+(p.best>=60?"done":"")+'">%'+p.best+'</span>':"")
       +(p.read?'<span class="badge done">ئوقۇلغان</span>':"")+'</div></div>'
       +'<span class="lgo">‹</span></a>';
@@ -785,14 +787,14 @@ function renderTabBody(L){
       + '<div class="pdf-head">'
       + '  <div class="pdf-info"><b>📄 ' + esc(pTitle) + '</b><br><small>تولۇق كىتابنى قەغەزدەك ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</small></div>'
       + '  <div class="pdf-btns">'
-      + '    <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank">⛶ پۈتۈن ئېكراندا ئوقۇش</a>'
-      + '    <a class="btn btn-gold btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf">⬇️ چۈشۈرۈش</a>'
+      + '    <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="font-weight:bold">⛶ پۈتۈن ئېكراندا ئوقۇش</a>'
+      + '    <a class="btn btn-gold btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="font-weight:bold;color:#2e2200">⬇️ كىتابنى چۈشۈرۈش</a>'
       + '  </div>'
       + '</div>'
       + '<div class="pdf-frame-wrap">'
       + '  <iframe src="' + esc(pUrl) + '#toolbar=1&navpanes=0" class="pdf-frame" title="دەرسلىك PDF"></iframe>'
       + '</div>'
-      + '<p class="pdf-tip">💡 ئەسكەرتىش: كۆزنەكتە بىۋاسىتە كۆرۈنمىسە، يۇقىرىدىكى <b>«⛶ پۈتۈن ئېكراندا ئوقۇش»</b> ياكى <b>«⬇️ چۈشۈرۈش»</b> كۇنۇپكىسىنى بېسىڭ.</p>'
+      + '<p class="pdf-tip">💡 ئەسكەرتىش: ئەگەر يانفون ياكى تور كۆرگۈدە ئۈستىدىكى كۆزنەك ئېچىلمىسا، يۇقىرىدىكى <b>«⛶ پۈتۈن ئېكراندا ئوقۇش»</b> ياكى <b>«⬇️ كىتابنى چۈشۈرۈش»</b> كۇنۇپكىسىنى بېسىپ بىۋاسىتە ئوقۇيالايسىز.</p>'
       + '</div>';
     box.innerHTML = hPdf;
   } else if(lessonTab==="mind"){
