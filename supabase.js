@@ -6,16 +6,21 @@ var SUPABASE_SETUP_SQL = '-- ===================================================
 var Supabase = (function(){
   var CFG_KEY = "uytibb_supabase_config";
 
+  var DEFAULT_URL = "https://voupxaqyaywhldazvklj.supabase.co";
+  var DEFAULT_KEY = "sb_publishable_YzSxcmTmflGY7Yzwi6M4Ww_K5MyIN00";
+
   function getConfig(){
     try {
       var saved = JSON.parse(localStorage.getItem(CFG_KEY) || "{}");
+      var u = saved.url || DEFAULT_URL;
+      var k = saved.key || DEFAULT_KEY;
       return {
-        url: saved.url || "https://voupxaqyaywhldazvklj.supabase.co",
-        key: saved.key || "",
-        connected: !!(saved.url && saved.key)
+        url: u,
+        key: k,
+        connected: !!(u && k)
       };
     } catch(e){
-      return { url: "", key: "", connected: false };
+      return { url: DEFAULT_URL, key: DEFAULT_KEY, connected: true };
     }
   }
 
