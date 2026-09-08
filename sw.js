@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v6-20260909';
+const CACHE_NAME = 'uytibb-v9-20260909';
 const ASSETS = [
   './',
   './index.html',
@@ -56,6 +56,22 @@ self.addEventListener('fetch', (event) => {
             return cached || caches.match('./index.html') || caches.match('./');
           });
         })
+    );
+    return;
+  }
+
+  // PDFs: Network-first, cache fallback (always get fresh authentic PDF)
+  if (url.pathname.includes('/pdf/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }

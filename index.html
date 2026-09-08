@@ -569,7 +569,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
       <small id="appbarLessonCount">نەزەرىيە قىسمى</small>
     </div>
     
-    <a class="aicon" href="#/install" title="تېلېفونغا قاچىلاش" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .8rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.18)">📲 تېلېفونغا قاچىلاش</a>
+    <a class="aicon" href="#/install" title="قاچىلاش" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .8rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.18)">📲 قاچىلاش</a>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     
     <button class="aicon" id="themeBtn" title="كېچە / كۈندۈز ھالى">🌙</button>
@@ -690,11 +690,6 @@ function vHome(){
   h+='<div class="secttl">🎯 بۈگۈنكى سوئال</div><div id="dqbox"></div>';
   h+='<div class="secttl">📘 بۈگۈنكى ئاتالغۇ</div><div id="dtbox"></div>';
   h+='<div class="tip">💡 <b>بۈگۈنكى تەۋسىيە:</b> '+todayTip()+'</div>';
-  if(!pwaStandalone()){
-    h+='<div class="tip" style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;cursor:pointer;margin-bottom:.8rem;border:2px solid var(--gold)" onclick="location.hash=\'#/install\'">'
-      +'<div><b>📲 بىر كۇنۇپكا بىلەن تېلېفونغا قاچىلاش</b><br><small style="color:var(--muted)">تورسىز راھەت ئوقۇش ئۈچۈن تېلېفونىڭىزغا قاچىلاۋېلىڭ</small></div>'
-      +'<button class="btn btn-gold btn-sm" style="flex-shrink:0">قاچىلاش ‹</button></div>';
-  }
   h+='<div class="secttl">💬 سوئال-پىكىر تاختىسى</div>';
   h+='<div class="fb"><div class="fb-form"><input id="fbnm" placeholder="ئىسمىڭىز" value="'+(s.user?esc(s.user.name):"")+'"><textarea id="fbtxt" placeholder="سوئال ياكى پىكرىڭىزنى يېزىڭ…"></textarea><button class="btn btn-teal btn-sm" id="fbSend">ئەۋەتىش ➤</button></div><div id="fblist"></div></div>';
   return h;
@@ -786,7 +781,112 @@ function vLesson(id, tab){
     L.goals.forEach(function(g){ h+='<li>'+esc(g)+'</li>'; });
     h+='</ul></div>';
   }
-   else if(q.type==="tf"){
+  var nq=L.quiz.length, nterms=(L.terms||[]).length;
+  h+='<div class="tabs">'
+    +'<button class="tab'+(lessonTab==="content"?" on":"")+'" data-tab="content">📖 مەزمۇن</button>'
+    +'<button class="tab'+(lessonTab==="mind"?" on":"")+'" data-tab="mind">🌳 خەرىتە</button>'
+    +'<button class="tab'+(lessonTab==="terms"?" on":"")+'" data-tab="terms">📙 ئاتالغۇ<span class="cnt">'+nterms+'</span></button>'
+    +'<button class="tab'+(lessonTab==="quiz"?" on":"")+'" data-tab="quiz">✍️ مەشىق<span class="cnt">'+nq+'</span></button>'
+    +'</div>';
+  h+='<div id="tabbody"></div>';
+  return h;
+}
+function renderTabBody(L){
+  var box=$("tabbody"); if(!box) return;
+  if(lessonTab==="content"){
+    var h="";
+    (L.sections||[]).forEach(function(s,i){
+      h+='<section class="sec" id="sec'+i+'"><h3>'+esc(s.h)+'<span class="hbtns"><button data-mark="s:'+L.id+':'+i+'" class="'+(isMarked('s',L.id,i)?'on':'')+'" title="بەلگە قويۇش">🔖</button></span></h3>'+(s.body||"");
+      if(s.points&&s.points.length){ h+='<div class="keybox"><b class="t">📌 مۇھىم نۇقتىلار:</b><ul>'; s.points.forEach(function(p){h+='<li>'+p+'</li>';}); h+='</ul></div>'; }
+      h+='</section>';
+    });
+    h+='<button class="btn btn-teal btn-block" id="btnRead">✓ بۇ دەرسنى ئوقۇدۇم</button>';
+    var nid=L.id+1;
+    if(lessonById(nid)) h+='<a class="btn btn-gold btn-block" style="margin-top:.5rem" href="#/lesson/'+nid+'">كېيىنكى دەرس ‹</a>';
+    box.innerHTML=h;
+    box.querySelectorAll("table.tbl").forEach(function(t){
+      var w=document.createElement("div"); w.className="tblwrap"; t.parentNode.insertBefore(w,t); w.appendChild(t);
+    });
+    bindMark(box, L); jumpFlash(box, L);
+    var br=$("btnRead"); if(br) br.onclick=function(){ markRead(L.id); checkBadges(); br.textContent="✓ بەلگىلەندى — رەھمەت!"; br.disabled=true; };
+  } else if(lessonTab==="mind"){
+    var h2='<div class="mm-tools"><button class="btn btn-teal btn-sm" id="mmExp">➕ ھەممىنى ئېچىش</button><button class="btn btn-line btn-sm" id="mmCol">➖ ھەممىنى يېپىش</button><span class="mm-count" id="mmCount"></span></div>';
+    h2+='<div class="mm-wrap">'+mmHTML(L.mindmap,0,true)+'</div>';
+    box.innerHTML=h2;
+    bindTree(box);
+    $("mmExp").onclick=function(){ box.querySelectorAll("li.closed").forEach(function(li){li.classList.remove("closed");}); mmBtns(box); };
+    $("mmCol").onclick=function(){ box.querySelectorAll("ul.tree ul").forEach(function(ul){ ul.parentElement.classList.add("closed"); }); mmBtns(box); };
+  } else if(lessonTab==="terms"){
+    var h3="";
+    (L.terms||[]).forEach(function(t,i){ h3+='<div class="term" id="term'+i+'"><b>'+esc(t.t)+'</b> — '+esc(t.d)+'<span class="hbtns"><button data-mark="t:'+L.id+':'+i+'" class="'+(isMarked('t',L.id,i)?'on':'')+'" title="بەلگە قويۇش">🔖</button></span></div>'; });
+    if(!h3) h3="<p>ئاتالغۇ يوق.</p>";
+    box.innerHTML=h3;
+    bindMark(box, L); jumpFlash(box, L);
+  } else if(lessonTab==="quiz"){
+    box.innerHTML=quizHTML(L, L.quiz);
+    bindQuiz(box, L, false);
+  }
+}
+function mmNodeTag(node, cls){
+  if(node.l) return {o:'<a class="'+cls+' nlink" href="#/lesson/'+node.l+'">', c:"</a>"};
+  return {o:'<span class="'+cls+'">', c:"</span>"};
+}
+function mmHTML(node, depth, isRoot){
+  if(!node) return "";
+  var cls = isRoot? "node root" : ("node d"+(Math.min(depth,4)));
+  var tag = mmNodeTag(node, cls);
+  var h='<ul class="'+(isRoot?"tree":"")+'"><li>'+tag.o;
+  if(node.c&&node.c.length) h+='<button class="tgl">−</button>';
+  h+=(isRoot?'<span aria-hidden="true">🌳 </span>':"")+esc(node.t)+tag.c;
+  if(node.c&&node.c.length){ h+='<ul>'; node.c.forEach(function(ch, i){ h+=mmLI(ch, depth+1, i%6); }); h+='</ul>'; }
+  h+='</li></ul>';
+  return h;
+}
+function mmLI(node, depth, br){
+  br = (br==null?0:br);
+  var cls="node d"+Math.min(depth,4)+" br"+br;
+  var tag = mmNodeTag(node, cls);
+  var h='<li>'+tag.o;
+  if(node.c&&node.c.length) h+='<button class="tgl">−</button>';
+  h+=esc(node.t)+tag.c;
+  if(node.c&&node.c.length){ h+='<ul class="br'+br+'">'; node.c.forEach(function(ch){ h+=mmLI(ch, depth+1, br); }); h+='</ul>'; }
+  h+='</li>';
+  return h;
+}
+function bindTree(box){
+  box.querySelectorAll(".tgl").forEach(function(b){
+    b.onclick=function(e){ e.stopPropagation(); var li=b.closest("li"); li.classList.toggle("closed"); mmBtns(box); };
+  });
+  mmBtns(box);
+  var mc=document.getElementById("mmCount");
+  if(mc) mc.textContent="🌳 "+box.querySelectorAll(".node").length+" تۈگۈن";
+}
+function mmBtns(box){ box.querySelectorAll("li").forEach(function(li){ var b=(li.firstElementChild?li.firstElementChild.querySelector(".tgl"):null); if(b) b.textContent = li.classList.contains("closed")?"+":"−"; }); }
+
+/* ===== سۇئال رېندېرلاش ===== */
+function quizHTML(L, questions){
+  var types=["all","choice","tf","blank","match","essay"];
+  var h='<div class="qfilter">';
+  types.forEach(function(t){
+    var label = t==="all" ? "ھەممىسى" : (QTICON[t]+" "+QTYPES[t]);
+    var cnt = t==="all"? questions.length : questions.filter(function(q){return q.type===t;}).length;
+    h+='<button class="chip'+(quizFilter===t?" on":"")+'" data-f="'+t+'">'+label+' ('+cnt+')</button>';
+  });
+  h+='</div><div id="qlist">';
+  questions.forEach(function(q,i){ h+=qHTML(q, "lq_"+i, i, quizFilter==="all"||q.type===quizFilter); });
+  h+='</div>';
+  h+='<div class="scorebar"><button class="btn btn-teal" id="btnCheck">✓ تەكشۈرۈش</button>'
+    +'<button class="btn btn-line" id="btnRetry">↺ قايتا</button><span class="sc" id="scoreLine"></span></div>';
+  return h;
+}
+function qHTML(q, key, idx, visible){
+  var h='<div class="q" id="q_'+key+'" data-type="'+q.type+'" style="'+(visible?"":"display:none")+'">';
+  h+='<div class="qh"><span class="qn">'+(idx+1)+'</span><div><span class="qt">'+esc(q.q)+'</span><br><span class="qtype">'+QTICON[q.type]+' '+QTYPES[q.type]+'</span></div></div>';
+  if(q.type==="choice"){
+    h+='<div class="opts">';
+    q.opts.forEach(function(o,i){ h+='<label data-i="'+i+'"><input type="radio" name="r_'+key+'" value="'+i+'"> '+esc(o)+'</label>'; });
+    h+='</div>';
+  } else if(q.type==="tf"){
     h+='<div class="opts"><label data-i="1"><input type="radio" name="r_'+key+'" value="1"> ✅ توغرا</label>'
       +'<label data-i="0"><input type="radio" name="r_'+key+'" value="0"> ❌ خاتا</label></div>';
   } else if(q.type==="blank"){
@@ -1542,7 +1642,7 @@ function vBooks(){
 
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:1.1rem;margin-bottom:2rem">';
   pdfLessons.forEach(function(L){
-    var pUrl = (L.id >= 1 && L.id <= 10) ? ("pdf/lesson-" + L.id + ".pdf") : (L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf"));
+    var pUrl = "pdf/lesson-" + L.id + ".pdf?v=20260909_original";
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
     h += '<div class="book-card" style="background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
       + '<div>'
@@ -1573,7 +1673,7 @@ function router(){
   var main = $("main");
   if(!main) return;
 
-  // 1. GUARANTEED PUBLIC OPEN ACCESS: Home, PDF Library, and Lesson PDF Books are 100% FREE and never blocked!
+  // 1. Home
   if(!hash || hash === "#/" || hash === "" || hash === "#"){
     main.innerHTML = vHome();
     bindHome();
@@ -1582,6 +1682,8 @@ function router(){
     var tb = $("topbtn"); if(tb) tb.style.display = "none";
     return;
   }
+
+  // 2. PDF Books Library (100% Free & Open)
   if(hash === "#/books" || hash === "#/pdf"){
     main.innerHTML = vBooks();
     renderNav();
@@ -1589,81 +1691,118 @@ function router(){
     var tb = $("topbtn"); if(tb) tb.style.display = "none";
     return;
   }
+
+  // Direct PDF route
   var mPdfDirect = hash.match(/^#\/lesson\/(\d+)\/pdf$/);
   if(mPdfDirect){
     var idPdf = parseInt(mPdfDirect[1], 10);
-    var LPdf = lessonById(idPdf);
-    var pdfUrl = (LPdf && (LPdf.pdfData || LPdf.pdfUrl)) || ("pdf/lesson-" + idPdf + ".pdf");
+    var pdfUrl = "pdf/lesson-" + idPdf + ".pdf?v=20260909_original";
     window.open(pdfUrl, "_blank");
-    location.hash = "#/lesson/" + idPdf;
+    location.hash = "#/books";
     return;
   }
 
-  // 2. CHECK ADMIN STATUS (Admins can browse ALL lessons freely without gatekeeper)
-  var _s0 = getProg();
-  var isAdmin = sessionStorage.getItem("uytibb_admin_auth") === "true" || localStorage.getItem("uytibb_is_admin") === "true";
-  
-  if(isAdmin){
-    if(!_s0.user){
-      _s0.user = { name: "ئاساسىي باشقۇرغۇچى", phone: "admin", status: "approved" };
-      saveProg(_s0);
-    } else if(_s0.user.status !== "approved"){
-      _s0.user.status = "approved";
-      saveProg(_s0);
-    }
-  } else {
-    // Regular Student Gatekeeper Check for non-home routes
-    if(!_s0.user){
-      main.innerHTML = vHome();
-      bindHome();
-      renderNav();
-      window.scrollTo(0,0);
-      var _tb = $("topbtn"); if(_tb) _tb.style.display = "none";
-      showRegModal("reg", false);
-      return;
-    }
-    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students") || "[]");
-    var curSt = allSt.find(function(u){ return u.phone === _s0.user.phone; });
-    var currentStatus = curSt ? curSt.status : (_s0.user.status || "pending");
-    if(currentStatus !== "approved"){
-      main.innerHTML = vWaitingApproval(_s0.user, currentStatus);
-      renderNav();
-      window.scrollTo(0,0);
-      return;
-    }
-  }
-  var m=hash.match(/^#\/lesson\/(\d+)(?:\/(content|mind|terms|quiz|pdf))?$/);
-  var main=$("main");
+  // 3. Lesson content page: #/lesson/:id (Open to all students!)
+  var m = hash.match(/^#\/lesson\/(\d+)(?:\/(content|mind|terms|quiz))?$/);
   if(m){
-    lessonTab=m[2]||"content"; quizFilter="all";
-    var L=lessonById(parseInt(m[1],10));
-    main.innerHTML=vLesson(L.id, lessonTab);
+    var lid = parseInt(m[1], 10);
+    var L = lessonById(lid);
+    if(!L){
+      main.innerHTML = "<p style='padding:2rem;text-align:center'>دەرس تېپىلمىدى.</p>";
+      renderNav();
+      return;
+    }
+    lessonTab = m[2] || "content";
+    quizFilter = "all";
+    main.innerHTML = vLesson(L.id, lessonTab);
     renderTabBody(L);
     bindTabs();
-  } else if(hash==="#/books" || hash==="#/pdf"){
-    main.innerHTML = vBooks();
-    window.scrollTo(0, 0);
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
   }
-  else if(hash==="#/lessons"){ main.innerHTML=vLessons(); renderLessonList(""); $("linp").addEventListener("input",function(){renderLessonList(this.value);}); }
-  else if(hash==="#/teachers"){ main.innerHTML=vTeachers(); }
-  else if(hash==="#/exam"){ main.innerHTML=vExam(); $("exStart").onclick=startExam; $("exScope").onchange=updExPool; $("exTypes").onchange=updExPool; updExPool(); }
-  else if(hash==="#/me"){
-    main.innerHTML=vMe();
-    var _br=$("btnRandom"); if(_br) _br.onclick=function(){ var L=LESSONS[Math.floor(Math.random()*LESSONS.length)]; location.hash="#/lesson/"+L.id+"/quiz"; };
-    $("btnReset").onclick=function(){ if(confirm("بارلىق نەتىجىلەر ئۆچۈرۈلسۇنمۇ؟")){ saveProg({lessons:{},exams:[]}); router(); } };
+
+  // 4. Lessons list: #/lessons
+  if(hash === "#/lessons"){
+    main.innerHTML = vLessons();
+    renderLessonList("");
+    var linp = $("linp");
+    if(linp) linp.addEventListener("input", function(){ renderLessonList(this.value); });
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
   }
-  else if(hash==="#/ai"){ main.innerHTML=vAI(); aiInit(); }
-  else if(hash==="#/admin"){ window.location.href="admin.html"; return; }
-  else if(hash==="#/install"){ main.innerHTML=vInstall(); bindInstall(); }
-  else if(hash==="#/wrong"){ main.innerHTML=vWrong(); bindWrong(); }
-  else if(hash==="#/wrong/review"){ main.innerHTML=vReview(); bindReview(); }
-  else if(hash==="#/marks"){ main.innerHTML=vMarks(); bindMarks(); }
-  else if(hash==="#/tehlil"){ main.innerHTML=vTehlil(); }
-  else if(hash.indexOf("#/search")===0){ main.innerHTML=vSearch(); $("sbtn").onclick=doSearch; $("sinp").addEventListener("keydown",function(e){if(e.key==="Enter")doSearch();}); }
-  else { main.innerHTML=vHome(); bindHome(); }
+
+  // 5. Teachers
+  if(hash === "#/teachers"){
+    main.innerHTML = vTeachers();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 6. Exam
+  if(hash === "#/exam"){
+    main.innerHTML = vExam();
+    var es = $("exStart"), sc = $("exScope"), ty = $("exTypes");
+    if(es) es.onclick = startExam;
+    if(sc) sc.onchange = updExPool;
+    if(ty) ty.onchange = updExPool;
+    updExPool();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 7. Me / Progress
+  if(hash === "#/me"){
+    main.innerHTML = vMe();
+    var _br = $("btnRandom");
+    if(_br) _br.onclick = function(){ var rndL = LESSONS[Math.floor(Math.random()*LESSONS.length)]; location.hash = "#/lesson/" + rndL.id + "/quiz"; };
+    var brst = $("btnReset");
+    if(brst) brst.onclick = function(){ if(confirm("بارلىق نەتىجىلەر ئۆچۈرۈلسۇنمۇ؟")){ saveProg({lessons:{},exams:[]}); router(); } };
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 8. AI Tutor
+  if(hash === "#/ai"){
+    main.innerHTML = vAI();
+    aiInit();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 9. Install Page
+  if(hash === "#/install"){
+    main.innerHTML = vInstall();
+    bindInstall();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 10. Admin
+  if(hash === "#/admin"){
+    window.location.href = "admin.html";
+    return;
+  }
+
+  // Fallback to Home
+  main.innerHTML = vHome();
+  bindHome();
   renderNav();
   window.scrollTo(0,0);
-  var tb=$("topbtn"); if(tb) tb.style.display="none";
+  var tb = $("topbtn"); if(tb) tb.style.display = "none";
 }
 function loadCustomData(){
   try {
@@ -1695,10 +1834,10 @@ function loadCustomData(){
   (LESSONS || []).forEach(function(L, idx){
     var lid = L.id || (idx+1);
     if(lid >= 1 && lid <= 10){
-      L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+      L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
       delete L.pdfData;
     } else {
-      if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+      if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
     }
     if(!L.pdfTitle) L.pdfTitle = (L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)";
   });
@@ -1712,7 +1851,7 @@ function loadCustomData(){
           LESSONS = custom.map(function(L, idx){
             var lid = L.id || (idx+1);
             if(lid >= 1 && lid <= 10){
-              L.pdfUrl = "pdf/lesson-" + lid + ".pdf";
+              L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
               delete L.pdfData;
             } else {
               L.pdfUrl = L.pdfUrl || ("pdf/lesson-" + lid + ".pdf");
@@ -2379,43 +2518,38 @@ function pwaIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent||"")||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 }
 function vInstall(){
-  var h='<a class="backlink" href="#/me">› قايتىش</a>';
-  h+='<h2 class="pagettl">📲 ئەپنى قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش»نى تېلېفونىڭىزغا دېتالدەك قاچىلاڭ — تورسىز ئىشلەيدۇ</p>';
-  h+='<button class="btn btn-gold btn-block" id="btnPWA" style="display:none;margin-bottom:.6rem">📲 بىۋاستە قاچىلاش — بېسىڭلا بولدى</button>';
-  h+='<p class="pagesub" id="pwaState" style="display:none"></p>';
-  h+='<button class="btn btn-line btn-block" id="copyLink" style="margin-bottom:.7rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
-  h+='<div class="sec"><h3>📱 ئاندروئىد (Android)</h3><ol>'
-    +'<li>ئەپ ئۇلانمىسىنى <b>Chrome</b> تور كۆرگۈچتە ئېچىڭ</li>'
-    +'<li>يۇقىرىدىكى <b>«بىۋاستە قاچىلاش»</b> كۇنۇپكىسىنى بېسىڭ — شۇ ھامان قاچىلىنىدۇ ✅</li>'
-    +'<li>كۇنۇپكا كۆرۈنمىسە: ئوڭ ئۈستىدىكى <b>⋮</b> → <b>ئەپنى قاچىلاش</b> ياكى <b>باش ئېكرانغا قوشۇش</b></li></ol></div>';
-  h+='<div class="sec"><h3>🍎 ئايفون (iPhone)</h3><ol>'
-    +'<li>ئەپ ئۇلانمىسىنى <b>Safari</b> دا ئېچىڭ</li>'
-    +'<li>ئاستىدىكى <b>ھەمبەھر (Share)</b> → <b>باش ئېكرانغا قوشۇش</b></li>'
-    +'<li>«قوشۇش» نى بېسىڭ ✅ (ئايفوندا بىر چېكىشتە قاچىلاشنى ئالما شىركىتى چەكلىگەن)</li></ol></div>';
-  h+='<div class="sec"><h3>🖥️ كومپيۇتېر</h3><ol>'
-    +'<li><b>index.html</b> ھۆججىتىنى قوش چېكىپ تور كۆرگۈچتە ئېچىڭ (Chrome / Edge تەۋسىيە قىلىنىدۇ)</li>'
-    +'<li>ئادرېس ستونىدىكى <b>قاچىلاش ⊞</b> بەلگىنى بېسىپ دېتالدەك قاچىلىغىلى بولىدۇ</li></ol></div>';
-  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بۇ ئەپ تورسىز ئىشلەيدۇ — بىر قېتىم ئېچىپ قاچىلىۋالسىڭىز، تور بولمىسىمۇ ئىشلەيدۇ.</div>';
+  var h='<a class="backlink" href="#/">› باش بەتكە قايتىش</a>';
+  h+='<h2 class="pagettl">📲 ئەپنى قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش» ئەپىنى بىۋاسىتە قاچىلاپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
+  h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.6rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
+  h+='  <div style="font-size:3.2rem;margin-bottom:.5rem">📲</div>';
+  h+='  <h3 style="margin:0 0 .6rem;color:var(--teal-dark);font-size:1.25rem">ئەپنى بىۋاسىتە قاچىلاش</h3>';
+  h+='  <p style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.3rem">تېلېفونىڭىزغا قاچىلاپ قويسىڭىز، باش ئېكراندىن بىرلا چېكىپ، تور بولمىسىمۇ ئەركىن ئوقۇيالايسىز.</p>';
+  h+='  <button class="btn btn-gold btn-block" id="btnPWA" style="font-size:1.05rem;font-weight:bold;padding:.85rem;margin-bottom:.8rem">📲 ھازىرلا قاچىلاش</button>';
+  h+='  <p class="pagesub" id="pwaState" style="display:none;margin:.5rem 0"></p>';
+  h+='  <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
+  h+='</div>';
+  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بۇ ئەپ پۈتۈنلەي تورسىز ئىشلەيدۇ. بىر قېتىم كىرىپ قاچىلىۋالسىڭىز، ھېچقانداق تور كېرەك قىلماستىن پۈتۈن دەرسلەر ۋە ئەسلى كىتابلارنى تولۇق ئوقۇيالايسىز.</div>';
   return h;
 }
 function bindInstall(){
   var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink");
   if(st){
-    if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى لوگودىن كىرىڭ!"; }
-    else if(pwaIOS()){ st.style.display="block"; st.textContent="🍎 ئايفون: تۆۋەندىكى 3 قەدەم بويىچە قولدا قوشۇڭ (2 مىنۇتلۇق ئىش)."; }
+    if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
   if(b){
-    if(_deferredPrompt) b.style.display="block";
     b.onclick=function(){
-      if(!_deferredPrompt) return;
-      _deferredPrompt.prompt();
-      _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; b.style.display="none"; });
+      if(_deferredPrompt){
+        _deferredPrompt.prompt();
+        _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; b.style.display="none"; });
+      } else {
+        alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
+      }
     };
   }
   if(cp) cp.onclick=function(){
     var url=location.href.split("#")[0];
     function done(ok){
-      cp.textContent=ok?"✅ كۆچۈرۈلدى! تېلېفونغا ئەۋەتىڭ":"🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش";
+      cp.textContent=ok?"✅ كۆچۈرۈلدى! دوستىڭىزغا ئەۋەتىڭ":"🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش";
       if(ok) setTimeout(function(){ cp.textContent="🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش"; },2500);
     }
     if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -2427,7 +2561,6 @@ function bindInstall(){
     }
   };
 }
-
 /* ===== ئۇستازلار (تېبابەت ئالىملىرى) ===== */
 TEACHERS = [
 {name:"غازباي (تارىملىق)", years:"مىلادىدىن بۇرۇنقى 467–375-يىللار", field:"قەدىمكى تېبابەت پېشۋاسى",
