@@ -1674,41 +1674,49 @@ function checkStudentApproval(){
 /* =========================================================
    📚 PDF كۇتۇپخانىسى (STUDENT PDF LIBRARY)
    ========================================================= */
+/* =========================================================
+   📚 PDF كۇتۇپخانىسى (STUDENT PDF LIBRARY)
+   ========================================================= */
 function vBooks(){
-  var pdfLessons = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); });
-  var h = '<a class="backlink" href="#/lessons">› دەرسلەرگە قايتىش</a>';
-  h += '<div class="lhead" style="margin-bottom:1rem"><h2 style="display:flex;align-items:center;gap:.5rem"><span>📖</span> دەرسلىك كىتابلىرى (PDF كۇتۇپخانىسى)</h2>'
-    + '<p class="sub">ئۇيغۇر تېبابىتى دەرسلىك كىتابلىرىنىڭ ئەسلى نەشرى — ھەرقانداق ئوقۇغۇچى چەكلىمىسىز، بىۋاسىتە پۈتۈن ئېكراندا ئوقۇيالايدۇ ياكى چۈشۈرەلەيدۇ</p></div>';
+  var pdfLessons = (LESSONS || []).map(function(L){
+    var item = Object.assign({}, L);
+    if(!item.pdfUrl) item.pdfUrl = "pdf/lesson-" + item.id + ".pdf";
+    if(!item.pdfTitle) item.pdfTitle = (item.title ? (item.id + "-دەرسلىك: " + item.title) : (item.id + "-دەرس")) + " كىتابى (PDF)";
+    return item;
+  });
 
-  if(!pdfLessons.length){
-    h += '<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2.5rem;text-align:center;color:var(--muted)">'
-      + '<span style="font-size:2.5rem;display:block;margin-bottom:.6rem">📁</span>'
-      + '<b>ھازىرچە سىستېمىغا كىرگۈزۈلگەن PDF دەرسلىك كىتابى يوق.</b>'
-      + '</div>';
-    return h;
-  }
+  var h = '<a class="backlink" href="#/lessons">› بارلىق دەرسلەرگە قايتىش</a>';
+  h += '<div class="lhead" style="margin-bottom:1.2rem;background:linear-gradient(135deg,rgba(18,135,111,.15),rgba(201,162,39,.18));padding:1.2rem;border-radius:16px;border:1.5px solid var(--gold);box-shadow:var(--shadow)">'
+    + '<div style="display:flex;align-items:center;gap:.8rem">'
+    + '  <span style="font-size:2.4rem">📖</span>'
+    + '  <div>'
+    + '    <h2 style="margin:0;font-size:1.35rem;color:var(--teal-dark)">📚 دەرسلىك ئەسلى كىتابلىرى (PDF كۇتۇپخانىسى)</h2>'
+    + '    <p style="margin:.3rem 0 0;font-size:.9rem;color:var(--ink);opacity:.9">ئۇيغۇر تېبابىتى دەرسلىكلىرىنىڭ تولۇق PDF ئەسلى نۇسخىلىرى — ھەقسىز ۋە چەكلىمىسىز پۈتۈن ئېكراندا ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</p>'
+    + '  </div>'
+    + '</div>'
+    + '</div>';
 
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:1rem">';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:1.1rem;margin-bottom:2rem">';
   pdfLessons.forEach(function(L){
-    var pUrl = L.pdfData || L.pdfUrl || "";
-    var pTitle = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
-    h += '<div style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
+    var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf");
+    var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
+    h += '<div class="book-card" style="background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
       + '<div>'
-      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">'
-      + '    <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:bold">📄 ' + L.id + '-دەرس كىتابى</span>'
-      + '    <span style="font-size:1.6rem">📚</span>'
+      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'
+      + '    <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-weight:bold;font-size:.82rem">📄 ' + L.id + '-دەرس ئەسلى كىتابى</span>'
+      + '    <span style="font-size:1.6rem">📕</span>'
       + '  </div>'
-      + '  <h3 style="margin:.3rem 0;font-size:1.12rem;color:var(--teal-dark)">' + esc(pTitle) + '</h3>'
-      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.5;margin-bottom:.8rem">' + esc(L.desc || (L.title + " ھەققىدىكى ئەسلى كىتاب نۇسخىسى")) + '</p>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.1rem;color:var(--teal-dark)">' + esc(L.title || pTitle) + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:.9rem">' + esc(L.desc || L.subtitle || (L.title + " ھەققىدىكى ئەسلى تېبابەت دەرسلىك كىتابى")) + '</p>'
       + '</div>'
-      + '<div style="border-top:1px solid var(--line);padding-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-gold btn-sm" href="#/lesson/' + L.id + '/pdf" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#2e2200;border-radius:8px;padding:.45rem">'
+      + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">'
+      + '  <a class="btn btn-gold btn-sm" href="#/lesson/' + L.id + '/pdf" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#2e2200;border-radius:8px;padding:.5rem;font-size:.85rem">'
       + '    📖 كىتابنى ئوقۇش'
       + '  </a>'
-      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="text-align:center;justify-content:center;text-decoration:none;font-weight:bold;border-radius:8px;padding:.45rem .8rem">'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="text-align:center;justify-content:center;text-decoration:none;font-weight:bold;border-radius:8px;padding:.5rem .85rem;font-size:.85rem">'
       + '    ⛶ يېڭى كۆزنەك'
       + '  </a>'
-      + '  <a class="btn btn-line btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="text-align:center;justify-content:center;text-decoration:none;border-radius:8px;padding:.45rem .8rem">'
+      + '  <a class="btn btn-line btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="text-align:center;justify-content:center;text-decoration:none;border-radius:8px;padding:.5rem .75rem;font-size:.85rem">'
       + '    ⬇️ چۈشۈرۈش'
       + '  </a>'
       + '</div>'
@@ -1718,14 +1726,13 @@ function vBooks(){
   return h;
 }
 
-
 function router(){
   stopTimer(); updStreak();
   var hash = location.hash || "#/";
   var main = $("main");
   if(!main) return;
 
-  // 1. GUARANTEED HOME PAGE ACCESS: #/, empty or # always renders vHome() directly without any block!
+  // 1. GUARANTEED PUBLIC OPEN ACCESS: Home, PDF Library, and Lesson PDF Books are 100% FREE and never blocked!
   if(!hash || hash === "#/" || hash === "" || hash === "#"){
     main.innerHTML = vHome();
     bindHome();
@@ -1733,6 +1740,27 @@ function router(){
     window.scrollTo(0,0);
     var tb = $("topbtn"); if(tb) tb.style.display = "none";
     return;
+  }
+  if(hash === "#/books" || hash === "#/pdf"){
+    main.innerHTML = vBooks();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+  var mPdfDirect = hash.match(/^#\/lesson\/(\d+)\/pdf$/);
+  if(mPdfDirect){
+    lessonTab = "pdf"; quizFilter = "all";
+    var LPdf = lessonById(parseInt(mPdfDirect[1], 10));
+    if(LPdf){
+      main.innerHTML = vLesson(LPdf.id, "pdf");
+      renderTabBody(LPdf);
+      bindTabs();
+      renderNav();
+      window.scrollTo(0,0);
+      var tb = $("topbtn"); if(tb) tb.style.display = "none";
+      return;
+    }
   }
 
   // 2. CHECK ADMIN STATUS (Admins can browse ALL lessons freely without gatekeeper)
@@ -2810,6 +2838,8 @@ id: 1,
 title: "ئومۇمىي قىسىم، تۆت چوڭ ماددا ۋە مىزاج",
 short: "ئومۇمىي قىسىم ۋە مىزاج",
 subtitle: "ئۇيغۇر تېبابىتىنىڭ تارىخى • ئىلىم تۈرلىرى • يەتتە ئاساسىي تەلىمات • تۆت چوڭ ماددا • مىزاج",
+pdfUrl: "pdf/lesson-1.pdf",
+pdfTitle: "1-دەرسلىك مىزاج ۋە تۆت چوڭ ماددا كىتابى (PDF)",
 desc: "تېبابەت تارىخى، ئىلىم سىستېمىسى، تۆت چوڭ ماددا ۋە تۆت خىل مىزاج",
 goals: [
  "ئۇيغۇر تېبابىتىنىڭ 2500 يىللىق تارىخى ۋە تەرەققىياتىنى بايان قىلالايسىز",
@@ -2992,6 +3022,8 @@ id: 2,
 title: "خىلىت، ئەزا، ھۈجەيرە، توقۇلما ۋە تېرە",
 short: "خىلىت ۋە ئەزا",
 subtitle: "تەبىئىي-غەيرىي تەبىئىي خىلىتلار • ئەزالارنىڭ تۈرلىرى ۋە مىزاجى • ھۈجەيرە • توقۇلما • تېرە",
+pdfUrl: "pdf/lesson-2.pdf",
+pdfTitle: "2-دەرسلىك خىلىت ۋە ئەزالار كىتابى (PDF)",
 desc: "تۆت خىلىت، غەيرىي خىلىت سەۋەبلىرى (8)، ئەزا تۈرلىرى، ھۈجەيرە-توقۇلما-تېرە",
 goals: [
  "خىلىتنىڭ ئېنىقلىمىسى ۋە تەبىئىي-غەيرىي تەبىئىي تۈرلىرىنى بايان قىلالايسىز",
@@ -3163,6 +3195,8 @@ id: 3,
 title: "ھەرىكەت، ئايلىنىش، نەپەسلىنىش ۋە ھەزىم قىلىش سىستېمىسى",
 short: "بەدەن سىستېمىلىرى (1)",
 subtitle: "ئىسكىلىت 206 سۆڭەك • يۈرەك-قان تومۇر • لىمفا • ئۆپكە • ھەزىم ئەزالىرى",
+pdfUrl: "pdf/lesson-3.pdf",
+pdfTitle: "3-دەرسلىك بەدەن سىستېمىلىرى كىتابى (PDF)",
 desc: "سۆڭەك-مۇسكۇل، قان ئايلىنىش، نەپەسلىنىش، ھەزىم قىلىش سىستېمىلىرى",
 goals: [
  "ھەرىكەت سىستېمىسىنىڭ تۈزۈلۈشى (سۆڭەك، بوغۇم، مۇسكۇل) نى بايان قىلالايسىز",
@@ -3302,6 +3336,8 @@ id: 4,
 title: "سۈيدۈك، ئىچكى سۇيۇقلۇق، نەسىللىنىش، نېرۋا سىستېمىسى ۋە قۇۋۋەت-روھ-ئەفئال",
 short: "بەدەن سىستېمىلىرى (2) + قۇۋۋەت",
 subtitle: "بۆرەك • ھورمون بەزلىرى • كۆپىيىش • نېرۋا • ئۈچ قۇۋۋەت • ئۈچ روھ • ئەفئال",
+pdfUrl: "pdf/lesson-4.pdf",
+pdfTitle: "4-دەرسلىك قۇۋۋەت، روھ ۋە ئەفئال كىتابى (PDF)",
 desc: "سۈيدۈك-ھورمون-كۆپىيىش-نېرۋا سىستېمىلىرى؛ قۇۋۋەت، روھ، ئەفئال تەلىماتلىرى",
 goals: [
  "سۈيدۈك ۋە ئىچكى سۇيۇقلۇق (ھورمون) سىستېمىسىنىڭ ئەزالىرىنى بايان قىلالايسىز",
@@ -3454,6 +3490,8 @@ id: 5,
 title: "ساقلىق ۋە كېسەللىك ئىلمى",
 short: "ساقلىق-كېسەللىك",
 subtitle: "ساقلىق ئېنىقلىمىسى • يالغۇز-مۇرەككەپ كېسەللىكلەر • مىزاج/شەكىل/پۈتۈنلۈك بۇزۇلۇش • 21 خىل مۇرەككەپ كېسەللىك",
+pdfUrl: "pdf/lesson-5.pdf",
+pdfTitle: "5-دەرسلىك ساقلىق ۋە كېسەللىك كىتابى (PDF)",
 desc: "ساقلىق-كېسەللىك، يالغۇز كېسەللىكنىڭ 3 شەكلى، مۇرەككەپ كېسەللىكنىڭ 21 تۈرى",
 goals: [
  "ساقلىق ۋە كېسەللىكنىڭ ئېنىقلىمىسىنى بايان قىلالايسىز",
@@ -3582,6 +3620,8 @@ id: 6,
 title: "كېسەللىك سەۋەبلىرى ئىلمى",
 short: "كېسەللىك سەۋەبلىرى",
 subtitle: "ئىچكى سەۋەب (7) • ئادەتتىكى تاشقى سەۋەب (6) • پەۋقۇلئاددە تاشقى سەۋەب (7)",
+pdfUrl: "pdf/lesson-6.pdf",
+pdfTitle: "6-دەرسلىك كېسەللىك سەۋەبلىرى كىتابى (PDF)",
 desc: "كېسەللىك پەيدا قىلغۇچى ئىچكى-تاشقى ئامىللار سىستېمىسى",
 goals: [
  "كېسەللىك سەۋەبلىرى ئىلمىنىڭ ئەھمىيىتىنى بايان قىلالايسىز",
@@ -3676,6 +3716,8 @@ id: 7,
 title: "كېسەللىك ئالامەتلىرى ۋە دىياگنوز ئىلمى (1)",
 short: "ئالامەت-دىياگنوز (1)",
 subtitle: "قىزىتما تۈرلىرى • ئاغرىق • قاراپ تەكشۈرۈش • سوراپ تەكشۈرۈش (9 مەزمۇن)",
+pdfUrl: "pdf/lesson-7.pdf",
+pdfTitle: "7-دەرسلىك دىياگنوز قويۇش ئىلمى (1) كىتابى (PDF)",
 desc: "قىزىتما-ئاغرىق ئالامەتلىرى، قاراپ ۋە سوراپ تەكشۈرۈش ئۇسۇللىرى",
 goals: [
  "كېسەللىك ئالامەتلىرىنىڭ ئەھمىيىتىنى بايان قىلالايسىز",
@@ -3789,6 +3831,8 @@ id: 8,
 title: "كېسەللىك ئالامەتلىرى ۋە دىياگنوز ئىلمى (2)",
 short: "ئالامەت-دىياگنوز (2)",
 subtitle: "تومۇر تۈرلىرى • چېكىپ-تىڭشاپ-پۇراپ تەكشۈرۈش • سۈيدۈك-تەرەت-خەپرۈك",
+pdfUrl: "pdf/lesson-8.pdf",
+pdfTitle: "8-دەرسلىك دىياگنوز قويۇش ئىلمى (2) كىتابى (PDF)",
 desc: "تومۇر تۇتۇش، چېكىپ-تىڭشاپ-پۇراپ تەكشۈرۈش، سۈيدۈك-تەرەت-خەپرۈك تەھلىلى",
 goals: [
  "تومۇر سوقۇشنىڭ ئۈچ ئامىلى ۋە تۇتۇش ئۇسۇلىنى بايان قىلالايسىز",
