@@ -1,3 +1,7 @@
 .vercel
 __pycache__
 *.bak
+
+*.bat
+*.txt
+*.bak
