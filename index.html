@@ -592,6 +592,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 </div>
 
 <script src="qrcode.min.js"></script>
+<script src="supabase.js"></script>
 <script>
 /* ===== ئەپ پروگراممىسى (تېلېفون ئۇسلۇبى) ===== */
 var LESSONS = [];
@@ -1532,6 +1533,22 @@ function checkStudentApproval(){
   var s = getProg();
   if(!s.user){ router(); return; }
   toast("⏳ تەكشۈرۈلىۋاتىدۇ...");
+  if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+    Supabase.checkStudentStatus(s.user.phone).then(function(st){
+      if(st === "approved"){
+        s.user.status = "approved";
+        saveProg(s);
+        var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+        var cur = allSt.find(function(u){ return u.phone === s.user.phone; });
+        if(cur) cur.status = "approved";
+        else allSt.unshift({name: s.user.name, phone: s.user.phone, status: "approved"});
+        localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+        toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
+        router();
+        return;
+      }
+    }).catch(function(){});
+  }
   fetch("/api/students")
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -2295,6 +2312,9 @@ function showRegModal(mode, closable){
       localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
     }
 
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      Supabase.registerStudent({name: nm, phone: ph, status: status});
+    }
     try {
       fetch("/api/students", {
         method: "POST",

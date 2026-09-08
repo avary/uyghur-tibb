@@ -760,12 +760,41 @@ table.data-table tr:hover { background: var(--teal-light); }
           </div>
         </div>
 
-        <!-- Cloud Architecture Card -->
-        <div class="card">
-          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">🌐 GitHub + Vercel + Supabase بۇلۇت ئۇلىنىشى</h3>
-          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;margin:0">
-            سىستېمىڭىز بىۋاسىتە <b>GitHub</b> ۋە <b>Vercel</b> غا باغلانغان بولۇپ، ھەر قېتىم كودلار ياكى ماتېرىياللار يېڭىلانغاندا Vercel ئاپتوماتىك دۇنياغا تارقىتىدۇ. پۈتكۈل ئوقۇغۇچىلار سانلىق مەلۇماتىنى مەڭگۈلۈك PostgreSQL غا ئۇلاش ئۈچۈن <b>Supabase</b> تەييارلاندى.
+        <!-- Supabase Cloud Database Card -->
+        <div class="card" id="sbCard" style="border:2px solid var(--teal)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem">
+            <h3 style="margin:0;color:var(--teal-dark)">⚡ Supabase بۇلۇت ساندانىنى ئۇلاش (PostgreSQL)</h3>
+            <span id="sbStatusBadge" class="badge badge-gold">⏳ تەكشۈرۈلىۋاتىدۇ...</span>
+          </div>
+          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;margin:0 0 1.2rem">
+            بۇلۇت ساندانى ئۇلانغاندىن كېيىن بارلىق تېلېفونلاردىن تىزىملاتقان ئوقۇغۇچىلار، تەستىقلار ۋە سوئال-جاۋابلار مەڭگۈلۈك كۈچلۈك PostgreSQL ساندىنىدا ساقلىنىدۇ.
           </p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:.8rem;margin-bottom:1rem">
+            <div class="inp-group" style="margin:0">
+              <label>Supabase Project URL:</label>
+              <input type="text" id="sbUrlInp" class="inp" placeholder="https://xxxx.supabase.co" dir="ltr">
+            </div>
+            <div class="inp-group" style="margin:0">
+              <label>Supabase Anon Public Key:</label>
+              <input type="password" id="sbKeyInp" class="inp" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." dir="ltr">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-teal" id="sbTestSaveBtn">⚡ ئۇلىنىشنى سىناش ۋە ساقلاش</button>
+            <button class="btn btn-line" id="sbCopySqlBtn">📋 جەدۋەل قۇرۇش SQL كودىنى كۆچۈرۈش</button>
+            <button class="btn btn-line btn-sm" id="sbClearBtn" style="color:var(--red)">ئۇلىنىشنى ئۈزۈش</button>
+          </div>
+
+          <div id="sbMsgBox" style="margin-top:1rem;display:none;padding:.8rem 1rem;border-radius:12px;font-size:.9rem;line-height:1.8"></div>
+
+          <div style="margin-top:1.2rem;background:var(--bg);padding:1rem;border-radius:14px;border:1px dashed var(--line);font-size:.88rem;color:var(--muted);line-height:1.9">
+            <b style="color:var(--teal-dark)">💡 3 باسقۇچتا ئۇلاش قوللانمىسى:</b><br>
+            1. <b><a href="https://supabase.com" target="_blank" style="color:var(--teal)">supabase.com</a></b> تورىغا كىرىپ ھەقسىز بىر تۈر (Project) قۇرۇڭ.<br>
+            2. سول تەرەپتىكى <b>«SQL Editor»</b> غا يۇقىرىدىكى «جەدۋەل قۇرۇش SQL كودىنى كۆچۈرۈش» نى بېسىپ كۆچۈرۈۋالغان كودنى چاپلاپ <b>«RUN»</b> كۇنۇپكىسىنى بېسىڭ.<br>
+            3. تۈر تەڭشىكىدىن (Project Settings ➡️ API) <b>Project URL</b> بىلەن <b>anon public key</b> نى كۆچۈرۈپ يۇقىرىغا چاپلاپ <b>«ئۇلىنىشنى سىناش ۋە ساقلاش»</b> نى بېسىڭ!
+          </div>
         </div>
       </section>
 
@@ -849,6 +878,7 @@ table.data-table tr:hover { background: var(--teal-light); }
 
 <!-- DATA SCRIPT -->
 <script src="data.js"></script>
+<script src="supabase.js"></script>
 <script>
 /* =========================================================
    «ئۇيغۇر تېبابىتى» ئارقا سەھنە باشقۇرۇش مەركىزى JS ماتورى
@@ -1452,6 +1482,99 @@ document.getElementById("btnAddTeacher").onclick = function(){
   renderTeachersTable();
 };
 
+
+/* ===== 10. SUPABASE CLOUD DATABASE INTEGRATION ===== */
+function initSupabaseAdminUI(){
+  if(typeof Supabase === "undefined") return;
+  var cfg = Supabase.getConfig();
+  var urlInp = document.getElementById("sbUrlInp");
+  var keyInp = document.getElementById("sbKeyInp");
+  var badge = document.getElementById("sbStatusBadge");
+  var msgBox = document.getElementById("sbMsgBox");
+
+  if(urlInp) urlInp.value = cfg.url || "";
+  if(keyInp) keyInp.value = cfg.key || "";
+
+  function updateBadge(status, text){
+    if(!badge) return;
+    badge.className = "badge " + (status === "ok" ? "badge-green" : (status === "err" ? "badge-red" : "badge-gold"));
+    badge.textContent = text;
+  }
+
+  if(cfg.connected){
+    updateBadge("ok", "🟢 ئۇلاندى (Live PostgreSQL)");
+  } else {
+    updateBadge("warn", "🔴 ئۇلانمىدى (يەرلىك ساندان)");
+  }
+
+  var btn = document.getElementById("sbTestSaveBtn");
+  if(btn){
+    btn.onclick = function(){
+      var u = urlInp.value.trim();
+      var k = keyInp.value.trim();
+      if(!u || !k){
+        showToast("⚠️ URL ۋە Anon Key كىرگۈزۈڭ!");
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "⏳ تەكشۈرۈلىۋاتىدۇ...";
+      Supabase.testConnection(u, k)
+        .then(function(){
+          Supabase.saveConfig(u, k);
+          btn.disabled = false;
+          btn.textContent = "⚡ ئۇلىنىشنى سىناش ۋە ساقلاش";
+          updateBadge("ok", "🟢 ئۇلاندى (Live PostgreSQL)");
+          msgBox.style.display = "block";
+          msgBox.style.background = "var(--teal-light)";
+          msgBox.style.color = "var(--teal-dark)";
+          msgBox.innerHTML = "<b>✅ مۇۋەپپەقىيەتلىك ئۇلاندى!</b><br>Supabase PostgreSQL ساندانىڭىز تولۇق قوزغىتىلدى. بارلىق ئوقۇغۇچىلار ۋە تەستىقلار ئەمدى بىۋاسىتە بۇلۇتتا ساقلىنىدۇ.";
+          showToast("🎉 Supabase مۇۋەپپەقىيەتلىك ئۇلاندى!");
+          loadStudentData();
+        })
+        .catch(function(err){
+          btn.disabled = false;
+          btn.textContent = "⚡ ئۇلىنىشنى سىناش ۋە ساقلاش";
+          updateBadge("err", "❌ ئۇلىنالمىدى");
+          msgBox.style.display = "block";
+          msgBox.style.background = "#ffebee";
+          msgBox.style.color = "#c62828";
+          msgBox.innerHTML = "<b>❌ ئۇلىنىش مەغلۇپ بولدى:</b> " + esc(err.message) + "<br><small>تۈر URL ياكى Anon Key نىڭ توغرىلىقىنى، ھەمدە SQL Editor دا جەدۋەل قۇرغانلىقىڭىزنى تەكشۈرۈڭ.</small>";
+        });
+    };
+  }
+
+  var clearBtn = document.getElementById("sbClearBtn");
+  if(clearBtn){
+    clearBtn.onclick = function(){
+      if(!confirm("Supabase ئۇلىنىشىنى ئۈزمەكچىمۇسىز؟")) return;
+      Supabase.saveConfig("", "");
+      urlInp.value = "";
+      keyInp.value = "";
+      updateBadge("warn", "🔴 ئۇلانمىدى (يەرلىك ساندان)");
+      msgBox.style.display = "none";
+      showToast("Supabase ئۇلىنىشى ئۈزىۋېتىلدى.");
+    };
+  }
+
+  var copySqlBtn = document.getElementById("sbCopySqlBtn");
+  if(copySqlBtn){
+    copySqlBtn.onclick = function(){
+      var sqlCode = typeof SUPABASE_SETUP_SQL !== "undefined" ? SUPABASE_SETUP_SQL : "";
+      if(!sqlCode){
+        showToast("تۈردىكى supabase_setup.sql ھۆججىتىنى ئېچىڭ.");
+        return;
+      }
+      navigator.clipboard.writeText(sqlCode)
+        .then(function(){
+          showToast("📋 جەدۋەل قۇرۇش SQL كودى كۆچۈرۈلدى! Supabase SQL Editor غا چاپلاپ Run نى بېسىڭ.");
+        })
+        .catch(function(){
+          showToast("كۆچۈرۈش مەغلۇپ بولدى، تۈر ئىچىدىكى supabase_setup.sql ھۆججىتىنى كۆرۈڭ.");
+        });
+    };
+  }
+}
+
 /* 9. STUDENTS & APPROVAL GATEKEEPER */
 
 // Fetch students from serverless API in background
@@ -1537,6 +1660,27 @@ function renderStudentsTableOnly(){
 
 function loadStudentData(){
   try {
+    // Live Supabase Sync
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      Supabase.getStudents().then(function(sbStudents){
+        if(sbStudents && sbStudents.length){
+          var changed = false;
+          sbStudents.forEach(function(s){
+            var ex = allSt.find(function(x){ return x.phone === s.phone; });
+            if(!ex){
+              allSt.unshift({ name: s.name, phone: s.phone, status: s.status, when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
+              changed = true;
+            } else if(s.status && ex.status !== s.status){
+              ex.status = s.status; changed = true;
+            }
+          });
+          if(changed){
+            localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+            renderStudentsTableOnly();
+          }
+        }
+      }).catch(function(){});
+    }
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
 
@@ -1635,6 +1779,9 @@ function approveStudent(phone){
         body: JSON.stringify({ action: "update_status", phone: phone, status: "approved" })
       }).catch(function(){});
     }catch(e){}
+        if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      Supabase.updateStudentStatus(phone, "approved");
+    }
     loadStudentData();
     showToast("✅ «" + st.name + "» غا دەرس كۆرۈش ئىجازىتى بېرىلدى!");
   }
