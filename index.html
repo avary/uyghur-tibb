@@ -691,7 +691,9 @@ function vHome(){
   h+='<div class="secttl">📘 بۈگۈنكى ئاتالغۇ</div><div id="dtbox"></div>';
   h+='<div class="tip">💡 <b>بۈگۈنكى تەۋسىيە:</b> '+todayTip()+'</div>';
   h+='<div class="secttl">💬 سوئال-پىكىر تاختىسى</div>';
-  h+='<div class="fb"><div class="fb-form"><input id="fbnm" placeholder="ئىسمىڭىز" value="'+(s.user?esc(s.user.name):"")+'"><textarea id="fbtxt" placeholder="سوئال ياكى پىكرىڭىزنى يېزىڭ…"></textarea><button class="btn btn-teal btn-sm" id="fbSend">ئەۋەتىش ➤</button></div><div id="fblist"></div></div>';
+  h+='<div class="tip" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.15rem 1.3rem;box-shadow:var(--shadow);font-size:1.02rem;color:var(--teal-dark);line-height:1.8;margin-bottom:1.2rem;cursor:pointer" onclick="handleFbClick()">'
+    +'خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷'
+    +'</div>';
   return h;
 }
 
@@ -1806,6 +1808,11 @@ function router(){
 }
 function loadCustomData(){
   try {
+    localStorage.removeItem("uytibb_feedback");
+    var cp = store.get();
+    if(cp && cp.fb){ delete cp.fb; store.set(cp); }
+  }catch(e){}
+  try {
     // Purge any mock/test students from local storage
     var rawSt = localStorage.getItem("uytibb_all_students");
     if(rawSt){
@@ -2379,6 +2386,22 @@ function renderTerm(){
   var terms=[]; LESSONS.forEach(function(L){ (L.terms||[]).forEach(function(t){ terms.push({t:t.t,d:t.d,lid:L.id}); }); });
   var tm=terms[dayNum()%terms.length];
   box.innerHTML='<div class="term dterm"><b>📘 '+esc(tm.t)+'</b> — '+esc(tm.d)+'</div>';
+}
+function handleFbClick(){
+  var msg = prompt("خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷\n\n(سوئال ياكى پىكىر-تەكلىپىڭىزنى يېزىڭ):");
+  if(msg && msg.trim()){
+    var s = getProg(); s.fb = s.fb || [];
+    var d = new Date();
+    s.fb.unshift({
+      n: (s.user && s.user.name) ? s.user.name : "ئوقۇغۇچى",
+      phone: (s.user && s.user.phone) ? s.user.phone : "",
+      t: msg.trim(),
+      w: d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()
+    });
+    saveProg(s);
+    try { localStorage.setItem("uytibb_feedback", JSON.stringify(s.fb)); } catch(e){}
+    toast("✅ رەھمەت! سوئال ياكى پىكىر-تەكلىپىڭىز تاپشۇرۇلدى.");
+  }
 }
 function bindHome(){
   renderFb(); renderDaily(); renderTerm();
