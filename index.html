@@ -690,9 +690,14 @@ function vHome(){
   h+='<div class="secttl">🎯 بۈگۈنكى سوئال</div><div id="dqbox"></div>';
   h+='<div class="secttl">📘 بۈگۈنكى ئاتالغۇ</div><div id="dtbox"></div>';
   h+='<div class="tip">💡 <b>بۈگۈنكى تەۋسىيە:</b> '+todayTip()+'</div>';
-  h+='<div class="secttl">💬 سوئال-پىكىر تاختىسى</div>';
-  h+='<div class="tip" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.15rem 1.3rem;box-shadow:var(--shadow);font-size:1.02rem;color:var(--teal-dark);line-height:1.8;margin-bottom:1.2rem;cursor:pointer" onclick="handleFbClick()">'
-    +'خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷'
+  h+='<div class="secttl">💬 سۇئال-پىكىر تاختىسى</div>';
+  h+='<div class="fb">'
+    +'  <div class="fb-form">'
+    +'    <input id="fbnm" placeholder="ئىسمىڭىز" value="'+(s.user?esc(s.user.name):"")+'">'
+    +'    <textarea id="fbtxt" placeholder="سۇئال ياكى پىكىرىڭىزنى بۇ يەرگە يېزىڭ…"></textarea>'
+    +'    <button class="btn btn-teal btn-sm" id="fbSend">ئەۋەتىش ➤</button>'
+    +'  </div>'
+    +'  <div id="fblist"></div>'
     +'</div>';
   return h;
 }
@@ -2343,9 +2348,28 @@ var LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><d
 function renderFb(){
   var box = $("fblist");
   if(!box) return;
-  box.innerHTML = '<div class="tip" style="background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:1.15rem 1.3rem;box-shadow:var(--shadow);font-size:1.02rem;color:var(--teal-dark);line-height:1.8;margin-bottom:1.2rem;cursor:pointer" onclick="handleFbClick()">'
+  var s = getProg();
+  var rawFb = localStorage.getItem("uytibb_feedback");
+  if(rawFb){
+    try { s.fb = JSON.parse(rawFb); } catch(e){}
+  }
+  var userMsgs = (s.fb || []).filter(function(m){
+    return m && m.t && m.n !== "باشقۇرغۇچى" && m.n !== "ئاساسىي باشقۇرغۇچى";
+  });
+
+  var h = '<div class="tip" style="background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:1rem 1.2rem;box-shadow:var(--shadow);font-size:.98rem;color:var(--teal-dark);line-height:1.7;margin-top:.8rem">'
     + 'خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷'
     + '</div>';
+
+  if(userMsgs.length){
+    h += userMsgs.map(function(m){
+      return '<div class="fbm" style="margin-top:.6rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.85rem 1rem;box-shadow:var(--shadow)">'
+        + '<div class="fbh" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem"><b>' + esc(m.n || "ئوقۇغۇچى") + '</b><span style="font-size:.78rem;color:var(--muted)">' + esc(m.w || "") + '</span></div>'
+        + '<p style="margin:0;line-height:1.6;font-size:.92rem">' + esc(m.t) + '</p>'
+        + '</div>';
+    }).join("");
+  }
+  box.innerHTML = h;
 }
 function dayNum(){ var n=new Date(); return n.getFullYear()*372+n.getMonth()*31+n.getDate(); }
 function allChoiceTf(){ var p=[]; LESSONS.forEach(function(L){ (L.quiz||[]).forEach(function(q){ if(q.type==="choice"||q.type==="tf") p.push({q:q,lid:L.id}); }); }); return p; }
@@ -2374,58 +2398,35 @@ function renderTerm(){
   var tm=terms[dayNum()%terms.length];
   box.innerHTML='<div class="term dterm"><b>📘 '+esc(tm.t)+'</b> — '+esc(tm.d)+'</div>';
 }
-function handleFbClick(){
-  var msg = prompt("خۇش كەپسىز! سوئال ۋە پىكىر-تەكلىپلىرىڭىزنى بۇ يەرگە قالدۇرۇڭ. 🌷\n\n(سوئال ياكى پىكىر-تەكلىپىڭىزنى يېزىڭ):");
-  if(msg && msg.trim()){
-    var s = getProg(); s.fb = s.fb || [];
-    var d = new Date();
-    s.fb.unshift({
-      n: (s.user && s.user.name) ? s.user.name : "ئوقۇغۇچى",
-      phone: (s.user && s.user.phone) ? s.user.phone : "",
-      t: msg.trim(),
-      w: d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()
-    });
-    saveProg(s);
-    try { localStorage.setItem("uytibb_feedback", JSON.stringify(s.fb)); } catch(e){}
-    toast("✅ رەھمەت! سوئال ياكى پىكىر-تەكلىپىڭىز تاپشۇرۇلدى.");
-  }
-}
 function bindHome(){
   renderFb(); renderDaily(); renderTerm();
-  var dq=$("dqbox");
-  if(dq) dq.onclick=function(e){
-    var b=e.target.closest("[data-dq]"); if(!b||b.disabled) return;
-    var s=getProg(); s.dailyQ.ans=parseInt(b.getAttribute("data-dq"),10); saveProg(s); renderDaily();
+  var dq = $("dqbox");
+  if(dq) dq.onclick = function(e){
+    var b = e.target.closest("[data-dq]"); if(!b||b.disabled) return;
+    var s = getProg(); s.dailyQ.ans = parseInt(b.getAttribute("data-dq"), 10); saveProg(s); renderDaily();
   };
-  var b=$("fbSend");
-  if(b) b.onclick=function(){
-    var nm=$("fbnm").value.trim(), tx=$("fbtxt").value.trim();
+  var b = $("fbSend");
+  if(b) b.onclick = function(){
+    var nm = $("fbnm").value.trim(), tx = $("fbtxt").value.trim();
     if(!tx){ $("fbtxt").focus(); return; }
-    var s=getProg(); s.fb=s.fb||[];
-    var d=new Date();
-    var dateStr = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+    var s = getProg(); s.fb = s.fb || [];
+    var d = new Date();
+    var dateStr = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
     var newMsg = {
-      n: nm || (s.user?s.user.name:"مېھمان"),
-      phone: s.user?s.user.phone:"",
+      n: nm || (s.user ? s.user.name : "ئوقۇغۇچى"),
+      phone: (s.user ? s.user.phone : ""),
       t: tx,
       w: dateStr
     };
     s.fb.unshift(newMsg);
-    if(s.fb.length>50) s.fb=s.fb.slice(0,50);
+    if(s.fb.length > 50) s.fb = s.fb.slice(0, 50);
     saveProg(s);
-    localStorage.setItem("uytibb_feedback", JSON.stringify(s.fb));
-    $("fbtxt").value="";
+    try { localStorage.setItem("uytibb_feedback", JSON.stringify(s.fb)); } catch(e){}
+    $("fbtxt").value = "";
     renderFb();
-    toast("💬 سوئالىڭىز تاپشۇرۇلدى! باشقۇرغۇچى جاۋاب قايتۇرغاندىن كېيىن كۆرۈنىدۇ.");
-  };
-  var fl=$("fblist");
-  if(fl) fl.onclick=function(e){
-    var del=e.target.closest("[data-fbdel]"); if(!del) return;
-    var i=parseInt(del.getAttribute("data-fbdel"),10);
-    var s2=getProg(); s2.fb=s2.fb||[]; s2.fb.splice(i,1); saveProg(s2); renderFb();
+    toast("✅ سوئالىڭىز تاپشۇرۇلدى! رەھمەت.");
   };
 }
-
 /* ===== تىزىملىتىش (ئىسىم + تېلېفون) ===== */
 function closeRegModal(){ var o=$("rover"); if(o) o.parentNode.removeChild(o); }
 function showRegModal(mode, closable){
