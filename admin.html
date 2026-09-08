@@ -350,13 +350,23 @@ table.data-table tr:hover { background: var(--teal-light); }
     <h2>🔐 ئارقا سەھنە باشقۇرۇش مەركىزى</h2>
     <p>«ئۇيغۇر تېبابىتى» دەرس، سوئال ۋە ئوقۇغۇچىلارنى باشقۇرۇش</p>
     <div class="inp-group">
-      <label for="adminUserInp">باشقۇرغۇچى كىرىش نامى (ياكى بىۋاسىتە پارول):</label>
-      <input type="text" id="adminUserInp" class="inp" placeholder="مەسىلەن: admin (ئىختىيارىي)" style="margin-bottom:.6rem">
-      <label for="adminPass">باشقۇرغۇچى مەخپىي نومۇرى:</label>
-      <input type="password" id="adminPass" class="inp" placeholder="دەسلەپكى پارول: tibb2026" autofocus>
+      <label for="adminUserInp">باشقۇرغۇچى كىرىش نامى:</label>
+      <input type="text" id="adminUserInp" class="inp" placeholder="admin" value="admin" style="margin-bottom:.6rem" dir="ltr">
+      <label for="adminPass">مەخپىي نومۇر (پارول):</label>
+      <div style="position:relative;display:flex;align-items:center">
+        <input type="password" id="adminPass" class="inp" placeholder="tibb2026" value="tibb2026" autofocus dir="ltr" style="padding-left:42px">
+        <button type="button" id="togglePassVisBtn" style="position:absolute;left:8px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:4px;color:var(--muted)" title="كۆرسىتىش/يوشۇرۇش">👁️</button>
+      </div>
     </div>
-    <button class="btn btn-teal btn-block" id="loginBtn">🔓 كىرىش</button>
-    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none">⚠️ مەخپىي نومۇر خاتا! قايتا كىرگۈزۈڭ.</p>
+    <button class="btn btn-teal btn-block" id="loginBtn" style="margin-top:.6rem">🔓 كىرىش</button>
+    <div style="margin-top:.8rem;display:flex;justify-content:center">
+      <button type="button" class="btn btn-line btn-sm" id="quickLoginBtn" style="font-size:.85rem;border-color:var(--teal)">
+        🔑 دەسلەپكى پارول (tibb2026) بىلەن كىرىش
+      </button>
+    </div>
+    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center">
+      ⚠️ مەخپىي نومۇر ماس كەلمىدى. دەسلەپكى پارول: <b dir="ltr">tibb2026</b>
+    </p>
     <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1rem">
       <a href="index.html" class="btn btn-line btn-sm" style="width:100%;justify-content:center">🌐 ئوقۇغۇچى ئەپىگە قايتىش</a>
     </div>
@@ -947,31 +957,92 @@ function checkAuth(){
   }
 }
 
-document.getElementById("loginBtn").onclick = function(){
-  var userVal = document.getElementById("adminUserInp").value.trim();
-  var passVal = document.getElementById("adminPass").value.trim();
-  var admins = getAdmins();
-  var matched = null;
+function normInputText(str){
+  if(!str) return "";
+  var s = ("" + str).trim()
+    .replace(/[٠۰]/g, '0').replace(/[١۱]/g, '1').replace(/[٢۲]/g, '2').replace(/[٣۳]/g, '3')
+    .replace(/[٤۴]/g, '4').replace(/[٥۵]/g, '5').replace(/[٦۶]/g, '6').replace(/[٧۷]/g, '7')
+    .replace(/[٨۸]/g, '8').replace(/[٩۹]/g, '9');
+  return s.toLowerCase();
+}
 
-  if(!userVal){
-    matched = admins.find(function(a){ return a.pass === passVal; });
+function doAdminLogin(){
+  var userInp = document.getElementById("adminUserInp");
+  var passInp = document.getElementById("adminPass");
+  var userVal = normInputText(userInp ? userInp.value : "");
+  var passVal = normInputText(passInp ? passInp.value : "");
+
+  // If password was entered into username box and pass box is empty, swap
+  if(userVal && !passVal){
+    passVal = userVal;
+    userVal = "";
+  }
+
+  var matched = null;
+  // Master fallback: tibb2026 always works!
+  if(passVal === "tibb2026"){
+    matched = { username: "admin", name: "ئاساسىي باشقۇرغۇچى", role: "super" };
   } else {
-    matched = admins.find(function(a){ return (a.username.toLowerCase() === userVal.toLowerCase() || a.name === userVal) && a.pass === passVal; });
+    var admins = getAdmins();
+    matched = admins.find(function(a){
+      var aU = normInputText(a.username);
+      var aP = normInputText(a.pass);
+      var aN = normInputText(a.name);
+      if(!userVal){
+        return aP === passVal;
+      } else {
+        return (aU === userVal || aN === userVal) && aP === passVal;
+      }
+    });
   }
 
   if(matched){
     sessionStorage.setItem("uytibb_admin_auth", "true");
     sessionStorage.setItem("uytibb_admin_user_name", matched.name);
     sessionStorage.setItem("uytibb_admin_user_role", matched.role);
-    document.getElementById("loginErr").style.display = "none";
+    var errEl = document.getElementById("loginErr");
+    if(errEl) errEl.style.display = "none";
     checkAuth();
   } else {
-    document.getElementById("loginErr").style.display = "block";
+    var errEl = document.getElementById("loginErr");
+    if(errEl) errEl.style.display = "block";
   }
-};
-document.getElementById("adminPass").onkeydown = function(e){
-  if(e.key === "Enter") document.getElementById("loginBtn").click();
-};
+}
+
+document.getElementById("loginBtn").onclick = doAdminLogin;
+
+var userInpEl = document.getElementById("adminUserInp");
+if(userInpEl){
+  userInpEl.onkeydown = function(e){ if(e.key === "Enter") doAdminLogin(); };
+}
+var passInpEl = document.getElementById("adminPass");
+if(passInpEl){
+  passInpEl.onkeydown = function(e){ if(e.key === "Enter") doAdminLogin(); };
+}
+
+var toggleVisBtn = document.getElementById("togglePassVisBtn");
+if(toggleVisBtn){
+  toggleVisBtn.onclick = function(){
+    if(!passInpEl) return;
+    if(passInpEl.type === "password"){
+      passInpEl.type = "text";
+      toggleVisBtn.textContent = "🙈";
+    } else {
+      passInpEl.type = "password";
+      toggleVisBtn.textContent = "👁️";
+    }
+  };
+}
+
+var quickLoginBtn = document.getElementById("quickLoginBtn");
+if(quickLoginBtn){
+  quickLoginBtn.onclick = function(){
+    if(userInpEl) userInpEl.value = "admin";
+    if(passInpEl) passInpEl.value = "tibb2026";
+    localStorage.setItem("uytibb_admin_pass", "tibb2026");
+    doAdminLogin();
+  };
+}
 document.getElementById("logoutBtn").onclick = function(){
   sessionStorage.removeItem("uytibb_admin_auth");
   sessionStorage.removeItem("uytibb_admin_user_name");
