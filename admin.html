@@ -1158,7 +1158,16 @@ function closePdfModal(){
 function initAdmin(){
   var rawL = localStorage.getItem("uytibb_custom_lessons");
   if(rawL){
-    try { LESSONS_DATA = JSON.parse(rawL); } catch(e){ LESSONS_DATA = window.DEFAULT_LESSONS.slice(); }
+    try {
+      LESSONS_DATA = JSON.parse(rawL);
+      if(Array.isArray(LESSONS_DATA)){
+        LESSONS_DATA.forEach(function(L, idx){
+          var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]) || {};
+          if(!L.pdfUrl && def.pdfUrl) L.pdfUrl = def.pdfUrl;
+          if(!L.pdfTitle && def.pdfTitle) L.pdfTitle = def.pdfTitle;
+        });
+      }
+    } catch(e){ LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice(); }
   } else {
     LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice();
   }

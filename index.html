@@ -552,8 +552,8 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
       <b>ئۇيغۇر تېبابىتى ئۆگىنىش</b>
       <small>نەزەرىيە قىسمى • 10 دەرس</small>
     </div>
-    <button class="aicon" id="pwaHeaderBtn" title="تېلېفونغا قاچىلاش" style="background:#c9a227;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;gap:.3rem">📲 قاچىلاش</button>
-    <a class="aicon" href="#/books" title="دەرسلىك PDF كىتابلىرى" style="background:rgba(201,162,39,.18);color:#b45309;font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--gold)">📄 PDF كىتابلار</a>
+    
+    <a class="aicon" href="#/books" title="دەرسلىك PDF كىتابلىرى" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.88rem;width:auto;padding:0 .9rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.2)">📖 PDF كىتابلار</a>
     <a class="aicon" href="admin.html" title="ئارقا سەھنە باشقۇرۇش مەركىزى" style="background:var(--teal-light);color:var(--teal-dark);font-weight:bold;font-size:.85rem;width:auto;padding:0 .7rem;display:inline-flex;align-items:center;gap:.3rem;text-decoration:none;border:1.5px solid var(--teal)">⚙️ ئارقا بەت</a>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     <button class="aicon" id="qrBtn" title="تېلېفوندا ئېچىش كودى">📲</button>
@@ -657,14 +657,21 @@ function vHome(){
     +'<div class="gprog"><i style="width:'+pct+'%"></i></div>'
     +'<div class="grow"><span>ئومۇمىي ئىلگىرىلەش</span><span>%'+pct+' ('+done+'/'+LESSONS.length+' دەرس)</span></div></div>';
   var pdfCountHome = LESSONS.filter(function(L){ return !!(L.pdfUrl || L.pdfData); }).length;
-  h+='<div class="home-pdf-hero" style="margin:.7rem 0;padding:.85rem 1rem;background:linear-gradient(135deg,#07332c,#12876f);color:#fff;border-radius:14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">'
-    +'  <div style="display:flex;align-items:center;gap:.7rem">'
-    +'    <span style="font-size:1.9rem">📖</span>'
-    +'    <div><b style="font-size:1.02rem;color:#fef08a">دەرسلىك كىتابلىرى (PDF كۇتۇپخانىسى)</b>'
-    +'    <small style="opacity:.9;display:block;font-size:.82rem">بارلىق ئەسلى كىتابلارنى يانفون ياكى كومپيۇتېردا تولۇق ئوقۇڭ</small></div>'
+  h+='<div class="home-pdf-hero" style="margin:.8rem 0;padding:1rem 1.1rem;background:linear-gradient(135deg,#0a5c52,#137762);color:#fff;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,.15);border:2px solid #eab308">'
+    +'  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">'
+    +'    <div style="display:flex;align-items:center;gap:.7rem">'
+    +'      <span style="font-size:2.2rem">📖</span>'
+    +'      <div><b style="font-size:1.08rem;color:#fef08a">دەرسلىك ئەسلى كىتابلىرى (PDF كۇتۇپخانىسى)</b>'
+    +'      <small style="opacity:.92;display:block;font-size:.83rem">بارلىق 10 دەرسلىكنىڭ تولۇق PDF كىتابى تەييارلاندى</small></div>'
+    +'    </div>'
+    +'    <a class="btn btn-gold btn-sm" href="#/books" style="color:#2e2200;font-weight:bold;text-decoration:none;padding:.45rem 1.1rem;border-radius:9px;font-size:.88rem;white-space:nowrap">📚 كىتابلارنى ئېچىش ('+LESSONS.length+' كىتاب) ›</a>'
     +'  </div>'
-    +'  <a class="btn btn-gold btn-sm" href="#/books" style="color:#2e2200;font-weight:bold;text-decoration:none;padding:.4rem .9rem;border-radius:8px;font-size:.85rem;white-space:nowrap">📄 كىتابلارنى كۆرۈش ('+pdfCountHome+') ›</a>'
-    +'</div>';
+    +'  <div style="display:flex;gap:.5rem;margin-top:.8rem;overflow-x:auto;padding-bottom:.4rem;width:100%">'
+    +'    <span style="align-self:center;font-size:.8rem;opacity:.9;white-space:nowrap;margin-left:.3rem">تېز ئېچىش:</span>';
+  LESSONS.forEach(function(pl){
+    h+='<a href="#/lesson/'+pl.id+'/pdf" style="flex:none;background:rgba(255,255,255,.18);color:#fff;text-decoration:none;padding:.35rem .75rem;border-radius:8px;font-size:.8rem;display:inline-flex;align-items:center;gap:.3rem;border:1px solid rgba(255,255,255,.3);white-space:nowrap">📄 '+pl.id+'-دەرس PDF ›</a>';
+  });
+  h+='</div></div>';
   h+='<div class="mstats"><div class="mstat"><b>'+LESSONS.length+'</b><span>دەرس</span></div>'
     +'<div class="mstat"><b>'+auto+'</b><span>ئاپتومات سوئال</span></div>'
     +'<div class="mstat"><b>'+(total-auto)+'</b><span>بايان سوئال</span></div>'
@@ -782,7 +789,7 @@ function vMe(){
     });
     h+='</table></div>';
   }
-  h+='<div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap"><a class="btn btn-gold" href="#/install">📲 ئەپنى قاچىلاش</a><button class="btn btn-line" id="btnRandom">🎲 تاساددىپى مەشىق</button>'
+  h+='<div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">'
     +'<button class="btn btn-line" id="btnReset">🗑️ نەتىجىلەرنى تازىلاش</button></div>';
   return h;
 }
@@ -850,6 +857,16 @@ function renderTabBody(L){
     var pUrl = L.pdfData || L.pdfUrl || "";
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك كىتابى (PDF)");
     var hPdf = '<div class="pdf-box">'
+      + '<div style="padding:.8rem 1rem;margin-bottom:.9rem;background:linear-gradient(135deg,rgba(18,135,111,.12),rgba(201,162,39,.15));border:1.5px solid var(--teal);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem">'
+      + '  <div style="display:flex;align-items:center;gap:.6rem">'
+      + '    <span style="font-size:1.6rem">📱</span>'
+      + '    <div><b style="color:var(--teal-dark);font-size:.95rem">بۇ كىتابنى يانفونىڭىزدا بىۋاسىتە ئوقۇڭ</b><br><small style="color:var(--muted);font-size:.82rem">تۆۋەندىكى كۆزنەكتە كۆرۈنمىسىمۇ، يېشىل كۇنۇپكىنى باسسىڭىزلا پۈتۈن ئېكراندا ئېچىلىدۇ.</small></div>'
+      + '  </div>'
+      + '  <div style="display:flex;gap:.5rem;flex-wrap:wrap">'
+      + '    <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="font-weight:bold;padding:.45rem 1rem;font-size:.88rem">🚀 پۈتۈن ئېكراندا ئېچىش</a>'
+      + '    <a class="btn btn-gold btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="font-weight:bold;color:#2e2200;padding:.45rem 1rem;font-size:.88rem">⬇️ چۈشۈرۈش</a>'
+      + '  </div>'
+      + '</div>'
       + '<div class="pdf-head">'
       + '  <div class="pdf-info"><b>📄 ' + esc(pTitle) + '</b><br><small>تولۇق كىتابنى قەغەزدەك ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</small></div>'
       + '  <div class="pdf-btns">'
@@ -1783,7 +1800,7 @@ function router(){
   else if(hash==="#/exam"){ main.innerHTML=vExam(); $("exStart").onclick=startExam; $("exScope").onchange=updExPool; $("exTypes").onchange=updExPool; updExPool(); }
   else if(hash==="#/me"){
     main.innerHTML=vMe();
-    $("btnRandom").onclick=function(){ var L=LESSONS[Math.floor(Math.random()*LESSONS.length)]; location.hash="#/lesson/"+L.id+"/quiz"; };
+    var _br=$("btnRandom"); if(_br) _br.onclick=function(){ var L=LESSONS[Math.floor(Math.random()*LESSONS.length)]; location.hash="#/lesson/"+L.id+"/quiz"; };
     $("btnReset").onclick=function(){ if(confirm("بارلىق نەتىجىلەر ئۆچۈرۈلسۇنمۇ؟")){ saveProg({lessons:{},exams:[]}); router(); } };
   }
   else if(hash==="#/ai"){ main.innerHTML=vAI(); aiInit(); }
@@ -1803,10 +1820,17 @@ function loadCustomData(){
   try {
     var raw = localStorage.getItem("uytibb_custom_lessons");
     if(raw){
-      var custom = JSON.parse(raw);
-      if(Array.isArray(custom) && custom.length){
-        LESSONS = custom;
-      }
+      try {
+        var custom = JSON.parse(raw);
+        if(Array.isArray(custom) && custom.length){
+          LESSONS = custom.map(function(L, idx){
+            var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]) || {};
+            if(!L.pdfUrl && def.pdfUrl) L.pdfUrl = def.pdfUrl;
+            if(!L.pdfTitle && def.pdfTitle) L.pdfTitle = def.pdfTitle;
+            return L;
+          });
+        }
+      } catch(e){}
     }
     var rawT = localStorage.getItem("uytibb_custom_teachers");
     if(rawT){
