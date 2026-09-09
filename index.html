@@ -1800,6 +1800,7 @@ function router(){
 
   // 10. Admin
   if(hash === "#/admin"){
+    sessionStorage.removeItem("uytibb_admin_auth");
     window.location.href = "admin.html";
     return;
   }

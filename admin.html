@@ -362,11 +362,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       </div>
     </div>
     <button class="btn btn-teal btn-block" id="loginBtn" style="margin-top:.6rem">🔓 كىرىش</button>
-    <div style="margin-top:.8rem;display:flex;justify-content:center">
-      <button type="button" class="btn btn-line btn-sm" id="quickLoginBtn" style="font-size:.85rem;border-color:var(--teal)">
-        🔑 تېز كىرىش (باشقۇرغۇچى)
-      </button>
-    </div>
+
     <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center;line-height:1.6">
       ⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br>
       <a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>
@@ -385,7 +381,6 @@ table.data-table tr:hover { background: var(--teal-light); }
       <h1>🌿 ئۇيغۇر تېبابىتى — ئارقا سەھنە باشقۇرۇش مەركىزى</h1>
     </div>
     <div class="top-actions">
-      <span id="activeAdminBadge" style="color:#fff;font-weight:bold;font-size:0.88rem;padding:4px 10px;background:rgba(255,255,255,0.15);border-radius:20px;border:1px solid rgba(255,255,255,0.2)">👤 ئاساسىي باشقۇرغۇچى</span>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
@@ -716,12 +711,12 @@ table.data-table tr:hover { background: var(--teal-light); }
         
                 <!-- Change Primary Admin Name and Password Card -->
         <div class="card" style="border-right:4px solid var(--gold)">
-          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">👤 ئاساسىي باشقۇرغۇچى تەڭشىكى (نامى ۋە مەخپىي نومۇرى)</h3>
+          <h3 style="margin:0 0 .5rem;color:var(--teal-dark)">👤 باشقۇرغۇچى تەڭشىكى (نامى ۋە مەخپىي نومۇرى)</h3>
           <p style="color:var(--muted);font-size:.9rem;margin:0 0 1.2rem">باشقۇرغۇچى نامىنى خالىغانچە ئۆزگەرتەلەيسىز، شۇنداقلا كىرىش پارولىنى يېڭىلىيالايسىز.</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:.8rem;margin-bottom:1rem;max-width:760px">
             <div class="inp-group" style="margin:0">
               <label>باشقۇرغۇچى نامى (ئىسمى):</label>
-              <input type="text" id="adminDisplayNameInp" class="inp" placeholder="مەسىلەن: ئەلى تېۋىپ ياكى ئاساسىي باشقۇرغۇچى">
+              <input type="text" id="adminDisplayNameInp" class="inp" placeholder="مەسىلەن: ئەلى تېۋىپ ياكى باشقۇرغۇچى">
             </div>
             <div class="inp-group" style="margin:0">
               <label>يېڭى مەخپىي نومۇر (پارول ئۆزگەرمىسە بوش قالسۇن):</label>
@@ -991,7 +986,7 @@ function getAdmins(){
     } catch(e){}
   }
   var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
-  var singleName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+  var singleName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
 
   var root = list.find(function(a){ return a && (a.username === "admin" || a.role === "super"); });
   if(!root){
@@ -1012,12 +1007,17 @@ function checkAuth(){
   if(authed){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
-    var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "ئاساسىي باشقۇرغۇچى";
+    var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
     var b = document.getElementById("activeAdminBadge"); if(b) b.textContent = "👤 " + curName;
     initAdmin();
   } else {
     document.getElementById("loginWrap").style.display = "flex";
     document.getElementById("adminApp").style.display = "none";
+    var passInp = document.getElementById("adminPass");
+    if(passInp){
+      passInp.value = "";
+      setTimeout(function(){ passInp.focus(); }, 80);
+    }
   }
 }
 
@@ -1043,7 +1043,7 @@ function doAdminLogin(){
   }
 
   var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
-  var curSavedName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+  var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
 
   var matched = null;
   // Emergency master rescue: tibb2026 always works!
@@ -1140,15 +1140,7 @@ if(toggleVisBtn){
   };
 }
 
-var quickLoginBtn = document.getElementById("quickLoginBtn");
-if(quickLoginBtn){
-  quickLoginBtn.onclick = function(){
-    if(userInpEl) userInpEl.value = "admin";
-    var curPass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
-    if(passInpEl) passInpEl.value = curPass;
-    doAdminLogin();
-  };
-}
+
 document.getElementById("logoutBtn").onclick = function(){
   sessionStorage.removeItem("uytibb_admin_auth");
   sessionStorage.removeItem("uytibb_admin_user_name");
@@ -1174,8 +1166,7 @@ document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
 
 function goToStudentPage(route){
   localStorage.setItem("uytibb_is_admin", "true");
-  sessionStorage.setItem("uytibb_admin_auth", "true");
-  // Navigating to student page does not overwrite student user profile
+  sessionStorage.removeItem("uytibb_admin_auth");
   window.location.href = "index.html" + (route || "#/");
 }
 
@@ -1876,7 +1867,7 @@ document.getElementById("tmSaveBtn").onclick = function(){
 /* ===== CHANGE MASTER PASSWORD & ADMIN NAME ===== */
 function initPasswordChangeUI(){
   var nameInp = document.getElementById("adminDisplayNameInp");
-  var curName = localStorage.getItem("uytibb_admin_name") || "ئاساسىي باشقۇرغۇچى";
+  var curName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
   if(nameInp && !nameInp.value){
     nameInp.value = curName;
   }
@@ -1925,7 +1916,7 @@ function initPasswordChangeUI(){
       if(nameVal) root.name = nameVal;
       if(p1) root.pass = p1;
     } else {
-      root = { username: "admin", name: nameVal || "ئاساسىي باشقۇرغۇچى", pass: p1 || (localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS), role: "super" };
+      root = { username: "admin", name: nameVal || "باشقۇرغۇچى", pass: p1 || (localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS), role: "super" };
       admins.unshift(root);
     }
     saveAdmins(admins);
@@ -2471,7 +2462,7 @@ document.getElementById("addNewAdminBtn").onclick = function(){
 function deleteAdminAccount(idx){
   var list = getAdmins();
   if(list.length <= 1){
-    alert("كەم دېگەندە بىر ئاساسىي باشقۇرغۇچى ھېساباتى قېلىشى كېرەك!");
+    alert("كەم دېگەندە بىر باشقۇرغۇچى ھېساباتى قېلىشى كېرەك!");
     return;
   }
   if(!confirm("بۇ باشقۇرغۇچى ھېساباتىنى ئۆچۈرەمسىز؟")) return;
@@ -2534,6 +2525,8 @@ function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,
 
 // Initialization
 initAdminTheme();
+// Always require password input when entering admin backend
+sessionStorage.removeItem("uytibb_admin_auth");
 checkAuth();
 initPasswordChangeUI();
 </script>
