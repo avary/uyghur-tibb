@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v12-20260909';
+const CACHE_NAME = 'uytibb-v13-20260909';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,10 @@ const ASSETS = [
   './admin.webmanifest',
   './icon-192.png',
   './icon-512.png',
-  './icon.svg'
+  './icon.svg',
+  './admin-icon-192.png',
+  './admin-icon-512.png',
+  './admin-icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
