@@ -1,9 +1,11 @@
-const CACHE_NAME = 'uytibb-v11-20260909';
+const CACHE_NAME = 'uytibb-v12-20260909';
 const ASSETS = [
   './',
   './index.html',
+  './admin.html',
   './data.js',
   './manifest.webmanifest',
+  './admin.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './icon.svg'
@@ -40,7 +42,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // 1. Navigation / Document requests: NETWORK-FIRST so user ALWAYS gets the freshest HTML
-  const isNav = event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('/index.html');
+  const isNav = event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html');
   if (isNav) {
     event.respondWith(
       fetch(event.request)
@@ -52,6 +54,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
+          if (url.pathname.endsWith('/admin.html')) {
+            return caches.match(event.request).then(cached => cached || caches.match('./admin.html'));
+          }
           return caches.match(event.request).then((cached) => {
             return cached || caches.match('./index.html') || caches.match('./');
           });
