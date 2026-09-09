@@ -13,6 +13,101 @@ import { loadData } from '../data/loader'
 const LS_LESSONS = 'uytibb_custom_lessons'
 const LS_TEACHERS = 'uytibb_custom_teachers'
 
+const QUIZ_TYPES = ['choice', 'tf', 'blank', 'match', 'essay']
+
+// ---- pure helpers (node-testable; no DOM) ----
+
+function asStr(v) { return v == null ? '' : String(v) }
+function asStrArray(v) { return Array.isArray(v) ? v.map(asStr) : [] }
+
+function normalizeLesson(L) {
+  if (!L || typeof L !== 'object') return null
+  const id = Number(L.id)
+  if (!Number.isInteger(id) || id <= 0) return null
+  if (!asStr(L.title).trim()) return null
+
+  const n = {
+    id,
+    title: asStr(L.title),
+    short: asStr(L.short),
+    subtitle: asStr(L.subtitle),
+    desc: asStr(L.desc),
+    goals: asStrArray(L.goals),
+    sections: Array.isArray(L.sections)
+      ? L.sections.map(s => ({
+          h: asStr(s && s.h),
+          body: asStr(s && s.body),
+          points: asStrArray(s && s.points)
+        }))
+      : [],
+    terms: Array.isArray(L.terms)
+      ? L.terms.map(t => ({ w: asStr(t && t.w), m: asStr(t && t.m) }))
+      : [],
+    quiz: Array.isArray(L.quiz)
+      ? L.quiz.map(q => {
+          const type = QUIZ_TYPES.includes(q && q.type) ? q.type : 'essay'
+          const nq = { type, q: asStr(q.q), exp: asStr(q.exp) }
+          if (type === 'choice') {
+            nq.opts = asStrArray(q.opts)
+            nq.a = Number(q.a)
+            if (!Number.isInteger(nq.a) || nq.a < 0 || nq.a >= nq.opts.length) nq.a = 0
+          } else if (type === 'tf') {
+            nq.a = Boolean(q.a)
+          } else if (type === 'blank') {
+            nq.a = Array.isArray(q.a) ? q.a.map(asStrArray) : []
+          } else if (type === 'match') {
+            nq.pairs = Array.isArray(q.pairs)
+              ? q.pairs.map(p => (Array.isArray(p) ? [asStr(p[0]), asStr(p[1])] : [asStr(p && p.a), asStr(p && p.b)]))
+              : []
+          } else {
+            nq.model = asStr(q.model)
+          }
+          return nq
+        })
+      : []
+  }
+  if (L.pdfUrl !== undefined) n.pdfUrl = asStr(L.pdfUrl)
+  if (L.pdfData !== undefined) n.pdfData = asStr(L.pdfData)
+  if (L.pdfTitle !== undefined) n.pdfTitle = asStr(L.pdfTitle)
+  return n
+}
+
+function normalizeTeacher(T) {
+  if (!T || typeof T !== 'object') return null
+  if (!asStr(T.name).trim()) return null
+  const n = { name: asStr(T.name) }
+  for (const k of ['years', 'field', 'tag', 'bio', 'works']) {
+    if (T[k] !== undefined) n[k] = asStr(T[k])
+  }
+  return n
+}
+
+function validateLessons(arr) {
+  if (!Array.isArray(arr)) return null
+  const seen = new Set()
+  const out = []
+  for (const L of arr) {
+    const n = normalizeLesson(L)
+    if (!n) return null
+    if (seen.has(n.id)) return null
+    seen.add(n.id)
+    out.push(n)
+  }
+  return out
+}
+
+function validateTeachers(arr) {
+  if (arr === undefined) return null
+  if (!Array.isArray(arr)) return null
+  const out = []
+  for (const T of arr) {
+    const n = normalizeTeacher(T)
+    if (!n) return null
+    out.push(n)
+  }
+  return out
+}
+
 function cloneDefaults() {
   const d = loadData()
   return {
@@ -75,8 +170,13 @@ export const useContent = defineStore('content', {
     },
 
     saveAll() {
-      localStorage.setItem(LS_LESSONS, JSON.stringify(this.lessons))
-      localStorage.setItem(LS_TEACHERS, JSON.stringify(this.teachers))
+      try {
+        localStorage.setItem(LS_LESSONS, JSON.stringify(this.lessons))
+        localStorage.setItem(LS_TEACHERS, JSON.stringify(this.teachers))
+        return true
+      } catch (e) {
+        return false
+      }
     },
 
     addLesson() {
@@ -164,12 +264,22 @@ export const useContent = defineStore('content', {
     },
 
     restore(data) {
-      if (!data || !Array.isArray(data.lessons)) return false
-      this.lessons = data.lessons
-      this.teachers = Array.isArray(data.teachers) ? data.teachers : this.teachers
+      if (!data || typeof data !== 'object') return { ok: false, error: 'زاپاس ھۆججەت قۇرۇلمىسى خاتا' }
+      const lessons = validateLessons(data.lessons)
+      if (!lessons) {
+        return {
+          ok: false,
+          error: 'دەرسلەر سانلىق مەلۇماتى خاتا (id سان بولۇشى ۋە بىردىنبىر ۋە title تولدۇرۇلغان بولۇشى كېرەك)'
+        }
+      }
+      const teachers = validateTeachers(data.teachers)
+      if (!teachers) return { ok: false, error: 'ئۇستازلار سانلىق مەلۇماتى خاتا (har بىرىنىڭ name بولۇشى كېرەك)' }
+      this.lessons = lessons
+      this.teachers = teachers
       this.currentLessonId = this.lessons.length ? this.lessons[0].id : 1
-      this.saveAll()
-      return true
+      const saved = this.saveAll()
+      if (!saved) return { ok: false, error: 'يەرلىك ئەسلىھەگە ساقلاش مەغلۇپ بولدى (خېرىدار ساقلاش چېكىدىن ئېشىپ كەتتى)' }
+      return { ok: true }
     },
 
     backup() {

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useQuiz } from '../composables/useQuiz'
 import { lessonById, QTYPES, QTICON } from '../data/loader'
+import { sanitizeHtml } from '../utils/sanitize'
 
 const props = defineProps({ id: { type: [String, Number], required: true } })
 const lesson = computed(() => lessonById(props.id))
@@ -105,7 +106,7 @@ const matchRights = computed(() => {
       <div v-else-if="q().type === 'essay'" class="essay">
         <textarea class="input" rows="4" placeholder="جاۋابىڭىزنى يېزىڭ…" v-model="answers[idx].text" :disabled="checked[idx]"></textarea>
         <button v-if="!checked[idx]" class="btn btn-ghost btn-sm" @click="selfGood[idx] = !selfGood[idx]">{{ selfGood[idx] ? '🚩 جاۋابىم توغرا دەپ بەلگىلەنگەن' : '🏁 جاۋابىم توغرا، بەلگىلە' }}</button>
-        <div v-else class="model" v-html="q().model || q().exp || ''"></div>
+        <div v-else class="model" v-html="sanitizeHtml(q().model || q().exp || '')"></div>
       </div>
 
       <!-- explanation -->

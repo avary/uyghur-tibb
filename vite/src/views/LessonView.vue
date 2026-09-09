@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useProgress } from '../stores/progress'
 import { lessonById } from '../data/loader'
 import { useToast } from '../composables/toast'
+import { sanitizeHtml } from '../utils/sanitize'
 
 const props = defineProps({ id: { type: [String, Number], required: true } })
 const progress = useProgress()
@@ -59,7 +60,7 @@ function goQuiz() {
 
     <article v-for="(sec, i) in lesson.sections" :key="i" class="sec card">
       <h3>{{ sec.h }}</h3>
-      <div class="lesson-body" v-html="sec.body"></div>
+      <div class="lesson-body" v-html="sanitizeHtml(sec.body)"></div>
       <details v-if="sec.points && sec.points.length" class="points">
         <summary>⭐ مۇھىم نۇقتىلار</summary>
         <ul><li v-for="(p, j) in sec.points" :key="j">{{ p }}</li></ul>

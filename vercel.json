@@ -1,6 +1,8 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "buildCommand": "npm --prefix vite run build",
+  "outputDirectory": "vite/dist",
   "headers": [
     {
       "source": "/manifest.webmanifest",

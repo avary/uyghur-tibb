@@ -9,6 +9,8 @@ const { toast } = useToast()
 
 const PLACEHOLDER_LOCAL = '(يەرلىك PDF سانلىق مەلۇماتى)'
 
+const MAX_PDF_BYTES = 2 * 1024 * 1024
+
 const lesson = computed(() => store.lessonById(store.currentLessonId))
 
 const pdfUrlDraft = ref('')
@@ -71,18 +73,36 @@ function delLesson() {
 
 function uploadPdf(e) {
   const file = e.target.files && e.target.files[0]
+  e.target.value = ''
   if (!file) return
   const L = lesson.value
   if (!L) return
+
+  const isPdf = file.type === 'application/pdf' || (!file.type && /\.pdf$/i.test(file.name))
+  if (!isPdf) {
+    toast('⚠️ پەقەت PDF ھۆججەت تاللىيالايسىز!', 'err')
+    return
+  }
+  if (file.size > MAX_PDF_BYTES) {
+    toast('⚠️ PDF ھۆججەت ' + Math.round(MAX_PDF_BYTES / 1024 / 1024) + 'MB دىن چوڭ بولماسلىقى كېرەك.', 'err')
+    return
+  }
+
   const rawName = file.name.replace(/\.[^/.]+$/, '').replace(/[\_\-]+/g, ' ').trim()
   let cleanTitle = rawName
   const m = /^lesson\s*(\d+)$/i.exec(rawName)
   if (m) cleanTitle = m[1] + '-دەرسلىك بىلىملىرى'
   const reader = new FileReader()
+  reader.onerror = () => toast('⚠️ ھۆججەتنى ئوقۇشتا خاتالىق — قايتا سىناڭ.', 'err')
   reader.onload = (evt) => {
-    L.pdfData = evt.target.result
-    L.pdfUrl = 'pdf/' + file.name
-    L.pdfTitle = (cleanTitle || (L.id + '-دەرس')) + ' كىتابى (PDF)'
+    const pdfData = evt.target.result
+    const pdfUrl = 'pdf/' + file.name
+    const pdfTitle = (cleanTitle || (L.id + '-دەرس')) + ' كىتابى (PDF)'
+    const prev = { pdfUrl: L.pdfUrl, pdfData: L.pdfData, pdfTitle: L.pdfTitle }
+
+    L.pdfData = pdfData
+    L.pdfUrl = pdfUrl
+    L.pdfTitle = pdfTitle
     pdfUrlDraft.value = ''
     if (!L.title || L.title === (L.id + '-دەرسلىك بىلىملىرى') || L.title.indexOf('يېڭى دەرس') >= 0) {
       L.title = cleanTitle || (L.id + '-دەرسلىك تېبابەت بىلىملىرى')
@@ -105,7 +125,7 @@ function uploadPdf(e) {
       L.sections = [
         {
           h: '1. دەرسلىك كىتابى ھەققىدە ۋە مۇھىم بىلىم نۇقتىلىرى',
-          body: '<p>مەزكۇر دەرسكە مۇناسىپ <b>«' + escapeHtml(L.pdfTitle) + '»</b> سىستېمىغا مۇۋەپپەقىيەتلىك كىرگۈزۈلدى. دەرسلىك ئىچىدىكى <b>«📄 كىتاب (PDF)»</b> خەتكۈچى ئارقىلىق پۈتۈن كىتابنى تولۇق ئوقۇيالايسىز.</p>',
+          body: '<p>مەزكۇر دەرسكە مۇناسىپ <b>«' + escapeHtml(pdfTitle) + '»</b> سىستېمىغا مۇۋەپپەقىيەتلىك كىرگۈزۈلدى. دەرسلىك ئىچىدىكى <b>«📄 كىتاب (PDF)»</b> خەتكۈچى ئارقىلىق پۈتۈن كىتابنى تولۇق ئوقۇيالايسىز.</p>',
           points: [
             'دەرسلىك كىتابىدىكى مۇھىم تېبابەت بىلىملىرىنى ئەستايىدىل تەھلىل قىلىش',
             'مۇھىم تېبابەت تەجرىبىلىرىنى دەپتەرگە قەرەللىك خاتىرىلەش'
@@ -113,11 +133,16 @@ function uploadPdf(e) {
         }
       ]
     }
-    store.saveAll()
+    if (!store.saveAll()) {
+      L.pdfData = prev.pdfData
+      L.pdfUrl = prev.pdfUrl
+      L.pdfTitle = prev.pdfTitle
+      toast('⚠️ PDF ساقلاش مەغلۇپ بولدى — يەرلىك ئەسلىھە چېكى تولغان بولۇشى مۇمكىن.', 'err')
+      return
+    }
     toast('✅ PDF قوشۇلدى ۋە دەرس مەزمۇنلىرى ئاپتوماتىك تولدۇرۇلدى!')
   }
   reader.readAsDataURL(file)
-  e.target.value = ''
 }
 
 function previewPdf() {
@@ -245,7 +270,7 @@ function save() {
       <div class="dropzone" @click="fileInput && fileInput.click()">
         <input ref="fileInput" type="file" accept="application/pdf" class="hidden" @change="uploadPdf">
         <b>📤 PDF يۈكلەش</b>
-        <small>بۇ يەرنى بېسىڭ ياكى PDF كىتابچە تاللاڭ — دەرس مەزمۇنلىرى ئاپتوماتىك تولدۇرۇلىدۇ.</small>
+        <small>بۇ يەرنى بېسىڭ ياكى PDF كىتابچە تاللاڭ — دەرس مەزمۇنلىرى ئاپتوماتىك تولدۇرۇلىدۇ. (ئەڭ چوڭ: 2MB)</small>
       </div>
     </div>
 

@@ -113,14 +113,14 @@ function restore(e) {
   reader.onload = evt => {
     try {
       const imported = JSON.parse(evt.target.result)
-      if (imported.lessons && Array.isArray(imported.lessons)) {
-        store.restore(imported)
-        if (Array.isArray(imported.students)) localStorage.setItem('uytibb_all_students', JSON.stringify(imported.students))
-        if (Array.isArray(imported.feedback)) saveFeedbackList(imported.feedback)
-        toast('✅ بارلىق دەرسلەر، سوئاللار ۋە سانلىق مەلۇماتلار ئەسلىگە كەلتۈرۈلدى!')
-      } else {
-        toast('خاتا زاپاس ھۆججەت فورماتى!', 'err')
+      const r = store.restore(imported)
+      if (!r.ok) {
+        toast('⚠️ زاپاس ھۆججەت قوبۇل قىلىنمىدى: ' + r.error, 'err')
+        return
       }
+      if (Array.isArray(imported.students)) localStorage.setItem('uytibb_all_students', JSON.stringify(imported.students))
+      if (Array.isArray(imported.feedback)) saveFeedbackList(imported.feedback)
+      toast('✅ بارلىق دەرسلەر، سوئاللار ۋە سانلىق مەلۇماتلار ئەسلىگە كەلتۈرۈلدى!')
     } catch (err) {
       toast('ھۆججەتنى ئوقۇشتا خاتالىق: ' + err.message, 'err')
     }
@@ -192,6 +192,11 @@ function roleLabel(r) { return r === 'super' ? 'ئالىي باشقۇرغۇچى 
         بارلىق دەرسلەر، ئۇستازلار، ئوقۇغۇچىلار ۋە پىكىر-سوئاللارنى بىر JSON
         ھۆججەتكە زاپاسلاپ، باشقا قۇرۇلمىغا يۆتكەلەيسىز.
       </p>
+      <p class="acopy note">
+        ℹ️ دەرس/ئۇستاز ئۆزگەرتىشلىرى پەقەت <b>بۇ ئۈسكۈنە</b> دە (localStorage)
+        ساقلىنىدۇ — مۇلازىمەتكە ئاپتوماتىك يوللانمايدۇ. ئەسلى زاپاس ھۆججەتتىن
+        باشقا قۇرۇلمىغا ئۆتكۈزۈش ئۈچۈن «زاپاس ھۆججەت چۈشۈرۈش/ئەسلىگە كەلتۈرۈش» نى ئىشلىتىڭ.
+      </p>
       <div class="qa-row">
         <button class="btn btn-gold btn-sm" @click="backup">📥 زاپاس ھۆججەت چۈشۈرۈش</button>
         <label class="btn btn-line btn-sm file-btn">
@@ -211,6 +216,8 @@ function roleLabel(r) { return r === 'super' ? 'ئالىي باشقۇرغۇچى 
 .fld { margin-bottom: .7rem; }
 .fld label { display: block; font-size: .82rem; font-weight: 800; color: var(--muted); margin-bottom: .3rem; }
 .acopy { color: var(--muted); font-size: .82rem; line-height: 1.9; }
+.acopy.note { border: 1px dashed var(--line); border-radius: 10px; padding: .55rem .7rem; background: var(--card-2); }
+.acopy b { color: var(--ink); }
 .acopy code { background: var(--card-2); padding: .1rem .35rem; border-radius: 6px; font-size: .88em; }
 .empty { text-align: center; color: var(--muted); padding: 1rem; font-size: .85rem; }
 .adm-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; border-top: 1px dashed var(--line); padding: .6rem 0; flex-wrap: wrap; }

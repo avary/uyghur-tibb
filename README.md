@@ -1,13 +1,15 @@
 # ئۇيغۇر تېبابىتى مائارىپ سۇپىسى (Uyghur Traditional Medicine Platform)
 
-Vanilla-JS education app on Vercel (static frontend + Node serverless functions in `api/`),
-backed by a database you can **choose at deploy time**: **MySQL** or **Supabase (Postgres)**.
-The frontend never touches the database directly: all DB work flows through `/api/students`,
-and the browser clients don't know (or care) which backend is running.
+Vue 3 + Vite education app on Vercel (static frontend built from `vite/` + Node serverless
+functions in `api/`), backed by a database you can **choose at deploy time**: **MySQL** or
+**Supabase (Postgres)**. The frontend never touches the database directly: all DB work flows
+through `/api/students`, and the browser clients don't know (or care) which backend is running.
 
 ## Stack
-- **Frontend**: `index.html`, `admin.html`, `supabase.js` (a thin API client), `data.js`
-  (plus the Vue port in `vite/`)
+- **Frontend**: Vue 3 + Vite + Pinia + vue-router in `vite/`, built to `vite/dist` and
+  served as the Vercel deployment root. Its content (lessons/questions/teachers) uses the
+  root `data.js` as the source of truth, with `uytibb_custom_lessons` / `uytibb_custom_teachers`
+  localStorage overrides applied (and written by the Vue admin editors).
 - **Backend**: Node serverless functions in `api/`; `api/students.js` is a driver-agnostic
   dispatcher that delegates DB work to a driver chosen by the `DB_DRIVER` env var:
   - `api/lib/db-mysql.js` — MySQL (mysql2)
@@ -143,19 +145,29 @@ curl -s "https://<ref>.supabase.co/rest/v1/students?select=count" \
 > GRANT as a superuser, or ask your DB host admin to grant those privileges to the app user.
 
 ### 6. Local development
-Run the app and the API locally against whichever backend `DB_DRIVER` selects in `.env`
-(MySQL or Supabase — no Vercel needed):
+Run the legacy plain-HTML app **or** the Vue app locally, plus the API, against whichever
+backend `DB_DRIVER` selects in `.env` (MySQL or Supabase — no Vercel needed):
 
 ```bash
-npm run dev          # == node dev.js  (default port 8080)
-# optional custom port:
+npm run dev          # == node dev.js  (default port 8080) — legacy HTML + /api
 PORT=3000 npm run dev
+# optional custom port:
 ```
 
-`dev.js` serves the static frontend (`index.html`, `admin.html`, …) **and** the `/api/students`
-serverless function from the same origin, so everything works end-to-end on localhost. Set
-`PORT` in `.env` or on the command line (default `8080`). `ALLOWED_ORIGIN` defaults to the
-local origin when unset, so browser POSTs work locally too.
+`dev.js` serves the legacy static frontend (`index.html`, `admin.html`, …) **and** the
+`/api/students` serverless function from the same origin, so the API works end-to-end on
+localhost. Set `PORT` in `.env` or on the command line (default `8080`). `ALLOWED_ORIGIN`
+defaults to the local origin when unset, so browser POSTs work locally too.
+
+The Vue app runs on its own dev server (which proxies `/api` to `:8080`) and builds to
+`vite/dist`:
+
+```bash
+npm --prefix vite install     # once
+npm run vite:dev              # Vite dev server on :5173, proxies /api -> :8080
+npm run vite:build            # production build -> vite/dist (also copies pdf/ in)
+npm run vite:preview          # serve the build locally
+```
 
 Then exercise the endpoints:
 
@@ -182,15 +194,18 @@ curl http://localhost:8080/api/students -H "Authorization: Bearer <TOKEN>"
 
 ### 7. Deploy to Vercel
 
-**Frontend root** — the repo can be deployed either as the vanilla app or the Vue app:
+**Single project, root = repo root.** `vercel.json` builds the Vue app and serves
+`vite/dist` as the deployment root, while the `api/` directory is always picked up as
+serverless functions — so `/api/students` keeps working untouched:
 
-| App | Vercel Root Directory | Build command | Output |
-|---|---|---|---|
-| Vanilla (current `index.html`/`admin.html`) | repo root | *none* | committed files |
-| Vue port (`vite/`) | `vite` | `npm run build` | `vite/dist` |
+| Setting | Value |
+|---|---|
+| Root directory | repo root (do **not** point it at `vite`, or the `api/` functions would be lost) |
+| Build command | `npm --prefix vite run build` (set in `vercel.json`) |
+| Output directory | `vite/dist` (set in `vercel.json`) |
+| Static assets | `/`, `#/admin`, `/sw.js`, `/manifest.webmanifest`, icons come from the build; lesson PDFs in the repo-root `pdf/` folder are copied into `vite/dist/pdf` during the build |
 
-In both cases the API path stays `/api/students` (the `api/` directory is always picked up as
-serverless functions — keep it **outside** the Vue root directory).
+Because the app uses hash routing, no SPA fallback rewrites are needed.
 
 **Steps:**
 
@@ -198,8 +213,9 @@ serverless functions — keep it **outside** the Vue root directory).
    ```bash
    npm i -g vercel
    vercel login
-   vercel --prod    # run from the root (or `vercel --prod <vite>` if deploying the Vue app)
+   vercel --prod
    ```
+   A **preview** deployment (`vercel`) builds the same way without touching production.
 2. In **Project → Settings → Environment Variables**, set exactly the block from §4 that
    matches your backend — e.g. for Supabase:
    `DB_DRIVER=supabase`, `SUPABASE_URL=...`, `SUPABASE_SERVICE_ROLE_KEY=...`,
@@ -209,49 +225,53 @@ serverless functions — keep it **outside** the Vue root directory).
    Requests from any other origin are rejected with `403`; if it is left unset, cross-origin
    requests fail closed (`503`). Same-origin requests (an admin panel hosted on the same
    domain) always work.
-4. Redeploy, then check the API responds (`curl https://<your-app>.vercel.app/api/students`,
-   expect `401` without a token; `?phone=...` works publicly). Admin login uses `ADMIN_PASSWORD`.
-5. Switching databases later is just a matter of changing `DB_DRIVER` + env vars and re-applying
+4. **Preview verification checklist** (Vue cutover) — after a preview deployment, confirm:
+   - `/` loads the Vue app (home tab) and `#/admin` opens the Vue admin login
+   - `/api/students` returns `401` without a token; `?phone=...` works publicly
+   - `/pdf/lesson-1.pdf` returns a PDF (200), plus the other lesson PDFs
+   - `/sw.js` and `/manifest.webmanifest` return 200 with the configured headers
+5. Redeploy to production, then `curl https://<your-app>.vercel.app/api/students` should
+   return `401` without a token. Admin login uses `ADMIN_PASSWORD`.
+6. Switching databases later is just a matter of changing `DB_DRIVER` + env vars and re-applying
    §3 to move the data — no code or frontend changes needed.
 
-## Vue frontend (incremental port)
+## Vue frontend (port complete)
 
-A Vue 3 + Vite + Pinia + vue-router port lives in `vite/`, being built tab-by-tab while the
-vanilla `index.html` remains the deployed app during the transition.
+The Vue 3 + Vite + Pinia + vue-router app in `vite/` is now the **deployed frontend**
+(§7). The legacy `index.html`, `admin.html` and `connect.html` still live at the repo root
+and `dev.js` can still serve them (and the API) — they are only kept during the cutover
+rollout and will be removed once the Vercel preview deployment is verified.
 
-Run it (needs the Node API running for `/api/*` — see §6, or leave out if you only
-browse static data):
-
-```bash
-npm --prefix vite install     # once
-npm run vite:dev              # Vite dev server on :5173, proxies /api -> :8080
-npm run vite:build            # production build -> vite/dist
-npm run vite:preview          # serve the build locally
-```
-
-Ported so far:
+What the Vue app includes:
 - App shell (appbar, tabbar, light/dark theme, toasts) + hash router
 - Home, Lessons list, Lesson reader (sections, goals, mind map, PDF), lesson Quiz
 - Books (PDF), Teachers, Exam (timed), Me (progress/wrong answers), AI assistant, Install
 - Admin (`/admin`, auth-gated): login, dashboard stats, student approve/block/delete,
   feedback reply/dismiss, CSV export; server API is the source of truth, localStorage
-  keys stay shared with the vanilla app
+  keys stay shared with the legacy app
 - Content editors: lesson form + sections + quiz, PDF upload/preview/remove, question bank
   (choice/TF/blank/essay), teachers editor, backup/restore JSON, reset to defaults, and
-  multi-admin display-names — all inside the Vue admin tabs (was: done in vanilla `admin.html`)
-- Progress storage reuses the same `uytibb_v1` localStorage key as the vanilla app
+  multi-admin display-names — all inside the Vue admin tabs
+- Progress storage reuses the same `uytibb_v1` localStorage key as the legacy app
 - Content stays in the root `data.js` (single source of truth); `uytibb_custom_lessons` /
   `uytibb_custom_teachers` overrides are applied (and written by the Vue editors) like in
-  the vanilla learner app
+  the legacy learner app
 - PWA: `vite/public/sw.js` + manifest are copied into the build; the service worker is
   registered from `src/main.js` on production/secure contexts
+- Security hardening: lesson bodies and quiz model/explanation HTML are allowlist-sanitized
+  before every `v-html` render; PDF uploads are restricted to `application/pdf`, max 2 MB,
+  with quota-failure handling; restore imports are schema-validated (ids, question types,
+  answers, sections, teachers)
 
-Not yet ported: nothing admin-critical. `index.html`, `admin.html` and `connect.html` are
-kept at the repo root while the migration is reviewed; they are removed once the Vue app
-reaches full parity and no in-app links point at them.
+### Content persistence caveat
+Lesson/teacher edits are stored in the current browser's `localStorage` only
+(`uytibb_custom_lessons` / `uytibb_custom_teachers`) — they are **not** synced to the
+server or shared across devices/admins. Use the admin "زاپاسلاش ۋە ئەسلىگە كەلتۈرۈش"
+backup/restore JSON to move content between devices. Server-backed content management
+would be a follow-up feature.
 
 ## Admin login
-- Open the Vue admin at `/` → `#/admin` (or the legacy `admin.html`).
+- Open the Vue admin at `/` → `#/admin`.
 - Enter the `ADMIN_PASSWORD` value. A short-lived token is issued and stored in the session.
   The Vue route guard validates the token server-side before `/admin` becomes accessible.
 
