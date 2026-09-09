@@ -376,8 +376,8 @@ table.data-table tr:hover { background: var(--teal-light); }
     </p>
     <div style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem;display:flex;flex-direction:column;gap:.6rem">
       <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
-      <button type="button" onclick="triggerAdminInstall()" id="adminInstallBtn" class="btn btn-gold btn-sm" style="width:100%;justify-content:center;cursor:pointer;font-weight:bold;color:#2e2200;display:flex;align-items:center;gap:.4rem">
-        <span>📲</span> تېلېفونغا ئايرىم ئەپ قىلىپ قاچلاش
+      <button type="button" onclick="directAdminInstall()" id="adminInstallBtn" class="btn btn-gold btn-sm" style="width:100%;justify-content:center;cursor:pointer;font-weight:bold;color:#2e2200;display:flex;align-items:center;gap:.4rem;padding:.6rem">
+        <span>📲</span> بىۋاستە چۈشۈرۈش (ئەپ قىلىپ قاچلاش)
       </button>
     </div>
   </div>
@@ -391,6 +391,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       <h1>🌿 ئۇيغۇر تېبابىتى — ئارقا سەھنە باشقۇرۇش مەركىزى</h1>
     </div>
     <div class="top-actions">
+      <button id="directDownloadBtnTop" type="button" onclick="directAdminInstall()" class="btn-gold" style="color:#2e2200;font-weight:bold;display:inline-flex;align-items:center;gap:.3rem"><span>📲</span> بىۋاستە چۈشۈرۈش</button>
       <button id="themeToggleBtn" title="كېچە ۋە كۈندۈز ھالىتى">🌙 كېچە</button>
       <button id="quickSaveBtn" class="btn-gold" style="color:#2e2200;font-weight:bold"><span>💾</span> ساقلاش</button>
       <button id="logoutBtn" style="background:rgba(192,57,43,.4);border-color:rgba(255,255,255,.2)"><span>🚪</span> چىقىش</button>
@@ -410,7 +411,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       <button class="nav-item" data-tab="students"><span class="icon">👥</span> ئوقۇغۇچىلار ۋە تەستىقلاش <span id="pendingBadgeSide" class="badge badge-gold" style="display:none;margin-right:.4rem">0</span></button>
       <button class="nav-item" data-tab="feedback"><span class="icon">💬</span> سوئال-جاۋاب ۋە پىكىرلەر <span id="feedbackBadgeSide" class="badge badge-gold" style="display:none;margin-right:.4rem">0</span></button>
       <button class="nav-item" data-tab="settings"><span class="icon">⚙️</span> سىستېما ۋە باشقۇرغۇچىلار</button>
-      <button class="nav-item" type="button" onclick="triggerAdminInstall()" style="margin-top:auto;color:var(--gold);border-top:1px dashed var(--line);padding-top:.8rem"><span class="icon">📲</span> تېلېفونغا قاچلاش</button>
+      <button class="nav-item" type="button" onclick="directAdminInstall()" style="margin-top:auto;color:var(--gold);border-top:1px dashed var(--line);padding-top:.8rem"><span class="icon">📲</span> بىۋاستە چۈشۈرۈش</button>
     </nav>
 
     <!-- Main Content Area -->
@@ -440,6 +441,7 @@ table.data-table tr:hover { background: var(--teal-light); }
         <div class="card">
           <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">🚀 تېز مەشغۇلاتلار</h3>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+            <button class="btn btn-gold" onclick="directAdminInstall()" style="font-weight:bold;color:#2e2200">📲 باشقۇرۇش ئەپىنى بىۋاستە چۈشۈرۈش</button>
             <button class="btn btn-teal" onclick="switchTab('lessons')">📄 بارلىق دەرسلەرنىڭ PDF سىنى باشقۇرۇش</button>
             <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
             <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
@@ -2605,10 +2607,26 @@ window.addEventListener('beforeinstallprompt', function(e){
   }
 });
 
-function triggerAdminInstall(){
+function directAdminInstall(){
+  if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
+    showToast("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان!");
+    return;
+  }
+  if(_adminDeferredPrompt){
+    _adminDeferredPrompt.prompt();
+    _adminDeferredPrompt.userChoice.then(function(choice){
+      if(choice.outcome === 'accepted'){
+        showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+        closeAdminInstallGuide();
+      }
+      _adminDeferredPrompt = null;
+    });
+    return;
+  }
   var m = document.getElementById("adminInstallModal");
   if(m) m.style.display = "flex";
 }
+var triggerAdminInstall = directAdminInstall;
 function closeAdminInstallGuide(){
   var m = document.getElementById("adminInstallModal");
   if(m) m.style.display = "none";
