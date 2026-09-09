@@ -65,9 +65,12 @@ function createDriver({ fetchFn } = {}){
     async getAdminData(){
       const students = [], feedback = [], exams = [];
       if(connected){
-        const sRows = await sb('/students?select=*&order=registered_at.desc').catch(() => []);
-        const fRows = await sb('/feedback?select=*&order=created_at.desc').catch(() => []);
-        const eRows = await sb('/exam_logs?select=*&order=taken_at.desc').catch(() => []);
+        // Deliberately NOT caught: a failed table read (bad key, missing schema,
+        // Supabase down) must surface as an error (the dispatcher returns 500) so
+        // an outage is never mistaken for an empty-but-healthy database.
+        const sRows = await sb('/students?select=*&order=registered_at.desc');
+        const fRows = await sb('/feedback?select=*&order=created_at.desc');
+        const eRows = await sb('/exam_logs?select=*&order=taken_at.desc');
         for(const r of sRows || []){
           students.push({ name: r.name, phone: r.phone, status: r.status, registered_at: iso(r.registered_at), when: iso(r.registered_at), notes: r.notes });
         }

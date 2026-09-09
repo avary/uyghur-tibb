@@ -27,17 +27,27 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 const AUTH_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
 // ---- Backend driver selection (DB_DRIVER=mysql|supabase, else auto-detect) ----
+// Explicitly choosing a driver whose credentials are missing is a configuration
+// error and FAILS CLOSED (the function errors on cold start) rather than silently
+// answering requests with an empty/never-persisted database. Only the auto-detect
+// default (no DB_DRIVER, no credentials) keeps the lenient connected=false path.
 function hasMysql(){
   return !!(process.env.MYSQL_HOST && process.env.MYSQL_USER &&
-    process.env.MYSQL_PASSWORD !== undefined && process.env.MYSQL_DATABASE);
+    process.env.MYSQL_PASSWORD && process.env.MYSQL_DATABASE);
 }
 function hasSupabase(){
   return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 function selectDriver(){
   const explicit = String(process.env.DB_DRIVER || '').toLowerCase();
-  if(explicit === 'supabase') return createSupabaseDriver();
-  if(explicit === 'mysql') return createMysqlDriver();
+  if(explicit === 'supabase'){
+    if(!hasSupabase()) throw new Error('DB_DRIVER=supabase requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (server-side only)');
+    return createSupabaseDriver();
+  }
+  if(explicit === 'mysql'){
+    if(!hasMysql()) throw new Error('DB_DRIVER=mysql requires MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD and MYSQL_DATABASE');
+    return createMysqlDriver();
+  }
   if(!hasMysql() && hasSupabase()) return createSupabaseDriver();
   return createMysqlDriver();
 }
@@ -149,8 +159,6 @@ function validateStudentInput(user){
   return { ok: true, name, phone, status };
 }
 
-function toIso(d){ return d ? new Date(d).toISOString() : null; }
-
 module.exports = async (req, res) => {
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
 
@@ -213,7 +221,15 @@ module.exports = async (req, res) => {
         return res.status(200).json({ status: 'ok', message: 'Logged in', token: issueToken('super', username), user: { name: username, role: 'super' } });
       }
 
-      // 2. Register student (public, validated)
+      // 2. Verify admin token (ADMIN ONLY) — thin server-side check so the Vue
+      //    route guard can reject forged/expired tokens before showing the admin UI
+      if(action === 'verify_token'){
+        const user = getReqUser(req, res);
+        if(!user) return;
+        return res.status(200).json({ status: 'ok', user: { name: user.username || 'admin', role: user.role || 'super' } });
+      }
+
+      // 3. Register student (public, validated)
       if(action === 'register' && data.user){
         const v = validateStudentInput(data.user);
         if(!v.ok) return fail(400, 'Invalid student data: ' + v.why);
@@ -221,7 +237,7 @@ module.exports = async (req, res) => {
         return res.status(200).json({ status: 'ok', message: 'Student registered' });
       }
 
-      // 3. Approve / block / set student status (ADMIN ONLY)
+      // 4. Approve / block / set student status (ADMIN ONLY)
       if(action === 'update_status' && data.phone && data.status){
         const user = getReqUser(req, res);
         if(!user) return;
@@ -230,7 +246,7 @@ module.exports = async (req, res) => {
         return res.status(200).json({ status: 'ok', message: 'Status updated' });
       }
 
-      // 4. Delete a student (ADMIN ONLY)
+      // 5. Delete a student (ADMIN ONLY)
       if(action === 'delete_student' && data.phone){
         const user = getReqUser(req, res);
         if(!user) return;
@@ -238,7 +254,7 @@ module.exports = async (req, res) => {
         return res.status(200).json({ status: 'ok', message: 'Student deleted' });
       }
 
-      // 5. Log exam result (public, validated, persisted)
+      // 6. Log exam result (public, validated, persisted)
       if(action === 'exam' && data.exam){
         const ex = data.exam;
         const score = Number(ex.score);
@@ -248,18 +264,11 @@ module.exports = async (req, res) => {
         if(!Number.isFinite(score) || score < 0 || !Number.isFinite(total) || total < 1 || total > 1000 || score > total) {
           return fail(400, 'Invalid exam data');
         }
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute(
-              'INSERT INTO exam_logs (student_phone, scope, score, total_questions, duration_seconds, passed) VALUES (?, ?, ?, ?, ?, ?)',
-              [phone || null, scope, Math.round(score), Math.round(total), Number(ex.duration_seconds) || null, ex.passed ? 1 : 0]
-            );
-          });
-        }
+        if(db.connected) await db.logExam({ student_phone: phone, scope, score, total_questions: total, duration_seconds: Number(ex.duration_seconds) || null, passed: !!ex.passed });
         return res.status(200).json({ status: 'ok', message: 'Exam result logged' });
       }
 
-      // 6. Submit feedback (public, validated, persisted)
+      // 7. Submit feedback (public, validated, persisted)
       if(action === 'feedback' && data.feedback){
         const name = String(data.feedback.name || '').trim();
         const phone = String(data.feedback.phone || '').trim();
@@ -267,46 +276,24 @@ module.exports = async (req, res) => {
         if(text.length < 1 || text.length > 2000) return fail(400, 'Invalid feedback');
         if(name.length > 200) return fail(400, 'Name too long');
         if(phone && phone.length > 40) return fail(400, 'Phone too long');
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute(
-              'INSERT INTO feedback (student_name, student_phone, question, is_public) VALUES (?, ?, ?, 1)',
-              [name || 'نامەلۇم', phone || '', text]
-            );
-          });
-        }
+        if(db.connected) await db.addFeedback({ name, phone, text });
         return res.status(200).json({ status: 'ok', message: 'Feedback logged' });
       }
 
-      // 7. Reply to feedback (ADMIN ONLY)
+      // 8. Reply to feedback (ADMIN ONLY)
       if(action === 'reply_feedback' && data.id != null && data.reply != null){
         const user = getReqUser(req, res);
         if(!user) return;
         const reply = String(data.reply).trim();
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute(
-              'UPDATE feedback SET reply = ?, reply_at = NOW(), replied_by = ? WHERE id = ?',
-              [reply, user.username || 'باشقۇرغۇچى', Number(data.id)]
-            );
-          });
-        }
+        if(db.connected) await db.replyFeedback(data.id, reply, user.username || 'باشقۇرغۇچى');
         return res.status(200).json({ status: 'ok', message: 'Reply recorded' });
       }
 
-      // 8. Update admin profile/settings (ADMIN ONLY)
+      // 9. Update admin profile/settings (ADMIN ONLY)
       if(action === 'admin_update' && data.admin){
         const user = getReqUser(req, res);
         if(!user) return;
-        if(connected){
-          const a = data.admin;
-          await withConn(async (conn) => {
-            await conn.execute(
-              'UPDATE admins SET full_name = ?, password_hash = ? WHERE username = ?',
-              [a.full_name || 'باشقۇرغۇچى', a.password_hash || null, user.username]
-            );
-          });
-        }
+        if(db.connected) await db.updateAdmin(data.admin, user.username);
         return res.status(200).json({ status: 'ok', message: 'Admin updated' });
       }
 

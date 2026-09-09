@@ -178,6 +178,77 @@ test('privileged action: delete_student with forged token returns 401', async ()
   assert.equal(res.statusCode, 401);
 });
 
+test('privileged action: reply_feedback without token returns 401', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'reply_feedback', id: 1, reply: 'جاۋاب' },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
+test('privileged action: reply_feedback with forged token returns 401', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'reply_feedback', id: 1, reply: 'جاۋاب' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + forgedToken(), 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
+test('privileged action: reply_feedback with expired token returns 401', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'reply_feedback', id: 1, reply: 'جاۋاب' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + forgedToken(Date.now() - 1000), 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
+test('privileged action: admin_update with forged token returns 401', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'admin_update', admin: { full_name: 'باشقۇرغۇچى' } },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + forgedToken(), 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
+test('verify_token: real login token returns 200 (server-side token check)', async () => {
+  // Get a genuine token through the login action, then verify it.
+  const login = await run(req({
+    method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() },
+  }));
+  assert.equal(login.statusCode, 200);
+  const r = req({
+    method: 'POST', body: { action: 'verify_token' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + login.body.token, 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+  assert.ok(res.body.user && res.body.user.name);
+});
+
+test('verify_token: forged token returns 401 (route guard cannot be opened)', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'verify_token' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + forgedToken(), 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
+test('verify_token: missing token returns 401', async () => {
+  const r = req({
+    method: 'POST', body: { action: 'verify_token' },
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() },
+  });
+  const res = await run(r);
+  assert.equal(res.statusCode, 401);
+});
+
 test('register: valid student returns 200 (public)', async () => {
   const r = req({
     method: 'POST', body: { action: 'register', user: { name: 'سىناق', phone: '13800138000', status: 'pending' } },

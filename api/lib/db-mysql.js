@@ -28,7 +28,7 @@ function createDriver(){
     password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || '',
   };
-  const connected = !!(DB.host && DB.user && DB.password !== undefined && DB.database);
+  const connected = !!(DB.host && DB.user && DB.password && DB.database);
 
   async function withConn(fn){
     const conn = await mysql.createConnection(DB);

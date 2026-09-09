@@ -146,14 +146,19 @@ async function saveReply() {
   const text = replyText.value.trim()
   if (!text) { toast('جاۋاب تېكىستىنى كىرگۈزۈڭ!', 'err'); return }
   const f = replyItem.value
+  if (f.id != null) {
+    // Server-backed item: only mutate local state when the API actually accepted it.
+    const d = await api.replyFeedback(f.id, text, adminName.value)
+    if (!d || d.status !== 'ok') {
+      toast('⚠️ جاۋاب يوللانمىدى. توكېن بېكىتىلمىگەن ياكى مۇددىتى ئۆتكەن بولۇشى مۇمكىن.', 'err')
+      return
+    }
+  }
   const d = new Date()
   const dateStr = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes()
   f.reply = text
   f.replyAt = dateStr
   f.by = adminName.value
-  if (f.id != null) {
-    await api.replyFeedback(f.id, text, adminName.value)
-  }
   // Persist merged list locally so the vanilla admin stays in sync.
   const list = feedback.value.map(x => ({ id: x.id, n: x.n, phone: x.phone, t: x.t, reply: x.reply, replyAt: x.replyAt, w: x.w }))
   writeJSON(LS_FEEDBACK, list)

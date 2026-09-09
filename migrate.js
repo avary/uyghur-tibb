@@ -1,22 +1,28 @@
 #!/usr/bin/env node
 /**
- * migrate.js - Simple MySQL migrator for the Uyghur Tibb platform.
+ * migrate.js - Data migrator for the Uyghur Tibb platform (MySQL <-> Supabase).
  *
  * Usage:
- *   node migrate.js                 Apply schema (create tables) using MYSQL_* env / .env
+ *   node migrate.js                 Apply MySQL schema (create tables) using MYSQL_* env / .env
  *   node migrate.js --seed          Also seed a default admin row (hashed from ADMIN_PASSWORD)
- *   node migrate.js --from-supabase Also copy existing students/feedback/exams from a Supabase project
- *   node migrate.js --drop          Drop tables first (DANGEROUS) - use carefully
+ *   node migrate.js --from-supabase Copy existing students/feedback/exams from a Supabase project
+ *                                   (uses SUPABASE_SERVICE_ROLE_KEY; SUPABASE_ANON_KEY is a legacy
+ *                                   fallback that only works if the source RLS allows the reads)
+ *   node migrate.js --to-supabase   Copy MySQL data into a Supabase project (ONE-SHOT: re-running
+ *                                   duplicates feedback/exam_logs; students upsert safely by phone)
+ *   node migrate.js --drop          Drop MySQL tables first (DANGEROUS) - use carefully
  *
  * Config comes from environment variables or a `.env` file in the project root:
  *   MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
- *   ADMIN_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY
+ *   ADMIN_PASSWORD, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
  *
  * Notes:
  *  - CREATE DATABASE / GRANT statements in mysql_setup.sql require an elevated DB user.
  *    They are applied only when MYSQL_ADMIN_USER + MYSQL_ADMIN_PASSWORD are provided;
  *    otherwise the migrator creates tables in the existing schema (MYSQL_DATABASE).
  *  - The app user (MYSQL_USER) should only need the privileges granted in mysql_setup.sql.
+ *  - Supabase writes use the SERVICE ROLE key (server-side). Application of the Supabase
+ *    schema is done through the Supabase SQL Editor (see supabase_setup.sql).
  */
 const fs = require('fs');
 const path = require('path');
@@ -146,10 +152,17 @@ async function fetchJson(url, headers){
 
 async function migrateFromSupabase(conn){
   const base = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
+  // Prefer the SERVICE ROLE key for reading the source: it bypasses RLS, so it works
+  // even for a source project using supabase_setup.sql's restrictive policies (students
+  // are not publicly readable, feedback only when answered). The legacy anon key only
+  // works if the source project already grants those reads.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
   if(!base || !key){
-    console.log('  · skip --from-supabase (SUPABASE_URL / SUPABASE_ANON_KEY not set)');
+    console.log('  · skip --from-supabase (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set)');
     return;
+  }
+  if(!process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_ANON_KEY){
+    console.log('  · ⚠ --from-supabase falls back to SUPABASE_ANON_KEY: reads only succeed if the source project\'s RLS allows them. Prefer SUPABASE_SERVICE_ROLE_KEY.');
   }
   const url = base.replace(/\/+$/, '');
   const headers = { 'apikey': key, 'Authorization': 'Bearer ' + key };
@@ -186,10 +199,91 @@ async function migrateFromSupabase(conn){
   }
 }
 
+async function sbWrite(path, body, prefer){
+  const base = process.env.SUPABASE_URL.replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const headers = {
+    'apikey': key,
+    'Authorization': 'Bearer ' + key,
+    'Content-Type': 'application/json',
+    'Prefer': prefer || 'return=minimal',
+  };
+  const res = await fetch(base + '/rest/v1' + path, { method: 'POST', headers, body: JSON.stringify(body) });
+  if(!res.ok) throw new Error('Supabase write failed ' + res.status + ' ' + (await res.text().catch(() => '')));
+  return res;
+}
+
+async function migrateToSupabase(conn){
+  const base = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if(!base || !key){
+    console.log('  · skip --to-supabase (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set)');
+    return;
+  }
+
+  // Students (upsert on unique phone)
+  const [sRows] = await conn.execute(
+    'SELECT name, phone, status, registered_at, last_active, notes FROM students'
+  );
+  let ns = 0;
+  for(const s of sRows){
+    try {
+      await sbWrite('/students', {
+        name: String(s.name || ''), phone: String(s.phone || ''),
+        status: String(s.status || 'pending'), notes: s.notes || null,
+        registered_at: s.registered_at ? s.registered_at.toISOString() : new Date().toISOString(),
+        last_active: s.last_active ? s.last_active.toISOString() : new Date().toISOString(),
+      }, 'return=minimal,resolution=merge-duplicates');
+      ns++;
+    } catch(e){ console.warn(`  · skip student ${s.phone}: ${e.message}`); }
+  }
+  console.log(`  ✓ ${ns} students → Supabase`);
+
+  // Feedback (fresh UUIDs; MySQL ids are BIGINT, not reused)
+  const [fRows] = await conn.execute(
+    'SELECT student_name, student_phone, question, reply, reply_at, replied_by, is_public, created_at FROM feedback'
+  );
+  let nf = 0;
+  for(const f of fRows){
+    try {
+      await sbWrite('/feedback', {
+        student_name: String(f.student_name || ''), student_phone: f.student_phone || null,
+        question: String(f.question || ''), reply: f.reply || null,
+        reply_at: f.reply_at ? f.reply_at.toISOString() : null, replied_by: f.replied_by || null,
+        is_public: !!f.is_public,
+        created_at: f.created_at ? f.created_at.toISOString() : new Date().toISOString(),
+      });
+      nf++;
+    } catch(e){ console.warn(`  · skip feedback #${f.id}: ${e.message}`); }
+  }
+  console.log(`  ✓ ${nf} feedback items → Supabase`);
+
+  // Exam logs
+  const [eRows] = await conn.execute(
+    'SELECT student_phone, scope, score, total_questions, duration_seconds, passed, taken_at FROM exam_logs'
+  );
+  let ne = 0;
+  for(const e of eRows){
+    try {
+      await sbWrite('/exam_logs', {
+        student_phone: e.student_phone || null, scope: String(e.scope || ''),
+        score: Number(e.score) || 0, total_questions: Number(e.total_questions) || 0,
+        duration_seconds: e.duration_seconds || null, passed: !!e.passed,
+        taken_at: e.taken_at ? e.taken_at.toISOString() : new Date().toISOString(),
+      });
+      ne++;
+    } catch(err){ console.warn(`  · skip exam log #${e.id}: ${err.message}`); }
+  }
+  console.log(`  ✓ ${ne} exam logs → Supabase`);
+  console.log('  · note: --to-supabase is ONE-SHOT — feedback/exam_logs get fresh UUIDs each run,');
+  console.log('    so re-running duplicates them. Students upsert by phone and are safe to re-run.');
+}
+
 async function main(){
   const args = process.argv.slice(2);
   const doSeed = args.includes('--seed');
   const doSupabase = args.includes('--from-supabase');
+  const doToSupabase = args.includes('--to-supabase');
   const doDrop = args.includes('--drop');
 
   if(!process.env.MYSQL_HOST || !process.env.MYSQL_DATABASE){
@@ -231,6 +325,7 @@ async function main(){
   await applySchema(conn);
   if(doSeed) await seedAdmin(conn);
   if(doSupabase) await migrateFromSupabase(conn);
+  if(doToSupabase) await migrateToSupabase(conn);
   await conn.end();
 
   console.log('\n✅ Migration complete.');
