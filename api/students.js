@@ -1,28 +1,47 @@
-// api/students.js - Vercel Serverless Function backed by MySQL (mysql2)
+// api/students.js - Vercel Serverless Function with a pluggable database backend.
+//
+// The backend is chosen with the DB_DRIVER env var:
+//   DB_DRIVER=mysql    -> MySQL (mysql2)                       — default
+//   DB_DRIVER=supabase -> Supabase (server-side PostgREST, Service Role key)
+// Actual DB work is delegated to api/lib/db-<driver>.js; everything below is
+// driver-agnostic, so the browser clients (supabase.js / the Vue API store) never
+// need to know or care which database is deployed.
 //
 // SECURITY:
 //  - No credentials are hardcoded. Everything comes from environment variables:
-//      MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
-//      ADMIN_PASSWORD (admin auth secret), ALLOWED_ORIGIN (CORS)
-//  - The MySQL credentials never reach the browser; all DB work happens here.
+//      MySQL:     MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
+//      Supabase:  SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (server-side only)
+//      Shared:    ADMIN_PASSWORD (admin auth secret), ALLOWED_ORIGIN (CORS), DB_DRIVER
+//  - Credentials never reach the browser; all DB work happens here.
 //  - Privileged actions (login, listing all students, approve/block, delete student,
 //    reply feedback, update admin) require a short-lived HMAC token from the `login` action.
 //  - Public actions (register, feedback, exam, scoped status) are validated + rate-limited.
 //  - Inputs are validated server-side; CORS is restricted; simple per-IP rate limiting.
-const mysql = require('mysql2/promise');
 const crypto = require('crypto');
 
-const DB = {
-  host: process.env.MYSQL_HOST || '',
-  port: Number(process.env.MYSQL_PORT || 3306),
-  user: process.env.MYSQL_USER || '',
-  password: process.env.MYSQL_PASSWORD || '',
-  database: process.env.MYSQL_DATABASE || '',
-};
-const connected = !!(DB.host && DB.user && DB.password !== undefined && DB.database);
+const { createDriver: createMysqlDriver } = require('./lib/db-mysql');
+const { createDriver: createSupabaseDriver } = require('./lib/db-supabase');
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 const AUTH_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+// ---- Backend driver selection (DB_DRIVER=mysql|supabase, else auto-detect) ----
+function hasMysql(){
+  return !!(process.env.MYSQL_HOST && process.env.MYSQL_USER &&
+    process.env.MYSQL_PASSWORD !== undefined && process.env.MYSQL_DATABASE);
+}
+function hasSupabase(){
+  return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+function selectDriver(){
+  const explicit = String(process.env.DB_DRIVER || '').toLowerCase();
+  if(explicit === 'supabase') return createSupabaseDriver();
+  if(explicit === 'mysql') return createMysqlDriver();
+  if(!hasMysql() && hasSupabase()) return createSupabaseDriver();
+  return createMysqlDriver();
+}
+const db = selectDriver();
 
 // ---- Simple per-IP rate limiter (best effort; resets on cold start) ----
 const RATE_WINDOW_MS = 60 * 1000;
@@ -35,13 +54,6 @@ function rateLimited(ip){
   if(!b || now - b.start > RATE_WINDOW_MS){ rateBuckets[ip] = { start: now, count: 1 }; return false; }
   b.count += 1;
   return b.count > RATE_LIMIT;
-}
-
-// Open a connection for a single request and always release it.
-async function withConn(fn){
-  const conn = await mysql.createConnection(DB);
-  try { return await fn(conn); }
-  finally { await conn.end().catch(() => {}); }
 }
 
 function hmac(value){
@@ -166,35 +178,19 @@ module.exports = async (req, res) => {
       if(q && q.phone){
         if(rateLimited(ip)) return fail(429, 'Too many requests');
         const phone = String(q.phone);
-        let status = null;
-        if(connected){
-          status = await withConn(async (conn) => {
-            const [rows] = await conn.execute('SELECT status FROM students WHERE phone = ?', [phone]);
-            return rows.length ? rows[0].status : null;
-          });
-        }
+        const status = await db.getStudentStatus(phone);
         return res.status(200).json({ status: 'ok', phone, studentStatus: status });
       }
 
       // Full list (students/exams/feedback) => ADMIN ONLY
       const user = getReqUser(req, res);
       if(!user) return;
-      let students = [], feedback = [], exams = [];
-      if(connected){
-        await withConn(async (conn) => {
-          const [sRows] = await conn.execute('SELECT * FROM students ORDER BY registered_at DESC');
-          students = sRows.map(r => ({ name: r.name, phone: r.phone, status: r.status, registered_at: toIso(r.registered_at), when: toIso(r.registered_at), notes: r.notes }));
-          const [fRows] = await conn.execute('SELECT * FROM feedback ORDER BY created_at DESC');
-          feedback = fRows.map(r => ({ id: r.id, n: r.student_name, phone: r.student_phone, t: r.question, reply: r.reply, replyAt: toIso(r.reply_at), by: r.replied_by, w: toIso(r.created_at) }));
-          const [eRows] = await conn.execute('SELECT * FROM exam_logs ORDER BY taken_at DESC');
-          exams = eRows.map(r => ({ student: r.student_phone, scope: r.scope, score: r.score, total_questions: r.total_questions, duration_seconds: r.duration_seconds, passed: !!r.passed, taken: toIso(r.taken_at), when: toIso(r.taken_at) }));
-        });
-      }
-      students = students.filter(s => {
+      const { students, feedback, exams } = await db.getAdminData();
+      const safeStudents = students.filter(s => {
         const nm = (s.name || '').trim();
         return nm !== 'سىناق ئوقۇغۇچى' && nm !== 'سىناق' && !nm.startsWith('سىناق') && s.phone !== '13800000000' && s.phone !== 'admin';
       });
-      return res.status(200).json({ status: 'ok', students, exams, feedback, dbConnected: connected, serverTime: new Date().toISOString() });
+      return res.status(200).json({ status: 'ok', students: safeStudents, exams, feedback, dbConnected: db.connected, serverTime: new Date().toISOString() });
     }
 
     // ---- POST ----
@@ -221,14 +217,7 @@ module.exports = async (req, res) => {
       if(action === 'register' && data.user){
         const v = validateStudentInput(data.user);
         if(!v.ok) return fail(400, 'Invalid student data: ' + v.why);
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute(
-              'INSERT INTO students (name, phone, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status), last_active = NOW()',
-              [v.name, v.phone, v.status]
-            );
-          });
-        }
+        if(db.connected) await db.registerStudent(v);
         return res.status(200).json({ status: 'ok', message: 'Student registered' });
       }
 
@@ -237,11 +226,7 @@ module.exports = async (req, res) => {
         const user = getReqUser(req, res);
         if(!user) return;
         if(!/^(approved|blocked|pending)$/.test(data.status)) return fail(400, 'Invalid status');
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute('UPDATE students SET status = ?, last_active = NOW() WHERE phone = ?', [data.status, data.phone]);
-          });
-        }
+        if(db.connected) await db.updateStudentStatus(data.phone, data.status);
         return res.status(200).json({ status: 'ok', message: 'Status updated' });
       }
 
@@ -249,12 +234,7 @@ module.exports = async (req, res) => {
       if(action === 'delete_student' && data.phone){
         const user = getReqUser(req, res);
         if(!user) return;
-        if(connected){
-          await withConn(async (conn) => {
-            await conn.execute('DELETE FROM exam_logs WHERE student_phone = ?', [data.phone]);
-            await conn.execute('DELETE FROM students WHERE phone = ?', [data.phone]);
-          });
-        }
+        if(db.connected) await db.deleteStudent(data.phone);
         return res.status(200).json({ status: 'ok', message: 'Student deleted' });
       }
 

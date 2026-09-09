@@ -72,6 +72,9 @@ button { font-family: inherit; }
 h1, h2, h3, h4, p { margin: 0; }
 
 /* ---------- app frame ---------- */
+.phone.bare {
+  max-width: none;
+}
 .phone {
   position: relative;
   max-width: var(--appw);

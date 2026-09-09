@@ -128,10 +128,19 @@ Ported so far:
 - App shell (appbar, tabbar, light/dark theme, toasts) + hash router
 - Home, Lessons list, Lesson reader (sections, goals, mind map, PDF), lesson Quiz
 - Books (PDF), Teachers, Exam (timed), Me (progress/wrong answers), AI assistant, Install
+- Admin (`/admin`, auth-gated): login, dashboard stats, student approve/block/delete,
+  feedback reply/dismiss, CSV export; server API is the source of truth, localStorage
+  keys stay shared with the vanilla app
+- Content-editing-heavy admin features (lesson/question/teacher editors, PDF upload,
+  backup/restore, multi-admin) still live in the vanilla `admin.html` (linked from the
+  Vue admin's "مەزمۇن" tab)
 - Progress storage reuses the same `uytibb_v1` localStorage key as the vanilla app
-- Content stays in the root `data.js` (single source of truth)
+- Content stays in the root `data.js` (single source of truth); `uytibb_custom_lessons` /
+  `uytibb_custom_teachers` overrides are applied like in the vanilla learner app
+- PWA: `vite/public/sw.js` + manifest are copied into the build; the service worker is
+  registered from `src/main.js` on production/secure contexts
 
-Not yet ported: `admin.html` (stays vanilla for now), PWA sw/manifest wiring for the build.
+Not yet ported: content editor flows above (kept in vanilla `admin.html` for now).
 
 ## Admin login
 - Open `admin.html`.
@@ -144,5 +153,3 @@ the HTML files, and route any new data features through `/api/students` with ser
 never add client-side DB/API keys or password bypasses.
 
 
-## Future:
-Migrate to  Vue 3 + Vite + Pinia

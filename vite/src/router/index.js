@@ -11,6 +11,8 @@ const routes = [
   { path: '/me', name: 'me', component: () => import('../views/MeView.vue') },
   { path: '/ai', name: 'ai', component: () => import('../views/AiView.vue') },
   { path: '/install', name: 'install', component: () => import('../views/InstallView.vue') },
+  { path: '/admin', name: 'admin', component: () => import('../views/admin/AdminDashboard.vue'), meta: { bare: true } },
+  { path: '/admin/login', name: 'admin-login', component: () => import('../views/admin/AdminLogin.vue'), meta: { bare: true } },
   { path: '/search', redirect: '/' },
   { path: '/pdf', redirect: '/books' },
   { path: '/wrong', redirect: '/me' },
@@ -19,8 +21,23 @@ const routes = [
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
-export default createRouter({
+function hasToken() {
+  try { return !!sessionStorage.getItem('uytibb_admin_token') } catch (e) { return false }
+}
+
+const router = createRouter({
   history: createWebHashHistory(),
   routes,
   scrollBehavior() { return { top: 0 } }
 })
+
+// Admin auth guard: /admin requires a token; /admin/login redirects when logged in.
+router.beforeEach((to) => {
+  const admin = to.path.startsWith('/admin')
+  const authed = hasToken()
+  if (admin && !authed && to.path !== '/admin/login') return '/admin/login'
+  if (to.path === '/admin/login' && authed) return '/admin'
+  return true
+})
+
+export default router

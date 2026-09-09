@@ -30,10 +30,19 @@ const activeTab = computed(() => {
   const hit = tabs.find(t => h === t.to)
   return hit ? hit.t : ''
 })
+
+const bare = computed(() => !!route.meta.bare)
 </script>
 
 <template>
-  <div class="phone">
+  <div v-if="bare" class="phone bare">
+    <router-view />
+    <div class="toast-wrap">
+      <div v-for="tt in toasts" :key="tt.id" class="toast" :class="{ err: tt.type === 'err' }">{{ tt.msg }}</div>
+    </div>
+  </div>
+
+  <div v-else class="phone">
     <header class="appbar">
       <div class="appbar-in">
         <div class="alogo"><img src="/icon.svg" alt=""></div>
