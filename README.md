@@ -106,7 +106,32 @@ curl http://localhost:8080/api/students -H "Authorization: Bearer <TOKEN>"
 ### 5. Deploy
 Push to GitHub and import into Vercel, or use the Vercel CLI. The `api/` directory is picked up
 as serverless functions; the static files are served as-is. Update `ALLOWED_ORIGIN` to match your
-deployed URL.
+deployed URL. When the Vue app replaces the vanilla `index.html`, point Vercel at the `vite/`
+project root (`npm run build`, output `dist/`); the API path stays `/api/students`.
+
+## Vue frontend (incremental port)
+
+A Vue 3 + Vite + Pinia + vue-router port lives in `vite/`, being built tab-by-tab while the
+vanilla `index.html` remains the deployed app during the transition.
+
+Run it (needs the Node API running for `/api/*` — see section 4, or leave out if you only
+browse static data):
+
+```bash
+npm --prefix vite install     # once
+npm run vite:dev              # Vite dev server on :5173, proxies /api -> :8080
+npm run vite:build            # production build -> vite/dist
+npm run vite:preview          # serve the build locally
+```
+
+Ported so far:
+- App shell (appbar, tabbar, light/dark theme, toasts) + hash router
+- Home, Lessons list, Lesson reader (sections, goals, mind map, PDF), lesson Quiz
+- Books (PDF), Teachers, Exam (timed), Me (progress/wrong answers), AI assistant, Install
+- Progress storage reuses the same `uytibb_v1` localStorage key as the vanilla app
+- Content stays in the root `data.js` (single source of truth)
+
+Not yet ported: `admin.html` (stays vanilla for now), PWA sw/manifest wiring for the build.
 
 ## Admin login
 - Open `admin.html`.

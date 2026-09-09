@@ -12,7 +12,10 @@
     "migrate:from-supabase": "node migrate.js --from-supabase",
     "dev": "node dev.js",
     "start": "node dev.js",
-    "test": "node --test \"tests/*.test.js\""
+    "test": "node --test \"tests/*.test.js\"",
+    "vite:dev": "npm --prefix vite run dev",
+    "vite:build": "npm --prefix vite run build",
+    "vite:preview": "npm --prefix vite run preview"
   },
   "dependencies": {
     "mysql2": "^3.11.0"
