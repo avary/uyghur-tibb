@@ -2,11 +2,17 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../../stores/api'
+import { useContent } from '../../stores/content'
 import { useToast } from '../../composables/toast'
-import { getLessons, countQuestions } from '../../data/loader'
+import LessonsEditor from './LessonsEditor.vue'
+import QuestionsBank from './QuestionsBank.vue'
+import TeachersEditor from './TeachersEditor.vue'
+import ManagePanel from './ManagePanel.vue'
 
 const router = useRouter()
 const api = useApi()
+const content = useContent()
+content.init()
 const { toast } = useToast()
 
 const TOKEN_KEY = 'uytibb_admin_token'
@@ -99,13 +105,15 @@ const approved = computed(() => students.value.filter(s => s.status !== 'pending
 const unreplied = computed(() => feedback.value.filter(f => !f.reply).length)
 
 const stats = computed(() => {
-  const lessons = getLessons()
+  const lessons = content.lessons
   let pdfs = 0
   lessons.forEach(L => { if (L.pdfUrl || L.pdfData) pdfs++ })
+  let questions = 0
+  lessons.forEach(L => { questions += (L.quiz || []).length })
   return {
     lessons: lessons.length,
     pdfs,
-    questions: countQuestions(),
+    questions,
     approved: approved.value.length,
     pending: pending.value.length,
     feedback: feedback.value.length,
@@ -202,7 +210,10 @@ const tabs = [
   { id: 'dash', ic: '📊', label: 'باش بەت' },
   { id: 'students', ic: '🎓', label: 'ئوقۇغۇچىلار' },
   { id: 'feedback', ic: '💬', label: 'پىكىر-سوئال' },
-  { id: 'content', ic: '📝', label: 'مەزمۇن' }
+  { id: 'lessons', ic: '📖', label: 'دەرسلەر' },
+  { id: 'questions', ic: '☑', label: 'سوئاللار' },
+  { id: 'teachers', ic: '👨‍🏫', label: 'ئۇستازلار' },
+  { id: 'manage', ic: '🛠', label: 'تەڭشەك / زاپاس' }
 ]
 </script>
 
@@ -231,7 +242,7 @@ const tabs = [
 
     <main class="abody">
       <!-- DASHBOARD -->
-      <section v-if="tab === 'dash'">
+      <section v-show="tab === 'dash'">
         <div class="stat-grid">
           <div class="stat"><b>{{ stats.lessons }}</b><span>دەرس</span></div>
           <div class="stat"><b>{{ stats.pdfs }}</b><span>PDF كىتاب</span></div>
@@ -245,14 +256,14 @@ const tabs = [
           <div class="qa-row">
             <button class="btn btn-teal" @click="tab = 'students'">🎓 ئوقۇغۇچىلارنى باشقۇرۇش</button>
             <button class="btn btn-gold" @click="tab = 'feedback'">💬 پىكىر-سوئالغا جاۋاب</button>
-            <button class="btn btn-ghost" @click="tab = 'content'">📝 مەزمۇن تەھرىر (ئەسلى)</button>
+            <button class="btn btn-ghost" @click="tab = 'lessons'">📖 دەرس مەزمۇنى تەھرىرلەش</button>
           </div>
         </div>
         <small class="ahint">مۇلازىمەت دۇكىنى: /api/students · توكېن 8 سائەت ئىشلەيدۇ.</small>
       </section>
 
       <!-- STUDENTS -->
-      <section v-else-if="tab === 'students'">
+      <section v-show="tab === 'students'">
         <div class="card">
           <div class="card-head">
             <h3>⏳ تەستىق كۈتۈۋاتقانلار ({{ pending.length }})</h3>
@@ -294,7 +305,7 @@ const tabs = [
       </section>
 
       <!-- FEEDBACK -->
-      <section v-else-if="tab === 'feedback'">
+      <section v-show="tab === 'feedback'">
         <div class="card">
           <div class="card-head">
             <h3>💬 سوئال-پىكىرلەر ({{ feedback.length }})</h3>
@@ -321,22 +332,17 @@ const tabs = [
         </div>
       </section>
 
-      <!-- CONTENT (legacy) -->
-      <section v-else-if="tab === 'content'">
-        <div class="card">
-          <h3>📝 مەزمۇن تەھرىرلىگۈچ</h3>
-          <p class="acopy">
-            دەرس سەھىپىسى (ئىدىيە، بۆلەك، سوئال، PDF يۈكلەش)، ئۇستازلار، زاپاسلاش/ئەسلىگە
-            قايتۇرۇش ۋە كۆپ باشقۇرغۇچى باشقۇرۇش ھازىرچە ئەسلى ئەپنىڭ <code>admin.html</code>
-            قىسمىدا تەھرىرلىنىدۇ. تەھرىرلەنگەن مەزمۇن <code>localStorage</code> ئارقىلىق
-            ئوقۇغۇچى ئەپىگە بىرلا ۋاقىتتا ئەكس ئېتىدۇ (فرونت ئەپ ۋە Vue ئەپ ئىككىلىسىگە).
-          </p>
-          <div class="qa-row">
-            <a class="btn btn-gold" href="/admin.html" target="_blank" rel="noopener">ئەسلى باشقۇرۇش سەھىپىسىنى ئېچىش →</a>
-            <button class="btn btn-ghost" @click="router.push('/')">→ ئوقۇغۇچى ئەپى</button>
-          </div>
-        </div>
-      </section>
+      <!-- LESSONS EDITOR -->
+      <section v-show="tab === 'lessons'"><LessonsEditor /></section>
+
+      <!-- QUESTION BANK -->
+      <section v-show="tab === 'questions'"><QuestionsBank /></section>
+
+      <!-- TEACHERS EDITOR -->
+      <section v-show="tab === 'teachers'"><TeachersEditor /></section>
+
+      <!-- SETTINGS / BACKUP & RESTORE -->
+      <section v-show="tab === 'manage'"><ManagePanel /></section>
     </main>
 
     <!-- REPLY MODAL -->
@@ -408,9 +414,6 @@ const tabs = [
 .fb-reply small { display: block; color: var(--muted); }
 .fb-unreplied { color: var(--red); font-size: .82rem; margin-bottom: .5rem; }
 .fb-actions { display: flex; gap: .45rem; }
-
-.acopy { color: var(--muted); line-height: 2; }
-.acopy code { background: var(--card-2); padding: .1rem .35rem; border-radius: 6px; font-size: .86em; }
 
 .amodal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(0, 0, 0, .45); }
 .amodal-card { width: 100%; max-width: 460px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 1.2rem; }

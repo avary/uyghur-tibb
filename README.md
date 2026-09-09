@@ -236,20 +236,24 @@ Ported so far:
 - Admin (`/admin`, auth-gated): login, dashboard stats, student approve/block/delete,
   feedback reply/dismiss, CSV export; server API is the source of truth, localStorage
   keys stay shared with the vanilla app
-- Content-editing-heavy admin features (lesson/question/teacher editors, PDF upload,
-  backup/restore, multi-admin) still live in the vanilla `admin.html` (linked from the
-  Vue admin's "مەزمۇن" tab)
+- Content editors: lesson form + sections + quiz, PDF upload/preview/remove, question bank
+  (choice/TF/blank/essay), teachers editor, backup/restore JSON, reset to defaults, and
+  multi-admin display-names — all inside the Vue admin tabs (was: done in vanilla `admin.html`)
 - Progress storage reuses the same `uytibb_v1` localStorage key as the vanilla app
 - Content stays in the root `data.js` (single source of truth); `uytibb_custom_lessons` /
-  `uytibb_custom_teachers` overrides are applied like in the vanilla learner app
+  `uytibb_custom_teachers` overrides are applied (and written by the Vue editors) like in
+  the vanilla learner app
 - PWA: `vite/public/sw.js` + manifest are copied into the build; the service worker is
   registered from `src/main.js` on production/secure contexts
 
-Not yet ported: content editor flows above (kept in vanilla `admin.html` for now).
+Not yet ported: nothing admin-critical. `index.html`, `admin.html` and `connect.html` are
+kept at the repo root while the migration is reviewed; they are removed once the Vue app
+reaches full parity and no in-app links point at them.
 
 ## Admin login
-- Open `admin.html`.
+- Open the Vue admin at `/` → `#/admin` (or the legacy `admin.html`).
 - Enter the `ADMIN_PASSWORD` value. A short-lived token is issued and stored in the session.
+  The Vue route guard validates the token server-side before `/admin` becomes accessible.
 
 ## Model: upstream collaboration
 The upstream project (`github.com/avary/uyghur-tibb`) keeps evolving. When new features land
