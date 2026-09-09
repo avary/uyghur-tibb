@@ -18,7 +18,8 @@ through `/api/students`, and the browser clients don't know (or care) which back
 - **Hosting**: Vercel (static + Node functions)
 
 ## Security model
-- Clients hold **no DB credentials** and no API keys — `supabase.js` only proxies to `/api/students`.
+- Clients hold **no DB credentials** and no API keys — the browser client
+  (`vite/src/stores/api.js`) only proxies to `/api/students`.
 - The Supabase **Service Role key is server-side only** (loaded from `SUPABASE_SERVICE_ROLE_KEY`),
   never shipped to the browser.
 - Admin auth is **server-side**: login checks `ADMIN_PASSWORD`, returns an 8-hour HMAC-signed
@@ -145,22 +146,21 @@ curl -s "https://<ref>.supabase.co/rest/v1/students?select=count" \
 > GRANT as a superuser, or ask your DB host admin to grant those privileges to the app user.
 
 ### 6. Local development
-Run the legacy plain-HTML app **or** the Vue app locally, plus the API, against whichever
-backend `DB_DRIVER` selects in `.env` (MySQL or Supabase — no Vercel needed):
+Run the Vue app locally, plus the API, against whichever backend `DB_DRIVER` selects in
+`.env` (MySQL or Supabase — no Vercel needed). The build must exist first:
 
 ```bash
-npm run dev          # == node dev.js  (default port 8080) — legacy HTML + /api
+npm run vite:build      # build the Vue app once (also copies pdf/ into vite/dist)
+npm run dev             # == node dev.js  (default port 8080) — Vue build + /api
 PORT=3000 npm run dev
-# optional custom port:
 ```
 
-`dev.js` serves the legacy static frontend (`index.html`, `admin.html`, …) **and** the
-`/api/students` serverless function from the same origin, so the API works end-to-end on
-localhost. Set `PORT` in `.env` or on the command line (default `8080`). `ALLOWED_ORIGIN`
-defaults to the local origin when unset, so browser POSTs work locally too.
+`dev.js` serves the built Vue app (`vite/dist`) **and** the `/api/students` serverless
+function from the same origin, so the app works end-to-end on localhost. Set `PORT` in
+`.env` or on the command line (default `8080`). `ALLOWED_ORIGIN` defaults to the local
+origin when unset, so browser POSTs work locally too.
 
-The Vue app runs on its own dev server (which proxies `/api` to `:8080`) and builds to
-`vite/dist`:
+For hot-reload UI development use the Vite dev server (which proxies `/api` to `:8080`):
 
 ```bash
 npm --prefix vite install     # once
@@ -237,10 +237,11 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
 
 ## Vue frontend (port complete)
 
-The Vue 3 + Vite + Pinia + vue-router app in `vite/` is now the **deployed frontend**
-(§7). The legacy `index.html`, `admin.html` and `connect.html` still live at the repo root
-and `dev.js` can still serve them (and the API) — they are only kept during the cutover
-rollout and will be removed once the Vercel preview deployment is verified.
+The Vue 3 + Vite + Pinia + vue-router app in `vite/` is the **only** frontend now
+(§7). The legacy `index.html`, `admin.html`, `connect.html`, the root `supabase.js`
+client and the root PWA files (`sw.js`, `manifest.webmanifest`, `admin.webmanifest`,
+icons) were removed once the port reached full parity — `dev.js` serves the built
+`vite/dist` alongside the API instead.
 
 What the Vue app includes:
 - App shell (appbar, tabbar, light/dark theme, toasts) + hash router
