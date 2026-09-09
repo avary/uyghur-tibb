@@ -1008,7 +1008,6 @@ function checkAuth(){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
     var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
-    var b = document.getElementById("activeAdminBadge"); if(b) b.textContent = "👤 " + curName;
     initAdmin();
   } else {
     document.getElementById("loginWrap").style.display = "flex";
@@ -1891,8 +1890,6 @@ function initPasswordChangeUI(){
     if(nameVal && nameVal !== localStorage.getItem("uytibb_admin_name")){
       localStorage.setItem("uytibb_admin_name", nameVal);
       sessionStorage.setItem("uytibb_admin_user_name", nameVal);
-      var b = document.getElementById("activeAdminBadge");
-      if(b) b.textContent = "👤 " + nameVal;
       didChangeName = true;
     }
 
