@@ -1,7 +1,32 @@
+# Secret files - NEVER commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Vercel / build
 .vercel
-__pycache__
+.vercelignore
+node_modules/
+dist/
+build/
+
+# Python (legacy)
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Local dev artifacts
+qr.svg
+
+# Backup files
 *.bak
 
+# Windows batch scripts & docs (deployment helpers, not source)
 *.bat
 *.txt
-*.bak

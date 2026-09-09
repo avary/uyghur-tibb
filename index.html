@@ -1509,25 +1509,22 @@ function startApprovalPoll(){
       clearInterval(_approvalPollTimer);
       return;
     }
-    fetch("/api/students")
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d && d.students){
-          var cur = d.students.find(function(u){ return u.phone === s.user.phone; });
-          if(cur && cur.status === "approved"){
-            clearInterval(_approvalPollTimer);
-            s.user.status = "approved";
-            saveProg(s);
-            var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-            var localCur = allSt.find(function(u){ return u.phone === s.user.phone; });
-            if(localCur) localCur.status = "approved";
-            else allSt.unshift(cur);
-            localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-            toast("🎉 تەستىقلاندىڭىز! دەرسلەر ئېچىلدى!");
-            router();
-          }
+    if(typeof Supabase !== "undefined" && Supabase.checkStudentStatus){
+      Supabase.checkStudentStatus(s.user.phone).then(function(st){
+        if(st === "approved"){
+          clearInterval(_approvalPollTimer);
+          s.user.status = "approved";
+          saveProg(s);
+          var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+          var localCur = allSt.find(function(u){ return u.phone === s.user.phone; });
+          if(localCur) localCur.status = "approved";
+          else allSt.unshift({name: s.user.name, phone: s.user.phone, status: "approved"});
+          localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+          toast("🎉 تەستىقلاندىڭىز! دەرسلەر ئېچىلدى!");
+          router();
         }
       }).catch(function(){});
+    }
   }, 7000);
 }
 
@@ -1570,55 +1567,24 @@ function checkStudentApproval(){
         toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
         router();
         return;
+      } else if(st === "blocked"){
+        s.user.status = "blocked";
+        saveProg(s);
+        router();
+        return;
       }
     }).catch(function(){});
   }
-  fetch("/api/students")
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.students){
-        var cur = d.students.find(function(u){ return u.phone === s.user.phone; });
-        if(cur && cur.status === "approved"){
-          s.user.status = "approved";
-          saveProg(s);
-          var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-          var localCur = allSt.find(function(u){ return u.phone === s.user.phone; });
-          if(localCur) localCur.status = "approved";
-          else allSt.unshift(cur);
-          localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-          toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
-          router();
-          return;
-        } else if(cur && cur.status === "blocked"){
-          s.user.status = "blocked";
-          saveProg(s);
-          router();
-          return;
-        }
-      }
-      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-      var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
-      if(curSt && curSt.status === "approved"){
-        s.user.status = "approved";
-        saveProg(s);
-        toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
-        router();
-      } else {
-        toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
-      }
-    })
-    .catch(function(){
-      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-      var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
-      if(curSt && curSt.status === "approved"){
-        s.user.status = "approved";
-        saveProg(s);
-        toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
-        router();
-      } else {
-        toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
-      }
-    });
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  var curSt = allSt.find(function(u){ return u.phone === s.user.phone; });
+  if(curSt && curSt.status === "approved"){
+    s.user.status = "approved";
+    saveProg(s);
+    toast("🎉 تەستىقلاندىڭىز! خۇش كەپسىز!");
+    router();
+  } else {
+    toast("⏳ تېخى تەستىقلانمىدى. باشقۇرغۇچىنىڭ تەستىقلىشىنى كۈتۈڭ.");
+  }
 }
 
 /* ===== يول باشقۇرۇش ===== */
@@ -1901,6 +1867,7 @@ function stopTimer(){ if(timerInt){clearInterval(timerInt);timerInt=null;} }
 window.addEventListener("hashchange", router);
 document.addEventListener("DOMContentLoaded", function(){
   initTheme(); initViewMode();  bindRegBtn(); loadCustomData(); renderNav(); router();
+  if(typeof Supabase !== "undefined" && Supabase.fetchConfigFromServer){ Supabase.fetchConfigFromServer(); }
   var phb = $("pwaHeaderBtn");
   if(phb){
     phb.onclick = function(){
@@ -2423,6 +2390,13 @@ function bindHome(){
     if(s.fb.length > 50) s.fb = s.fb.slice(0, 50);
     saveProg(s);
     try { localStorage.setItem("uytibb_feedback", JSON.stringify(s.fb)); } catch(e){}
+    try {
+      if(typeof Supabase !== "undefined" && Supabase.addFeedback){
+        Supabase.addFeedback(newMsg.n, newMsg.phone, tx);
+      }
+    }catch(e){
+      // Non-fatal: keep the local copy even if the API is unreachable.
+    }
     $("fbtxt").value = "";
     renderFb();
     toast("✅ سوئالىڭىز تاپشۇرۇلدى! رەھمەت.");
@@ -2448,7 +2422,7 @@ function showRegModal(mode, closable){
     h+='<h3>'+(edit?"✎ مەلۇماتنى ئۆزگەرتىش":"📝 تىزىملىتىپ كىرىش")+'</h3>'
       +'<p class="rsub">باشقا بەتلەرنى كۆرۈش ئۈچۈن ئىسمىڭىز ۋە تېلېفون نومۇرىڭىزنى قالدۇرۇڭ.<br>بىر قېتىملا تىزىملىتىسىز — كېيىن سورالمايدۇ. ✅</p>'
       +'<label>ئىسمىڭىز:</label><input id="rgName" placeholder="مەسىلەن: ئابدۇللا" value="'+esc(edit?(u.name||""):"")+'">'
-      +'<label>تېلېفون نومۇرى:</label><input id="rgPhone" inputmode="tel" dir="ltr" placeholder="مەسىلەن: 13812345678" value="'+esc(edit?(u.phone||""):"")+'">'
+      +'<label>تېلېفون نومۇرى:</label><input id="rgPhone" inputmode="tel" dir="ltr" placeholder="مەسىلەن: 13800138000" value="'+esc(edit?(u.phone||""):"")+'">'
       +'<div class="rerr" id="rgErr"></div>'
       +'<button class="btn btn-gold btn-block" id="rgGo">'+(edit?"ساقلاش ✅":"كىرىش ➤")+'</button>'
       +((closable||edit)?'<button class="btn btn-line btn-block" id="rgX">يېپىش</button>':"");
@@ -2487,15 +2461,8 @@ function showRegModal(mode, closable){
     }
 
     if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-      Supabase.registerStudent({name: nm, phone: ph, status: status});
+      Supabase.registerStudent({name: nm, phone: ph, status: status, when: dateStr});
     }
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "register", user: {name: nm, phone: ph, status: status, when: dateStr} })
-      }).catch(function(){});
-    }catch(e){}
 
     closeRegModal();
     if(status !== "approved"){

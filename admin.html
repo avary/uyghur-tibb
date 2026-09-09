@@ -372,7 +372,7 @@ table.data-table tr:hover { background: var(--teal-light); }
 
     <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center;line-height:1.6">
       ⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br>
-      <a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>
+      <a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟</a>
     </p>
     <div style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem;display:flex;flex-direction:column;gap:.6rem">
       <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
@@ -733,7 +733,7 @@ table.data-table tr:hover { background: var(--teal-light); }
             </div>
             <div class="inp-group" style="margin:0">
               <label>يېڭى مەخپىي نومۇر (پارول ئۆزگەرمىسە بوش قالسۇن):</label>
-              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: 123456" dir="ltr">
+              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: كۈچلۈك پارول" dir="ltr">
             </div>
             <div class="inp-group" style="margin:0">
               <label>پارولنى قايتا يېزىڭ:</label>
@@ -774,16 +774,16 @@ table.data-table tr:hover { background: var(--teal-light); }
               <input type="text" id="newAdmUsername" class="inp" placeholder="مەسىلەن: ali_tibb">
             </div>
             <div class="inp-group" style="margin:0">
-              <label>مەخپىي نومۇر:</label>
-              <input type="password" id="newAdmPassword" class="inp" placeholder="مەخپىي نومۇر كىرگۈزۈڭ">
-            </div>
-            <div class="inp-group" style="margin:0">
               <label>ھوقۇق تۈرى:</label>
               <select id="newAdmRole" class="inp">
                 <option value="super">ئالىي باشقۇرغۇچى (Super Admin)</option>
                 <option value="teacher">ئوقۇتۇش مەسئۇلى (Teacher)</option>
               </select>
             </div>
+            <p style="color:var(--muted);font-size:.85rem;margin:0">
+              ئەسكەرتىش: كىرىش تەكشۈرۈش مۇلازىمەت تەرەپتە <b>ADMIN_PASSWORD</b> ئارقىلىق بولىدۇ؛
+              بۇ يەردىكى تىزىملىك پەقەت نام-ئۇچۇر (metadata) ئۈچۈن، پارول ساقلانمايدۇ.
+            </p>
           </div>
           <button class="btn btn-teal btn-sm" id="addNewAdminBtn">➕ باشقۇرغۇچىنى قوشۇش</button>
         </div>
@@ -987,8 +987,10 @@ function applyAdminTheme(t){
   }
 }
 
-/* 2. AUTHENTICATION & MULTI-ADMIN ACCOUNTS */
-var DEFAULT_PASS = "123456";
+/* 2. AUTHENTICATION & MULTI-ADMIN ACCOUNTS
+   NOTE: Admin authentication is now server-side via ADMIN_PASSWORD (env) and a signed
+   token. The localStorage "admins" list below is used ONLY for display name metadata;
+   it no longer stores or validates passwords. */
 function getAdmins(){
   var raw = localStorage.getItem("uytibb_admins");
   var list = [];
@@ -998,15 +1000,13 @@ function getAdmins(){
       if(Array.isArray(parsed) && parsed.length > 0) list = parsed;
     } catch(e){}
   }
-  var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
   var singleName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
 
   var root = list.find(function(a){ return a && (a.username === "admin" || a.role === "super"); });
   if(!root){
-    root = { username: "admin", name: singleName, pass: singlePass, role: "super" };
+    root = { username: "admin", name: singleName, role: "super" };
     list.unshift(root);
   } else {
-    if(localStorage.getItem("uytibb_admin_pass")) root.pass = localStorage.getItem("uytibb_admin_pass");
     if(localStorage.getItem("uytibb_admin_name")) root.name = localStorage.getItem("uytibb_admin_name");
   }
   return list;
@@ -1015,22 +1015,38 @@ function saveAdmins(list){
   localStorage.setItem("uytibb_admins", JSON.stringify(list));
 }
 
+function getAdminToken(){
+  return sessionStorage.getItem("uytibb_admin_token") || "";
+}
+function setAdminToken(t){
+  if(t) sessionStorage.setItem("uytibb_admin_token", t);
+  else sessionStorage.removeItem("uytibb_admin_token");
+}
+function getAdminUserName(){
+  return sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
+}
+function getAdminRole(){
+  return sessionStorage.getItem("uytibb_admin_user_role") || "super";
+}
+
+// Client-side gate. Real authorization is enforced server-side on every privileged
+// action via the signed token; this merely shows/hides the panel.
 function checkAuth(){
-  var authed = sessionStorage.getItem("uytibb_admin_auth") === "true";
-  if(authed){
+  var token = getAdminToken();
+  if(token && token.indexOf(".") === token.lastIndexOf(".") && token.split(".").length === 2){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
-    var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
     initAdmin();
-  } else {
-    document.getElementById("loginWrap").style.display = "flex";
-    document.getElementById("adminApp").style.display = "none";
-    var passInp = document.getElementById("adminPass");
-    if(passInp){
-      passInp.value = "";
-      setTimeout(function(){ passInp.focus(); }, 80);
-    }
+    return true;
   }
+  document.getElementById("loginWrap").style.display = "flex";
+  document.getElementById("adminApp").style.display = "none";
+  var passInp = document.getElementById("adminPass");
+  if(passInp){
+    passInp.value = "";
+    setTimeout(function(){ passInp.focus(); }, 80);
+  }
+  return false;
 }
 
 function normInputText(str){
@@ -1045,8 +1061,9 @@ function normInputText(str){
 function doAdminLogin(){
   var userInp = document.getElementById("adminUserInp");
   var passInp = document.getElementById("adminPass");
-  var userVal = normInputText(userInp ? userInp.value : "");
-  var passVal = normInputText(passInp ? passInp.value : "");
+  var btn = document.getElementById("loginBtn");
+  var userVal = (userInp ? userInp.value : "").trim();
+  var passVal = (passInp ? passInp.value : "").trim();
 
   // If password was entered into username box and pass box is empty, swap
   if(userVal && !passVal){
@@ -1054,76 +1071,54 @@ function doAdminLogin(){
     userVal = "";
   }
 
-  var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
-  var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
-
-  var matched = null;
-  // Emergency master rescue: tibb2026 always works!
-  if(passVal === "tibb2026"){
-    matched = { username: "admin", name: curSavedName, role: "super" };
-  } else if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
-    // If username is empty or matches admin name, check against saved master password
-    if(passVal === curSavedPass){
-      matched = { username: "admin", name: curSavedName, role: "super" };
-    }
+  if(!passVal){
+    var e0 = document.getElementById("loginErr");
+    if(e0){ e0.style.display = "block"; e0.style.background = "#ffebee"; e0.style.color = "var(--red)"; e0.innerHTML = '⚠️ مەخپىي نومۇرنى كىرگۈزۈڭ.'; }
+    return;
   }
 
-  // If not matched yet, check all registered admin accounts
-  if(!matched){
-    var admins = getAdmins();
-    matched = admins.find(function(a){
-      var aU = normInputText(a.username);
-      var aP = normInputText(a.pass);
-      var aN = normInputText(a.name);
-      if(!userVal){
-        return aP === passVal;
-      } else {
-        return (aU === userVal || aN === userVal) && aP === passVal;
+  if(btn){ btn.disabled = true; btn.textContent = "⏳ تەكشۈرۈلىۋاتىدۇ..."; }
+
+  var finish = function(){ if(btn){ btn.disabled = false; btn.textContent = "🔓 كىرىش"; } };
+
+  Supabase.adminLogin(userVal || "admin", passVal).then(function(d){
+    finish();
+    if(d && d.status === "ok" && d.token){
+      setAdminToken(d.token);
+      sessionStorage.setItem("uytibb_admin_user_name", (d.user && d.user.name) || "باشقۇرغۇچى");
+      sessionStorage.setItem("uytibb_admin_user_role", (d.user && d.user.role) || "super");
+      var errEl = document.getElementById("loginErr");
+      if(errEl) errEl.style.display = "none";
+      checkAuth();
+    } else {
+      var er = document.getElementById("loginErr");
+      if(er){
+        er.style.display = "block";
+        er.style.background = "#ffebee";
+        er.style.color = "var(--red)";
+        er.innerHTML = '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><small>ADMIN_PASSWORD مۇھىت ئۆزگەرگۈچىسى تەڭشەلگەنلىكىنى تەكشۈرۈڭ.</small>';
       }
-    });
-  }
-
-  if(matched){
-    sessionStorage.setItem("uytibb_admin_auth", "true");
-    sessionStorage.setItem("uytibb_admin_user_name", matched.name);
-    sessionStorage.setItem("uytibb_admin_user_role", matched.role);
-    localStorage.setItem("uytibb_is_admin", "true");
-    try {
-      var prog = JSON.parse(localStorage.getItem("uytibb_v1") || "{}");
-      prog.user = Object.assign(prog.user || {}, { name: matched.name, status: "approved" });
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }catch(e){}
-    var errEl = document.getElementById("loginErr");
-    if(errEl) errEl.style.display = "none";
-    checkAuth();
-  } else {
-    var errEl = document.getElementById("loginErr");
-    if(errEl) {
-      errEl.style.display = "block";
-      errEl.style.background = "#ffebee";
-      errEl.style.color = "var(--red)";
-      errEl.innerHTML = '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>';
     }
-  }
+  }).catch(function(){
+    finish();
+    var er = document.getElementById("loginErr");
+    if(er){
+      er.style.display = "block";
+      er.style.background = "#ffebee";
+      er.style.color = "var(--red)";
+      er.innerHTML = '⚠️ مۇلازىمەت ئۇلىنىشى مەغلۇپ بولدى.<br><small>توردا ئىشلەپ تۇرغانلىقىڭىزنى تەكشۈرۈڭ.</small>';
+    }
+  });
 }
 
+// No longer supported: the admin password is enforced server-side via ADMIN_PASSWORD.
 function resetAdminPassPrompt(){
-  if(confirm("باشقۇرغۇچىنىڭ كىرىش پارولىنى ئەسلىدىكى «123456» گە قايتۇرامسىز؟")){
-    localStorage.setItem("uytibb_admin_pass", "123456");
-    var admins = getAdmins();
-    var root = admins.find(function(a){ return a.username === "admin" || a.role === "super"; });
-    if(root) root.pass = "123456";
-    saveAdmins(admins);
-    var passInp = document.getElementById("adminPass");
-    if(passInp) passInp.value = "123456";
-    var errEl = document.getElementById("loginErr");
-    if(errEl) {
-      errEl.style.display = "block";
-      errEl.style.background = "#e6f7f2";
-      errEl.style.color = "var(--teal-dark)";
-      errEl.innerHTML = '✅ پارول ئەسلىدىكى <b dir="ltr">123456</b> گە قايتۇرۇلدى! ئەمدى كىرىشنى بېسىڭ.';
-    }
-    showToast("✅ پارول 123456 گە ئەسلىگە كەلتۈرۈلدى!");
+  var errEl = document.getElementById("loginErr");
+  if(errEl){
+    errEl.style.display = "block";
+    errEl.style.background = "#ffebee";
+    errEl.style.color = "var(--red)";
+    errEl.innerHTML = '⚠️ پارولنى ئەسلىگە قايتۇرۇش چىقىرىۋېتىلدى. باشقۇرغۇچى پارولى (ADMIN_PASSWORD) مۇلازىمەت تەرەپتە تەڭشىلىدۇ.';
   }
 }
 
@@ -1154,7 +1149,7 @@ if(toggleVisBtn){
 
 
 document.getElementById("logoutBtn").onclick = function(){
-  sessionStorage.removeItem("uytibb_admin_auth");
+  setAdminToken("");
   sessionStorage.removeItem("uytibb_admin_user_name");
   sessionStorage.removeItem("uytibb_admin_user_role");
   checkAuth();
@@ -1178,7 +1173,7 @@ document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
 
 function goToStudentPage(route){
   localStorage.setItem("uytibb_is_admin", "true");
-  sessionStorage.removeItem("uytibb_admin_auth");
+  setAdminToken("");
   window.location.href = "index.html" + (route || "#/");
 }
 
@@ -1898,7 +1893,6 @@ function initPasswordChangeUI(){
     }
 
     var didChangeName = false;
-    var didChangePass = false;
 
     if(nameVal && nameVal !== localStorage.getItem("uytibb_admin_name")){
       localStorage.setItem("uytibb_admin_name", nameVal);
@@ -1906,46 +1900,26 @@ function initPasswordChangeUI(){
       didChangeName = true;
     }
 
+    // Password: the admin password is managed server-side via the ADMIN_PASSWORD
+    // environment variable (Vercel). It is intentionally NOT stored or changeable in
+    // the browser, which previously enabled client-side reset-to-default bypasses.
     if(p1){
-      if(p1.length < 4){
-        showToast("⚠️ مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
-        return;
-      }
-      if(p1 !== p2){
-        showToast("⚠️ ئىككى قېتىم كىرگۈزگەن مەخپىي نومۇر ئوخشاش چىقمىدى!");
-        return;
-      }
-      localStorage.setItem("uytibb_admin_pass", p1);
-      didChangePass = true;
+      showToast("⚠️ باشقۇرغۇچى پارولى بۇ يەردە ئۆزگەرتىلىنەمدۇ — ئۇنى Vercel دە ADMIN_PASSWORD مۇھىت ئۆزگەرگۈچىسى ئارقىلىق تەڭشەڭ.");
+      document.getElementById("newMasterPassInp").value = "";
+      document.getElementById("newMasterPassConfirmInp").value = "";
+      return;
     }
 
-    // Synchronize to multi-admins list
+    // Synchronize admin display name to the local admins list (metadata only)
     var admins = getAdmins();
     var root = admins.find(function(a){ return a.username === "admin" || a.role === "super"; });
     if(root){
       if(nameVal) root.name = nameVal;
-      if(p1) root.pass = p1;
     } else {
-      root = { username: "admin", name: nameVal || "باشقۇرغۇچى", pass: p1 || (localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS), role: "super" };
+      root = { username: "admin", name: nameVal || "باشقۇرغۇچى", role: "super" };
       admins.unshift(root);
     }
     saveAdmins(admins);
-
-    // Also try updating Supabase admins table if connected
-    if(typeof Supabase !== "undefined" && Supabase.getConfig && Supabase.getConfig().connected){
-      var patchData = {};
-      if(p1) patchData.password_hash = p1;
-      if(nameVal) patchData.full_name = nameVal;
-      fetch(Supabase.getConfig().url + "/rest/v1/admins?username=eq.admin", {
-        method: "PATCH",
-        headers: {
-          "apikey": Supabase.getConfig().key,
-          "Authorization": "Bearer " + Supabase.getConfig().key,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(patchData)
-      }).catch(function(){});
-    }
 
     document.getElementById("newMasterPassInp").value = "";
     document.getElementById("newMasterPassConfirmInp").value = "";
@@ -1961,7 +1935,6 @@ function initPasswordChangeUI(){
 
       var statusText = "✅ تەڭشەك مۇۋەپپەقىيەتلىك ساقلاندى!";
       if(didChangeName) statusText += " باشقۇرغۇچى نامى: «" + nameVal + "».";
-      if(didChangePass) statusText += " يېڭى كىرىش پارولى: «" + p1 + "» (كېيىنكى قېتىم بۇ پارول بىلەن كىرىسىز).";
       msg.textContent = statusText;
     }
 
@@ -2068,28 +2041,32 @@ var _syncingStudents = false;
 function syncStudentsFromServer(){
   if(_syncingStudents) return;
   _syncingStudents = true;
-  fetch("/api/students")
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      _syncingStudents = false;
-      if(d && d.students && d.students.length){
-        var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-        var changed = false;
-        d.students.forEach(function(s){
-          var ex = allSt.find(function(x){ return x.phone === s.phone; });
-          if(!ex){
-            allSt.unshift(s); changed = true;
-          } else if(s.status && ex.status !== s.status){
-            ex.status = s.status; changed = true;
-          }
-        });
-        if(changed){
-          localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-          renderStudentsTableOnly();
+  var doSync = function(d){
+    _syncingStudents = false;
+    if(d && d.length){
+      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+      var changed = false;
+      d.forEach(function(s){
+        var ex = allSt.find(function(x){ return x.phone === s.phone; });
+        if(!ex){
+          allSt.unshift(s); changed = true;
+        } else if(s.status && ex.status !== s.status){
+          ex.status = s.status; changed = true;
         }
+      });
+      if(changed){
+        localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+        renderStudentsTableOnly();
       }
-    })
-    .catch(function(){ _syncingStudents = false; });
+    }
+  };
+  try {
+    if(typeof Supabase !== "undefined" && Supabase.getStudents){
+      Supabase.getStudents().then(function(d){ doSync(d); }).catch(function(){ _syncingStudents = false; });
+    } else {
+      _syncingStudents = false;
+    }
+  }catch(e){ _syncingStudents = false; }
 }
 
 
@@ -2250,71 +2227,73 @@ function loadStudentData(){
   } catch(e){}
 }
 
-function approveStudent(phone){
+function apiResultOk(d){ return !!(d && d.status === "ok"); }
+
+function applyStudentStatus(phone, status, okToast, errToast){
   var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
   var st = allSt.find(function(u){ return u.phone === phone; });
-  if(st){
-    st.status = "approved";
-    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-
-    // Update current active student progress if matched
+  if(!st) return;
+  var onSuccess = function(){
+    var a2 = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var cur = a2.find(function(u){ return u.phone === phone; });
+    if(cur) cur.status = status;
+    localStorage.setItem("uytibb_all_students", JSON.stringify(a2));
     var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
     if(prog.user && prog.user.phone === phone){
-      prog.user.status = "approved";
+      prog.user.status = status;
       localStorage.setItem("uytibb_v1", JSON.stringify(prog));
     }
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "update_status", phone: phone, status: "approved" })
-      }).catch(function(){});
-    }catch(e){}
-        if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-      Supabase.updateStudentStatus(phone, "approved");
-    }
     loadStudentData();
-    showToast("✅ «" + st.name + "» غا دەرس كۆرۈش ئىجازىتى بېرىلدى!");
-  }
+    showToast(okToast);
+  };
+  var onFail = function(){
+    showToast("⚠️ " + errToast + " مۇلازىمەت ئەمەلگە ئاشۇرالمىدى. توكېن بېكىتىلمىگەن ياكى مۇددىتى ئۆتكەن بولۇشى مۇمكىن.");
+  };
+  try {
+    if(typeof Supabase !== "undefined" && Supabase.updateStudentStatus){
+      Supabase.updateStudentStatus(phone, status)
+        .then(function(d){ apiResultOk(d) ? onSuccess() : onFail(); })
+        .catch(onFail);
+    } else { onFail(); }
+  }catch(e){ onFail(); }
+}
+
+function approveStudent(phone){
+  applyStudentStatus(phone, "approved",
+    "✅ دەرس كۆرۈش ئىجازىتى بېرىلدى!",
+    "تەستىقلاش");
 }
 
 function blockStudent(phone){
-  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  var st = allSt.find(function(u){ return u.phone === phone; });
-  if(st){
-    st.status = "blocked";
-    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "update_status", phone: phone, status: "blocked" })
-      }).catch(function(){});
-    }catch(e){}
-
-    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-    if(prog.user && prog.user.phone === phone){
-      prog.user.status = "blocked";
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }
-    loadStudentData();
-    showToast("⛔ «" + st.name + "» نىڭ ئىجازىتى توختىتىلدى.");
-  }
+  applyStudentStatus(phone, "blocked",
+    "⛔ ئىجازىتى توختىتىلدى.",
+    "ئىجازەت توختىتىش");
 }
 
 function deleteStudent(phone){
   if(!confirm("بۇ ئوقۇغۇچىنىڭ ئۇچۇرىنى ئۆچۈرۈشنى جەزملەشتۈرەمسىز؟")) return;
-  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  allSt = allSt.filter(function(u){ return u.phone !== phone; });
-  localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-
-  var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-  if(prog.user && prog.user.phone === phone){
-    delete prog.user;
-    localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-  }
-  loadStudentData();
-  showToast("🗑️ ئوقۇغۇچى ئۆچۈرۈلدى.");
+  var onSuccess = function(){
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    allSt = allSt.filter(function(u){ return u.phone !== phone; });
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+    if(prog.user && prog.user.phone === phone){
+      delete prog.user;
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
+    loadStudentData();
+    showToast("🗑️ ئوقۇغۇچى ئۆچۈرۈلدى.");
+  };
+  var onFail = function(){
+    showToast("⚠️ ئۆچۈرۈش ئەمەلگە ئاشمىدى. توكېن بېكىتىلمىگەن ياكى مۇددىتى ئۆتكەن بولۇشى مۇمكىن.");
+  };
+  try {
+    if(typeof Supabase !== "undefined" && Supabase.deleteStudent){
+      Supabase.deleteStudent(phone)
+        .then(function(d){ apiResultOk(d) ? onSuccess() : onFail(); })
+        .catch(onFail);
+    } else { onFail(); }
+  }catch(e){ onFail(); }
 }
 
 document.getElementById("exportStudentsBtn").onclick = function(){
@@ -2406,6 +2385,14 @@ document.getElementById("saveReplyBtn").onclick = function(){
   list[editingFeedbackIdx].reply = text;
   list[editingFeedbackIdx].replyAt = dateStr;
 
+  // Persist the reply to the database when the item was loaded from the API (has an id).
+  var fbItem = list[editingFeedbackIdx];
+  try {
+    if(fbItem && typeof fbItem.id !== "undefined" && Supabase && Supabase.replyFeedback){
+      Supabase.replyFeedback(fbItem.id, text, getAdminUserName());
+    }
+  }catch(e){}
+
   saveFeedbackList(list);
   closeReplyModal();
   renderFeedbackTable();
@@ -2442,15 +2429,10 @@ function renderAdminsTable(){
 document.getElementById("addNewAdminBtn").onclick = function(){
   var name = document.getElementById("newAdmFullName").value.trim();
   var username = document.getElementById("newAdmUsername").value.trim();
-  var pass = document.getElementById("newAdmPassword").value.trim();
   var role = document.getElementById("newAdmRole").value;
 
-  if(!name || !username || !pass){
-    alert("بارلىق سۆزنەكلەرنى (ئىسمى، كىرىش نامى ۋە مەخپىي نومۇر) تولدۇرۇڭ!");
-    return;
-  }
-  if(pass.length < 4){
-    alert("مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
+  if(!name || !username){
+    alert("ئىسمى ۋە كىرىش نامىنى تولدۇرۇڭ!");
     return;
   }
 
@@ -2460,13 +2442,14 @@ document.getElementById("addNewAdminBtn").onclick = function(){
     return;
   }
 
-  list.push({ username: username, name: name, pass: pass, role: role });
+  // NOTE: no password is stored client-side. Login is verified server-side against
+  // the ADMIN_PASSWORD env var; this list is display metadata only.
+  list.push({ username: username, name: name, role: role });
   saveAdmins(list);
   document.getElementById("newAdmFullName").value = "";
   document.getElementById("newAdmUsername").value = "";
-  document.getElementById("newAdmPassword").value = "";
   renderAdminsTable();
-  showToast("➕ يېڭى باشقۇرغۇچى («" + name + "») قوشۇلدى!");
+  showToast("➕ نام-ئۇچۇر قوشۇلدى («" + name + "»).");
 };
 
 function deleteAdminAccount(idx){
@@ -2536,9 +2519,16 @@ function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,
 // Initialization
 initAdminTheme();
 // Always require password input when entering admin backend
-sessionStorage.removeItem("uytibb_admin_auth");
+if(typeof setAdminToken === "function") setAdminToken("");
 checkAuth();
 initPasswordChangeUI();
+
+// Load server data in the background (students etc. via the MySQL API)
+if(typeof Supabase !== "undefined" && Supabase.fetchConfigFromServer){
+  Supabase.fetchConfigFromServer().then(function(){
+    if(typeof loadStudentData === "function"){ syncStudentsFromServer(); }
+  });
+}
 </script>
 
 <!-- ADMIN PWA INSTALL GUIDE MODAL -->
