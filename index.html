@@ -934,9 +934,7 @@ function qHTML(q, key, idx, visible){
     });
     h+='</div>';
   } else if(q.type==="essay"){
-    h+='<textarea class="essay-ta" placeholder="جاۋابىڭىزنى بۇ يەرگە يېزىڭ…"></textarea>'
-      +'<div style="margin-top:.4rem"><button class="btn btn-line btn-sm" data-model="'+key+'">📖 ئۈلگە جاۋابنى كۆرۈش</button></div>'
-      +'<div class="model" id="model_'+key+'"><b>📌 ئۈلگە جاۋاب:</b><br>'+q.model+'</div>';
+    h+='<textarea class="essay-ta" placeholder="جاۋابىڭىزنى تەپسىلىي بايان قىلىپ يېزىڭ…"></textarea>';
   }
   if(q.exp) h+='<div class="exp">💡 <b>چۈشەندۈرۈش:</b> '+esc(q.exp)+'</div>';
   else if(q.type==="blank"||q.type==="match") h+='<div class="exp">💡 جاۋابنى تەكشۈرۈپ كۆرۈڭ.</div>';
@@ -989,10 +987,19 @@ function checkQuestion(q, key){
     res.score = rows.length? okm/rows.length : 0;
     box.classList.add(okm===rows.length?"correct":"wrong");
   } else if(q.type==="essay"){
-    res.max=0;
+    res.max=1;
     var ta=box.querySelector("textarea");
-    if(ta&&norm(ta.value)!=="") res.done=true;
-    box.classList.remove("wrong","correct");
+    var val=ta?norm(ta.value):"";
+    if(val.length>=4){
+      res.score=1;
+      res.done=true;
+      box.classList.remove("wrong");
+      box.classList.add("correct");
+    } else {
+      res.score=0;
+      box.classList.remove("correct");
+      box.classList.add("wrong");
+    }
   }
   return res;
 }
@@ -1000,16 +1007,13 @@ function bindQuiz(box, L, isExam){
   box.querySelectorAll(".chip").forEach(function(c){
     c.onclick=function(){ quizFilter=c.getAttribute("data-f"); renderTabBody(L); };
   });
-  box.querySelectorAll("[data-model]").forEach(function(b){
-    b.onclick=function(){ var m=$("model_"+b.getAttribute("data-model")); m.classList.toggle("show"); b.textContent=m.classList.contains("show")?"📕 ئۈلگە جاۋابنى يوشۇرۇش":"📖 ئۈلگە جاۋابنى كۆرۈش"; };
-  });
   if(isExam) return;
   $("btnCheck").onclick=function(){
     var tot=0, got=0, nw=0;
     L.quiz.forEach(function(q,i){
       var vis = quizFilter==="all"||q.type===quizFilter;
       var r=checkQuestion(q, "lq_"+i);
-      if(vis&&q.type!=="essay"){ tot+=r.max; got+=r.score; }
+      if(vis){ tot+=r.max; got+=r.score; }
       if(vis&&r.max>0&&r.score<r.max){ addWrong(L.id, i); nw++; }
     });
     var pct=tot?Math.round(got/tot*100):0;
@@ -1066,16 +1070,17 @@ function doSearch(){
 /* ===== سىناق ===== */
 var examState=null, timerInt=null;
 function vExam(){
-  var auto=countQ(function(q){return q.type!=="essay";}), total=countQ();
-  var h='<h2 class="pagettl">📝 سىناققا تەييارلىق</h2>';
+  var total=countQ();
+  var h='<h2 class="pagettl">📝 چوڭ سىناق ۋە مەشىق</h2>';
   h+='<div class="exam-setup"><h3 style="margin:.1rem 0 .4rem;font-size:1.05rem">⚙️ سىناق تەڭشىكى</h3>'
-    +'<p class="pagesub">جەمئىي '+total+' سوئال (ئاپتومات '+auto+' + بايان '+(total-auto)+') • ئۆتۈش: %60</p>'
-    +'<label>📚 دائىرە:</label><select id="exScope"><option value="all">ھەممە دەرس (ئومۇمىي)</option>'
+    +'<p class="pagesub">ئومۇمىي سوئال ئامبىرى: جەمئىي '+total+' تۈرلۈك سىناق سوئالى • ئۆتۈش نومۇرى: %60</p>'
+    +'<label>📚 دائىرە:</label><select id="exScope"><option value="all">ھەممە دەرس (ئومۇمىي سىناق)</option>'
     +LESSONS.map(function(L){return '<option value="'+L.id+'">'+L.id+'-دەرس: '+esc(L.title)+'</option>';}).join("")+'</select>'
-    +'<label>🏷️ سوئال تۈرلىرى:</label><div class="tchecks" id="exTypes">'+'<label><input type="checkbox" value="choice" checked>☑ تاللاش</label>'+'<label><input type="checkbox" value="tf" checked>✓✗ توغرا-خاتا</label>'+'<label><input type="checkbox" value="blank" checked>✎ بوش ئورۇن</label>'+'<label><input type="checkbox" value="match" checked>🔗 تۇتاشتۇرۇش</label><label><input type="checkbox" value="essay" checked>✍ بايان (جاۋاب بېرىش)</label></div>'+'<p class="pagesub" id="exPool"></p>'+'<label>🔢 سوئال سانى:</label><select id="exCount"><option value="10">10 سوئال</option><option value="20" selected>20 سوئال</option><option value="30">30 سوئال</option><option value="50">50 سوئال</option><option value="100">100 سوئال</option><option value="all">ھەممىسى ('+auto+')</option></select>'
-    +'<label>⏱️ ۋاقىت:</label><select id="exTime"><option value="600">10 مىنۇت</option><option value="1200">20 مىنۇت</option><option value="2700" selected>45 مىنۇت</option><option value="3600">60 مىنۇت</option><option value="5400">90 مىنۇت</option><option value="0">ۋاقىتسىز (مەشىق)</option></select>'
+    +'<label>🏷️ سوئال تۈرلىرى:</label><div class="tchecks" id="exTypes">'+'<label><input type="checkbox" value="choice" checked>☑ تاللاش</label>'+'<label><input type="checkbox" value="tf" checked>✓✗ توغرا-خاتا</label>'+'<label><input type="checkbox" value="blank" checked>✎ بوش ئورۇن</label>'+'<label><input type="checkbox" value="match" checked>🔗 تۇتاشتۇرۇش</label><label><input type="checkbox" value="essay" checked>✍ بايان (جاۋاب بېرىش)</label></div>'+'<p class="pagesub" id="exPool"></p>'
+    +'<label>🔢 سىناق سوئال سانى (50 تىن كۆپ مەشىق):</label><select id="exCount"><option value="50" selected>50 سوئال (ئۆلچەملىك مەشىق)</option><option value="60">60 سوئال</option><option value="80">80 سوئال</option><option value="100">100 سوئال (چوڭ سىناق)</option><option value="150">150 سوئال</option><option value="all">ھەممىسى ('+total+' سوئال)</option><option value="30">30 سوئال (تېز سىناق)</option></select>'
+    +'<label>⏱️ ۋاقىت:</label><select id="exTime"><option value="3600" selected>60 مىنۇت</option><option value="5400">90 مىنۇت</option><option value="7200">120 مىنۇت</option><option value="2700">45 مىنۇت</option><option value="0">ۋاقىت چەكلىمىسىز (تەتقىق مەشىق)</option></select>'
     +'<div style="margin-top:.8rem"><button class="btn btn-gold btn-block" id="exStart">🚀 سىناقنى باشلاش</button></div></div>';
-  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بەش خىل سوئال تۈرىنى ئارىلاش تاللىغىلى بولىدۇ. <b>جاۋاب بېرىش (بايان)</b> سوئاللىرى نومۇرغا كىرمەيدۇ — تاپشۇرغاندىن كېيىن ئۈلگە جاۋابى كۆرسىتىلىدۇ.</div>';
+  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بارلىق سوئال تۈرلىرى (تاللاش، توغرا-خاتا، بوش ئورۇن، تۇتاشتۇرۇش ۋە جاۋاب بېرىش بايان سوئاللىرى) تەكشۈرۈلۈپ، ئىمتىھان ئومۇمىي نەتىجىسى ۋە نومۇرىغا تولۇق قوشۇلىدۇ.</div>';
   return h;
 }
 function startExam(){
@@ -2302,30 +2307,180 @@ function aiRespond(raw){
   return {h:AI_FALLBACK+aiChips(AI_SUGS.slice(0,3))};
 }
 function vAI(){
-  var h='<div class="ai-head"><div class="ava">'+AI_ICON+'</div><div><b>ئەقىللىق ياردەمچى</b><br><small>تورسىز ئىشلەيدۇ • دەرسلىك بويىچە جاۋاب بېرىدۇ</small></div></div>';
-  h+='<div class="chat" id="chat"></div>';
+  var h='<div class="ai-head" style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(-90deg,#072a25,#0a5c52 60%,#12876f);color:#fff;padding:.75rem 1rem;border-radius:14px;margin-bottom:.8rem;box-shadow:var(--shadow)">'
+    + '<div style="display:flex;align-items:center;gap:.6rem">'
+    + '  <div class="ava" style="width:42px;height:42px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 2px 8px rgba(0,0,0,.2)">'+AI_ICON+'</div>'
+    + '  <div><b style="font-size:1.05rem">ئەقىللىق تېبابەت ياردەمچىسى</b><br><small style="opacity:.85;font-size:.78rem">تورسىز ئىشلەيدۇ • 24 سائەت مەسلىھەتچى</small></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:.35rem">'
+    + '  <button class="btn btn-gold btn-sm" id="btnNewChat" title="يېڭى سۆھبەت قۇرۇش" style="font-size:.8rem;padding:.35rem .6rem">➕ يېڭى</button>'
+    + '  <button class="btn btn-line btn-sm" id="btnChatHistory" title="سۆھبەت خاتىرىسىنى كۆرۈش" style="background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);color:#fff;font-size:.8rem;padding:.35rem .6rem">📜 خاتىرە</button>'
+    + '</div>'
+    + '</div>';
+  h+='<div class="chat" id="chat" style="min-height:300px;margin-bottom:.8rem"></div>';
   h+='<div class="qchips" id="sug">'+AI_SUGS.map(function(s){return '<button class="qchip" data-sug="'+esc(s)+'">'+esc(s)+'</button>';}).join("")+"</div>";
-  h+='<div class="chatbar"><input id="ainp" placeholder="سوئالىڭىزنى يېزىڭ…" autocomplete="off"><button class="btn btn-teal" id="asend">➤</button></div>';
+  h+='<div class="chatbar"><input id="ainp" placeholder="سوئالىڭىزنى بۇ يەرگە يېزىڭ…" autocomplete="off"><button class="btn btn-teal" id="asend">➤</button></div>';
   return h;
 }
-function aiPush(r,h){
-  var s=getProg(); s.chat=s.chat||[];
-  s.chat.push({r:r,h:h});
-  if(s.chat.length>40) s.chat=s.chat.slice(-40);
-  saveProg(s); renderChat();
+
+function aiGetActiveSessionId(){
+  var s = getProg();
+  if(!s.ai_active_id){
+    s.ai_active_id = "ai_sess_" + Date.now();
+    saveProg(s);
+  }
+  return s.ai_active_id;
 }
+
+function aiPush(r, h){
+  var s = getProg();
+  s.chat = s.chat || [];
+  var d = new Date();
+  var timeStr = (d.getHours()<10?"0":"")+d.getHours()+":"+(d.getMinutes()<10?"0":"")+d.getMinutes();
+  var msg = { r: r, h: h, time: timeStr };
+  s.chat.push(msg);
+  if(s.chat.length > 50) s.chat = s.chat.slice(-50);
+
+  // Sync with sessions
+  var sid = aiGetActiveSessionId();
+  s.ai_sessions = s.ai_sessions || [];
+  var sess = s.ai_sessions.find(function(x){ return x.id === sid; });
+  var dateStr = (d.getMonth() + 1) + "-ئاينىڭ " + d.getDate() + "-كۈنى " + timeStr;
+  if(!sess){
+    var firstUserText = (r === "u" ? stripHTML(h) : "تېبابەت مەسلىھىتى");
+    sess = {
+      id: sid,
+      title: firstUserText.substring(0, 32),
+      time: dateStr,
+      messages: [msg]
+    };
+    s.ai_sessions.unshift(sess);
+  } else {
+    sess.messages = s.chat;
+    sess.time = dateStr;
+    if(sess.title === "تېبابەت مەسلىھىتى" && r === "u"){
+      sess.title = stripHTML(h).substring(0, 32);
+    }
+  }
+  if(s.ai_sessions.length > 30) s.ai_sessions = s.ai_sessions.slice(0, 30);
+  saveProg(s);
+  renderChat();
+}
+
 function renderChat(){
-  var box=$("chat"); if(!box) return;
-  var s=getProg();
-  if(!s.chat||!s.chat.length){ s.chat=[{r:"b",h:AI_WELCOME}]; saveProg(s); }
-  box.innerHTML=s.chat.map(function(m){ return '<div class="msg '+m.r+'">'+m.h+'</div>'; }).join("");
-  window.scrollTo(0,document.body.scrollHeight);
+  var box = $("chat");
+  if(!box) return;
+  var s = getProg();
+  if(!s.chat || !s.chat.length){
+    s.chat = [{ r: "b", h: AI_WELCOME, time: "ھازىر" }];
+    saveProg(s);
+  }
+  box.innerHTML = s.chat.map(function(m){
+    return '<div class="msg ' + m.r + '">' + m.h + (m.time ? '<div style="font-size:.7rem;opacity:.65;margin-top:.2rem;text-align:'+(m.r==='u'?'left':'right')+'">'+esc(m.time)+'</div>' : '') + '</div>';
+  }).join("");
+  box.scrollTop = box.scrollHeight;
 }
+
 function aiReplaceLast(h){
-  var s=getProg();
-  if(s.chat&&s.chat.length) s.chat[s.chat.length-1]={r:"b",h:h};
-  saveProg(s); renderChat();
+  var s = getProg();
+  if(s.chat && s.chat.length){
+    s.chat[s.chat.length - 1].h = h;
+  }
+  saveProg(s);
+  renderChat();
 }
+
+function aiNewChat(){
+  var s = getProg();
+  s.ai_active_id = "ai_sess_" + Date.now();
+  s.chat = [{ r: "b", h: "🌷 ئەسسالامۇ ئەلەيكۇم! يېڭى سۆھبەت باشلاندى. ئۇيغۇر تېبابىتى توغرىسىدا نېمىلەرنى سورىماقچى؟", time: "ھازىر" }];
+  saveProg(s);
+  renderChat();
+  toast("✨ يېڭى سۆھبەت باشلاندى");
+}
+
+function showChatHistoryModal(){
+  var s = getProg();
+  var sessions = s.ai_sessions || [];
+  var ov = document.createElement("div");
+  ov.className = "rover";
+  ov.id = "chatHistOver";
+  var h = '<div class="rcard" style="max-width:440px;max-height:85vh;display:flex;flex-direction:column">';
+  h += '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1.5px solid var(--line);padding-bottom:.6rem">';
+  h += '    <h3 style="margin:0;color:var(--teal-dark);font-size:1.2rem">📜 سۈنئىي ئەقىل سۆھبەت خاتىرىلىرى</h3>';
+  h += '    <button class="btn btn-line btn-sm" id="histCloseX" style="border:none;font-size:1.3rem;padding:0 .4rem;cursor:pointer">✕</button>';
+  h += '  </div>';
+
+  if(!sessions.length){
+    h += '  <div style="text-align:center;padding:2rem 1rem;color:var(--muted)">تېخى سۆھبەت خاتىرىسى يوق.</div>';
+  } else {
+    h += '  <div style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;padding-left:4px">';
+    sessions.forEach(function(sess, idx){
+      var isCurrent = (sess.id === s.ai_active_id);
+      h += '    <div style="background:'+(isCurrent?'var(--teal-light)':'var(--bg)')+';border:1.5px solid '+(isCurrent?'var(--teal)':'var(--line)')+';border-radius:12px;padding:.75rem .9rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem">';
+      h += '      <div style="cursor:pointer;flex:1" onclick="aiLoadSession(\'' + esc(sess.id) + '\')">';
+      h += '        <b style="color:var(--teal-dark);display:block;font-size:.92rem;line-height:1.4">' + esc(sess.title || (idx+1) + "-سۆھبەت") + '</b>';
+      h += '        <span style="font-size:.76rem;color:var(--muted)">' + esc(sess.time || "") + ' • ' + (sess.messages?sess.messages.length:0) + ' پارچە ئۇچۇر</span>';
+      h += '      </div>';
+      h += '      <button class="btn btn-red btn-sm" onclick="aiDeleteSession(\'' + esc(sess.id) + '\')" title="ئۆچۈرۈش" style="padding:.25rem .55rem;font-size:.8rem">🗑️</button>';
+      h += '    </div>';
+    });
+    h += '  </div>';
+    h += '  <button class="btn btn-line btn-sm" id="histClearAll" style="color:var(--red);border-color:rgba(192,57,43,.3);margin-bottom:.5rem">🗑️ بارلىق خاتىرىلەرنى تازىلاش</button>';
+  }
+
+  h += '  <button class="btn btn-gold btn-block" id="histNewBtn">➕ يېڭى سۆھبەت باشلاش</button>';
+  h += '</div>';
+  ov.innerHTML = h;
+  document.body.appendChild(ov);
+
+  $("histCloseX").onclick = function(){ var o = $("chatHistOver"); if(o) o.remove(); };
+  var nb = $("histNewBtn");
+  if(nb) nb.onclick = function(){
+    var o = $("chatHistOver"); if(o) o.remove();
+    aiNewChat();
+  };
+  var ca = $("histClearAll");
+  if(ca) ca.onclick = function(){
+    if(confirm("بارلىق سۆھبەت خاتىرىلىرىنى ئۆچۈرۈشنى جەزملەشتۈرەمسىز؟")){
+      var s2 = getProg();
+      s2.ai_sessions = [];
+      s2.chat = [{ r: "b", h: AI_WELCOME, time: "ھازىر" }];
+      saveProg(s2);
+      var o = $("chatHistOver"); if(o) o.remove();
+      renderChat();
+      toast("🗑️ سۆھبەت خاتىرىلىرى تولۇق تازىلاندى");
+    }
+  };
+}
+
+function aiLoadSession(sid){
+  var s = getProg();
+  var sess = (s.ai_sessions || []).find(function(x){ return x.id === sid; });
+  if(sess && sess.messages){
+    s.ai_active_id = sid;
+    s.chat = sess.messages;
+    saveProg(s);
+    renderChat();
+    var o = $("chatHistOver"); if(o) o.remove();
+    toast("📖 سۆھبەت خاتىرىسى يۈكلەندى");
+  }
+}
+
+function aiDeleteSession(sid){
+  var s = getProg();
+  s.ai_sessions = (s.ai_sessions || []).filter(function(x){ return x.id !== sid; });
+  if(s.ai_active_id === sid){
+    s.ai_active_id = "ai_sess_" + Date.now();
+    s.chat = [{ r: "b", h: AI_WELCOME, time: "ھازىر" }];
+  }
+  saveProg(s);
+  var o = $("chatHistOver"); if(o) o.remove();
+  showChatHistoryModal();
+  renderChat();
+  toast("🗑️ سۆھبەت ئۆچۈرۈلدى");
+}
+
 function aiSend(text){
   text=String(text||"").trim(); if(!text) return;
   if(AI.quiz){ aiQuizType(text); return; }
@@ -2353,6 +2508,8 @@ function aiQuizType(text){
 }
 function aiInit(){
   renderChat();
+  var nc = $("btnNewChat"); if(nc) nc.onclick = aiNewChat;
+  var ch = $("btnChatHistory"); if(ch) ch.onclick = showChatHistoryModal;
   $("asend").onclick=function(){ var v=$("ainp").value; $("ainp").value=""; aiSend(v); };
   $("ainp").addEventListener("keydown",function(e){ if(e.key==="Enter"){ var v=this.value; this.value=""; aiSend(v); } });
   $("sug").addEventListener("click",function(e){ var b=e.target.closest("[data-sug]"); if(b) aiSend(b.getAttribute("data-sug")); });
@@ -2452,81 +2609,159 @@ function bindHome(){
     toast("✅ سوئالىڭىز تاپشۇرۇلدى! رەھمەت.");
   };
 }
-/* ===== تىزىملىتىش (ئىسىم + تېلېفون) ===== */
+/* ===== تىزىملىتىش ۋە كىرىش سىستېمىسى (STUDENT AUTH & MULTI-DEVICE LOGIN) ===== */
 function closeRegModal(){ var o=$("rover"); if(o) o.parentNode.removeChild(o); }
 function showRegModal(mode, closable){
   closeRegModal();
-  var s=getProg(), u=s.user||{};
-  var ov=document.createElement("div"); ov.className="rover"; ov.id="rover";
-  var h='<div class="rcard"><div class="rlogo">'+LOGO_SVG+'</div>';
-  if(mode==="profile" && u.name){
-    h+='<h3>👤 مېنىڭ تىزىملىتىشىم</h3><div class="rinfo">'
-      +'<div><span>ئىسىم:</span><b>'+esc(u.name)+'</b></div>'
-      +'<div><span>تېلېفون:</span><b dir="ltr">'+esc(u.phone)+'</b></div>'
-      +'<div><span>تىزىملانغان:</span><b>'+esc(u.when||"")+'</b></div></div>'
-      +'<button class="btn btn-teal btn-block" id="rgEdit">✎ مەلۇماتنى ئۆزگەرتىش</button>'
-      +'<button class="btn btn-line btn-block" id="rgDel">🗑️ تىزىمنى ئۆچۈرۈش</button>'
-      +'<button class="btn btn-line btn-block" id="rgX">يېپىش</button>';
+  mode = mode || (getProg().user ? "profile" : "login");
+  var s = getProg(), u = s.user || {};
+  var ov = document.createElement("div"); ov.className = "rover"; ov.id = "rover";
+  var h = '<div class="rcard"><div class="rlogo">'+LOGO_SVG+'</div>';
+
+  if(mode === "profile" && u.name){
+    h += '<h3>👤 مېنىڭ ھېساباتىم</h3><div class="rinfo">'
+      + '<div><span>ئىسىم:</span><b>' + esc(u.name) + '</b></div>'
+      + '<div><span>تېلېفون / نام:</span><b dir="ltr">' + esc(u.phone) + '</b></div>'
+      + '<div><span>ھالىتى:</span><b>' + (u.status === "approved" ? "✅ تەستىقلانغان (دەرسلەر ئوچۇق)" : "⏳ تەستىق كۈتۈۋاتىدۇ") + '</b></div>'
+      + '<div><span>تىزىملانغان:</span><b>' + esc(u.when || "") + '</b></div></div>'
+      + '<button class="btn btn-gold btn-block" id="rgEditPass" style="margin-bottom:.5rem">🔑 مەخپىي نومۇرنى ئۆزگەرتىش</button>'
+      + '<button class="btn btn-line btn-block" id="rgLogout" style="color:var(--red);border-color:rgba(192,57,43,.3);margin-bottom:.5rem">🚪 ھېساباتتىن چىقىش</button>'
+      + '<button class="btn btn-line btn-block" id="rgX">يېپىش</button>';
+  } else if(mode === "editpass"){
+    h += '<h3>🔑 مەخپىي نومۇرنى يېڭىلاش</h3>'
+      + '<p class="rsub">تېلېفون ياكى كومپىيوتېردا كىرىدىغان يېڭى پارول بەلگىلەڭ.</p>'
+      + '<label>يېڭى مەخپىي نومۇر:</label><input type="password" id="npPass1" class="inp" placeholder="كەم دېگەندە 4 ھەرپ ياكى رەقەم" dir="ltr">'
+      + '<label>مەخپىي نومۇرنى جەزملەشتۈرۈڭ:</label><input type="password" id="npPass2" class="inp" placeholder="پارولنى قايتا كىرگۈزۈڭ" dir="ltr">'
+      + '<div class="rerr" id="rgErr"></div>'
+      + '<button class="btn btn-gold btn-block" id="npSaveBtn">ساقلاش ✅</button>'
+      + '<button class="btn btn-line btn-block" id="npCancelBtn" style="margin-top:.4rem">قايتىش</button>';
+  } else if(mode === "reg"){
+    h += '<h3>📝 يېڭى ھېسابات تىزىملىتىش</h3>'
+      + '<p class="rsub">ئۇيغۇر تېبابىتىنى ئۆگىنىش ئۈچۈن ئىسمىڭىز ۋە كىرىش مەخپىي نومۇرى بەلگىلەڭ.<br>بۇ مەخپىي نومۇر ئارقىلىق تېلېفون ياكى كومپىيوتېردىن خالىغان چاغدا كىرەلەيسىز. ✅</p>'
+      + '<label>ئىسمىڭىز:</label><input id="rgName" class="inp" placeholder="مەسىلەن: ئابدۇللا">'
+      + '<label>تېلېفون نومۇرى ياكى كىرىش نامى:</label><input id="rgPhone" class="inp" inputmode="tel" dir="ltr" placeholder="مەسىلەن: 13812345678">'
+      + '<label>مەخپىي نومۇر (پارول):</label><input type="password" id="rgPass" class="inp" dir="ltr" placeholder="كەم دېگەندە 4 ھەرپ ياكى رەقەم">'
+      + '<div class="rerr" id="rgErr"></div>'
+      + '<button class="btn btn-gold btn-block" id="rgGo" style="margin-top:.4rem">📝 تىزىملىتىپ كىرىش</button>'
+      + '<div style="margin-top:.8rem;border-top:1px solid var(--line);padding-top:.8rem;text-align:center">'
+      + '  <a href="javascript:void(0)" id="toLoginLink" style="color:var(--teal-dark);font-weight:bold;font-size:.92rem">ئاللىقاچان ھېساباتىڭىز بارمۇ؟ 🔓 كىرىش</a>'
+      + '</div>'
+      + ((closable)?'<button class="btn btn-line btn-block" id="rgX" style="margin-top:.6rem">يېپىش</button>':"");
   } else {
-    var edit=(mode==="edit");
-    h+='<h3>'+(edit?"✎ مەلۇماتنى ئۆزگەرتىش":"📝 تىزىملىتىپ كىرىش")+'</h3>'
-      +'<p class="rsub">باشقا بەتلەرنى كۆرۈش ئۈچۈن ئىسمىڭىز ۋە تېلېفون نومۇرىڭىزنى قالدۇرۇڭ.<br>بىر قېتىملا تىزىملىتىسىز — كېيىن سورالمايدۇ. ✅</p>'
-      +'<label>ئىسمىڭىز:</label><input id="rgName" placeholder="مەسىلەن: ئابدۇللا" value="'+esc(edit?(u.name||""):"")+'">'
-      +'<label>تېلېفون نومۇرى:</label><input id="rgPhone" inputmode="tel" dir="ltr" placeholder="مەسىلەن: 13812345678" value="'+esc(edit?(u.phone||""):"")+'">'
-      +'<div class="rerr" id="rgErr"></div>'
-      +'<button class="btn btn-gold btn-block" id="rgGo">'+(edit?"ساقلاش ✅":"كىرىش ➤")+'</button>'
-      +((closable||edit)?'<button class="btn btn-line btn-block" id="rgX">يېپىش</button>':"");
+    // LOGIN MODE
+    h += '<h3>🔓 سىستېمىغا كىرىش</h3>'
+      + '<p class="rsub">تېلېفونىڭىز ياكى كومپىيوتېرىڭىزدا بەلگىلىگەن نومۇر ۋە مەخپىي نومۇر بىلەن كىرىڭ.</p>'
+      + '<label>تېلېفون نومۇرى ياكى كىرىش نامى:</label><input id="lgPhone" class="inp" inputmode="tel" dir="ltr" placeholder="تېلېفون نومۇرى ياكى كىرىش نامى">'
+      + '<label>مەخپىي نومۇر (پارول):</label><input type="password" id="lgPass" class="inp" dir="ltr" placeholder="مەخپىي نومۇرىڭىزنى كىرگۈزۈڭ">'
+      + '<div class="rerr" id="rgErr"></div>'
+      + '<button class="btn btn-gold btn-block" id="lgGo" style="margin-top:.4rem">🔓 كىرىش</button>'
+      + '<div style="margin-top:.8rem;border-top:1px solid var(--line);padding-top:.8rem;text-align:center">'
+      + '  <a href="javascript:void(0)" id="toRegLink" style="color:var(--teal-dark);font-weight:bold;font-size:.92rem">تېخى ھېساباتىڭىز يوقمۇ؟ 📝 يېڭى تىزىملىتىش</a>'
+      + '</div>'
+      + ((closable)?'<button class="btn btn-line btn-block" id="rgX" style="margin-top:.6rem">يېپىش</button>':"");
   }
-  h+='</div>';
-  ov.innerHTML=h;
+  h += '</div>';
+  ov.innerHTML = h;
   document.body.appendChild(ov);
-  var x=$("rgX"); if(x) x.onclick=closeRegModal;
-  var ed=$("rgEdit"); if(ed) ed.onclick=function(){ showRegModal("edit",true); };
-  var del=$("rgDel");
-  if(del) del.onclick=function(){
-    if(!confirm("تىزىملىتىشىڭىز ئۆچۈرۈلسۇنمۇ؟ كېيىن قايتا تىزىملىتىسىز.")) return;
-    var s3=getProg(); delete s3.user; saveProg(s3);
+
+  var x = $("rgX"); if(x) x.onclick = closeRegModal;
+  var toLog = $("toLoginLink"); if(toLog) toLog.onclick = function(){ showRegModal("login", closable); };
+  var toRg = $("toRegLink"); if(toRg) toRg.onclick = function(){ showRegModal("reg", closable); };
+  var edPass = $("rgEditPass"); if(edPass) edPass.onclick = function(){ showRegModal("editpass", true); };
+  var loBtn = $("rgLogout");
+  if(loBtn) loBtn.onclick = function(){
+    if(!confirm("ھېساباتتىن چىقامسىز؟")) return;
+    var s3 = getProg(); delete s3.user; saveProg(s3);
     closeRegModal(); location.hash="#/"; router();
+    toast("🚪 ھېساباتتىن چىقتىڭىز");
   };
-  var go=$("rgGo");
-  if(go) go.onclick=function(){
-    var nm=$("rgName").value.trim(), ph=$("rgPhone").value.replace(/[\s\-]/g,"");
-    var err="";
-    if(nm.length<2) err="ئىسمىڭىزنى توغرا يېزىڭ.";
-    else if(!/^[+]?[0-9]{6,15}$/.test(ph)) err="تېلېفون نومۇرىنى توغرا يېزىڭ (6-15 رەقەم).";
-    if(err){ $("rgErr").textContent=err; return; }
-    var s4=getProg(), d=new Date();
-    var dateStr = d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+
+  // Save new password in editpass mode
+  var npSave = $("npSaveBtn");
+  if(npSave) npSave.onclick = function(){
+    var p1 = $("npPass1").value.trim(), p2 = $("npPass2").value.trim();
+    if(p1.length < 4){ $("rgErr").textContent = "مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن."; return; }
+    if(p1 !== p2){ $("rgErr").textContent = "ئىككى قېتىم كىرگۈزگەن مەخپىي نومۇر ئوخشاش چىقمىدى."; return; }
+    var s4 = getProg();
+    if(s4.user){
+      s4.user.pass = p1;
+      saveProg(s4);
+      var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+      var st = allSt.find(function(x){ return x.phone === s4.user.phone; });
+      if(st){ st.pass = p1; localStorage.setItem("uytibb_all_students", JSON.stringify(allSt)); }
+    }
+    toast("✅ يېڭى پارول مۇۋەپپەقىيەتلىك ساقلاندى!");
+    showRegModal("profile", true);
+  };
+  var npCan = $("npCancelBtn"); if(npCan) npCan.onclick = function(){ showRegModal("profile", true); };
+
+  // Login handler
+  var lgGo = $("lgGo");
+  if(lgGo) lgGo.onclick = function(){
+    var ph = $("lgPhone").value.replace(/[\s\-]/g,""), pass = $("lgPass").value.trim();
+    if(!ph){ $("rgErr").textContent = "تېلېفون نومۇرىڭىزنى كىرگۈزۈڭ."; return; }
+    if(!pass){ $("rgErr").textContent = "مەخپىي نومۇرىڭىزنى كىرگۈزۈڭ."; return; }
 
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var existing = allSt.find(function(u){ return u.phone === ph; });
-    var status = existing ? existing.status : "pending";
 
-    s4.user={name:nm, phone:ph, when:dateStr, status:status};
-    saveProg(s4);
+    if(existing && existing.pass && existing.pass !== pass){
+      $("rgErr").textContent = "⚠️ مەخپىي نومۇر (پارول) خاتا بولدى!";
+      return;
+    }
+
+    var s5 = getProg();
+    var nm = existing ? existing.name : ph;
+    var status = existing ? existing.status : "approved";
+    var when = existing ? existing.when : (new Date()).toLocaleDateString();
+
+    s5.user = { name: nm, phone: ph, pass: pass, status: status, when: when };
+    saveProg(s5);
 
     if(!existing){
-      allSt.unshift({name:nm, phone:ph, when:dateStr, status:"pending"});
+      allSt.unshift({ name: nm, phone: ph, pass: pass, status: status, when: when });
       localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
     }
 
-    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-      Supabase.registerStudent({name: nm, phone: ph, status: status});
+    closeRegModal();
+    toast("✅ خۇش كەپسىز، " + nm + "!");
+    router();
+  };
+
+  // Register handler
+  var go = $("rgGo");
+  if(go) go.onclick = function(){
+    var nm = $("rgName").value.trim(), ph = $("rgPhone").value.replace(/[\s\-]/g,""), pass = $("rgPass").value.trim();
+    var err = "";
+    if(nm.length < 2) err = "ئىسمىڭىزنى توغرا يېزىڭ.";
+    else if(!/^[+]?[0-9a-zA-Z_]{4,18}$/.test(ph)) err = "تېلېفون ياكى كىرىش نامىنى توغرا يېزىڭ (4-18 ھەرپ/رەقەم).";
+    else if(pass.length < 4) err = "مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن.";
+    if(err){ $("rgErr").textContent = err; return; }
+
+    var s4 = getProg(), d = new Date();
+    var dateStr = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var existing = allSt.find(function(u){ return u.phone === ph; });
+    var status = existing ? existing.status : "approved";
+
+    s4.user = { name: nm, phone: ph, pass: pass, when: dateStr, status: status };
+    saveProg(s4);
+
+    if(!existing){
+      allSt.unshift({ name: nm, phone: ph, pass: pass, when: dateStr, status: status });
+    } else {
+      existing.name = nm;
+      existing.pass = pass;
     }
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "register", user: {name: nm, phone: ph, status: status, when: dateStr} })
-      }).catch(function(){});
-    }catch(e){}
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      Supabase.registerStudent({ name: nm, phone: ph, status: status });
+    }
 
     closeRegModal();
-    if(status !== "approved"){
-      toast("⏳ تىزىملىتىشىڭىز تاپشۇرۇلدى! باشقۇرغۇچى تەستىقلىغاندىن كېيىن دەرسلەر ئېچىلىدۇ.");
-    } else {
-      toast("✅ خۇش كەپسىز، " + nm + "!");
-    }
+    toast("🎉 تىزىملىتىش مۇۋەپپەقىيەتلىك بولدى! خۇش كەپسىز، " + nm + "!");
     router();
   };
 }
