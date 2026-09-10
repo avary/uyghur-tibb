@@ -86,7 +86,7 @@ const bestAvg = computed(() => {
 .stat b { font-size: 1.35rem; color: var(--teal-dark); }
 [data-theme="dark"] .stat b { color: var(--teal); }
 .stat span { font-size: .76rem; color: var(--muted); }
-.stat > i { position: absolute; left: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 4px 0 0; transition: width .5s ease; }
+.stat > i { position: absolute; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--teal)); border-radius: 4px 0 0 0; transition: width .5s ease; }
 .sub { font-size: .72rem; color: var(--muted); }
 .wlist { display: flex; flex-direction: column; gap: 10px; }
 .w { display: flex; flex-direction: column; gap: 8px; }
