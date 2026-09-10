@@ -17,18 +17,7 @@ through `/api/students`, and the browser clients don't know (or care) which back
 - **DB**: remote MySQL (schema in `mysql_setup.sql`) **or** Supabase (schema in `supabase_setup.sql`)
 - **Hosting**: Vercel (static + Node functions)
 
-## Security model
-- Clients hold **no DB credentials** and no API keys — the browser client
-  (`vite/src/stores/api.js`) only proxies to `/api/students`.
-- The Supabase **Service Role key is server-side only** (loaded from `SUPABASE_SERVICE_ROLE_KEY`),
-  never shipped to the browser.
-- Admin auth is **server-side**: login checks `ADMIN_PASSWORD`, returns an 8-hour HMAC-signed
-  token stored in `sessionStorage`. Every privileged API action requires that token (both drivers).
-- **Fail closed everywhere**: an explicit `DB_DRIVER` without its credentials errors at startup,
-  a Supabase backend outage surfaces as a 500 (never an empty-but-successful admin list), and
-  disallowed CORS origins get a 403.
-- CORS is restricted to `ALLOWED_ORIGIN`; inputs are validated and rate-limited server-side.
-- No hardcoded or default passwords (the previous reset-to-default password backdoors were removed).
+efault passwords (the previous reset-to-default password backdoors were removed).
 
 ## Setup
 
@@ -235,46 +224,7 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
 6. Switching databases later is just a matter of changing `DB_DRIVER` + env vars and re-applying
    §3 to move the data — no code or frontend changes needed.
 
-## Vue frontend (port complete)
 
-The Vue 3 + Vite + Pinia + vue-router app in `vite/` is the **only** frontend now
-(§7). The legacy `index.html`, `admin.html`, `connect.html`, the root `supabase.js`
-client and the root PWA files (`sw.js`, `manifest.webmanifest`, `admin.webmanifest`,
-icons) were removed once the port reached full parity — `dev.js` serves the built
-`vite/dist` alongside the API instead.
-
-What the Vue app includes:
-- App shell (appbar, tabbar, light/dark theme, toasts) + hash router
-- Home, Lessons list, Lesson reader (sections, goals, mind map, PDF), lesson Quiz
-- Books (PDF), Teachers, Exam (timed), Me (progress/wrong answers), AI assistant, Install
-- Admin (`/admin`, auth-gated): login, dashboard stats, student approve/block/delete,
-  feedback reply/dismiss, CSV export; server API is the source of truth, localStorage
-  keys stay shared with the legacy app
-- Content editors: lesson form + sections + quiz, PDF upload/preview/remove, question bank
-  (choice/TF/blank/essay), teachers editor, backup/restore JSON, reset to defaults, and
-  multi-admin display-names — all inside the Vue admin tabs
-- Progress storage reuses the same `uytibb_v1` localStorage key as the legacy app
-- Content stays in the root `data.js` (single source of truth); `uytibb_custom_lessons` /
-  `uytibb_custom_teachers` overrides are applied (and written by the Vue editors) like in
-  the legacy learner app
-- PWA: `vite/public/sw.js` + manifest are copied into the build; the service worker is
-  registered from `src/main.js` on production/secure contexts
-- Security hardening: lesson bodies and quiz model/explanation HTML are allowlist-sanitized
-  before every `v-html` render; PDF uploads are restricted to `application/pdf`, max 2 MB,
-  with quota-failure handling; restore imports are schema-validated (ids, question types,
-  answers, sections, teachers)
-
-### Content persistence caveat
-Lesson/teacher edits are stored in the current browser's `localStorage` only
-(`uytibb_custom_lessons` / `uytibb_custom_teachers`) — they are **not** synced to the
-server or shared across devices/admins. Use the admin "زاپاسلاش ۋە ئەسلىگە كەلتۈرۈش"
-backup/restore JSON to move content between devices. Server-backed content management
-would be a follow-up feature.
-
-## Admin login
-- Open the Vue admin at `/` → `#/admin`.
-- Enter the `ADMIN_PASSWORD` value. A short-lived token is issued and stored in the session.
-  The Vue route guard validates the token server-side before `/admin` becomes accessible.
 
 ## Model: upstream collaboration
 The upstream project (`github.com/avary/uyghur-tibb`) keeps evolving. When new features land
