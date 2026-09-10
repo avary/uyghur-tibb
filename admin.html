@@ -12,6 +12,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="تېبابەت باشقۇرۇش">
 <link rel="apple-touch-icon" href="admin-icon-192.png">
+<script>
+var _adminDeferredPrompt = null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  _adminDeferredPrompt = e;
+});
+if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./sw.js").catch(function(){});
+  });
+}
+</script>
 <style>
 @font-face {
   font-family: 'UKIJEkran';
@@ -2541,104 +2553,26 @@ checkAuth();
 initPasswordChangeUI();
 </script>
 
-<!-- ADMIN PWA INSTALL GUIDE MODAL -->
-<div id="adminInstallModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:1rem">
-  <div class="card" style="max-width:440px;width:100%;background:var(--card);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;border:2px solid var(--gold);padding:0">
-    <div style="background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;padding:1.2rem;text-align:center">
-      <div style="margin-bottom:.6rem"><img src="admin-icon-192.png" alt="Admin Icon" style="width:72px;height:72px;border-radius:50%;background:#ffffff;padding:4px;box-shadow:0 4px 14px rgba(0,0,0,0.3);border:2px solid #fff"></div>
-      <h3 style="margin:0;font-size:1.15rem">باشقۇرۇش مەركىزىنى تېلېفونغا قاچىلاش</h3>
-      <p style="margin:.3rem 0 0;font-size:.85rem;opacity:.9">ئوقۇغۇچى ئەپىدىن ئايرىم، مۇستەقىل باشقۇرغۇچى ئەپى سۈپىتىدە چۈشۈرۈش</p>
-    </div>
-    <div style="padding:1.2rem;font-size:.9rem;line-height:1.7;color:var(--ink)">
-      <div id="adminInstallNativePromptBox" style="display:none;margin-bottom:1rem;background:var(--teal-light);border:1px solid var(--teal);padding:.8rem;border-radius:10px;text-align:center">
-        <p style="margin:0 0 .6rem;font-weight:bold;color:var(--teal-dark)">تېلېفونىڭىز ئەپ قاچىلاشنى قوللايدۇ!</p>
-        <button type="button" id="adminDoNativeInstallBtn" class="btn btn-teal btn-block" style="justify-content:center;font-weight:bold">
-          ⚡ دەرھال تېلېفونغا قاچىلاش (Install)
-        </button>
-      </div>
-
-      <div style="background:var(--bg);border-radius:12px;padding:.9rem;margin-bottom:.8rem">
-        <b style="color:var(--teal-dark);display:block;margin-bottom:.4rem">🍎 ئايفون (iPhone / iPad Safari):</b>
-        <ol style="margin:0;padding-right:1.2rem;color:var(--ink)">
-          <li>Safari نىڭ ئاستىدىكى <b>ھەمبەھىرلەش (⎋ ياكى Share)</b> سىنبەلگىسىنى بېسىڭ.</li>
-          <li>تىزىملىكتىن پەسكە سىيرىپ <b>«باش ئېكرانغا قوشۇش ➕» (Add to Home Screen)</b> نى تاللاڭ.</li>
-          <li>يۇقىرى ئوڭ تەرەپتىكى <b>«قوشۇش» (Add)</b> نى بېسىڭ. باشقۇرۇش ئەپى ئايرىم ئورنىتىلىدۇ!</li>
-        </ol>
-      </div>
-
-      <div style="background:var(--bg);border-radius:12px;padding:.9rem">
-        <b style="color:var(--teal-dark);display:block;margin-bottom:.4rem">🤖 ئاندروئىد (Android Chrome):</b>
-        <ol style="margin:0;padding-right:1.2rem;color:var(--ink)">
-          <li>Chrome نىڭ ئوڭ تەرەپ ئۈستىدىكى <b>3 چېكىت (⋮)</b> نى بېسىڭ.</li>
-          <li><b>«ئەپنى قاچلاش 📲» (Install app)</b> ياكى «باش ئېكرانغا قوشۇش» نى بېسىڭ.</li>
-        </ol>
-      </div>
-    </div>
-    <div style="padding:.8rem 1.2rem 1.2rem;text-align:center">
-      <button type="button" onclick="closeAdminInstallGuide()" class="btn btn-line btn-block" style="justify-content:center">
-        چۈشەندىم (ياپقۇچ)
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
-/* ===== ADMIN PWA INSTALLATION & SERVICE WORKER ===== */
-var _adminDeferredPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e){
-  e.preventDefault();
-  _adminDeferredPrompt = e;
-  var pBox = document.getElementById("adminInstallNativePromptBox");
-  if(pBox) pBox.style.display = "block";
-  var btn = document.getElementById("adminDoNativeInstallBtn");
-  if(btn){
-    btn.onclick = function(){
-      if(_adminDeferredPrompt){
-        _adminDeferredPrompt.prompt();
-        _adminDeferredPrompt.userChoice.then(function(choice){
-          if(choice.outcome === 'accepted'){
-            showToast("🎉 باشقۇرۇش ئەپى قاچىلاندى!");
-            closeAdminInstallGuide();
-          }
-          _adminDeferredPrompt = null;
-        });
-      }
-    };
-  }
-});
-
+/* ===== ADMIN PWA DIRECT INSTALLATION ===== */
 function directAdminInstall(){
   if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
-    showToast("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان!");
+    alert("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!");
     return;
   }
   if(_adminDeferredPrompt){
     _adminDeferredPrompt.prompt();
     _adminDeferredPrompt.userChoice.then(function(choice){
-      if(choice.outcome === 'accepted'){
-        showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
-        closeAdminInstallGuide();
+      if(choice && choice.outcome === 'accepted'){
+        if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
       }
       _adminDeferredPrompt = null;
     });
-    return;
+  } else {
+    alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
   }
-  var m = document.getElementById("adminInstallModal");
-  if(m) m.style.display = "flex";
 }
 var triggerAdminInstall = directAdminInstall;
-function closeAdminInstallGuide(){
-  var m = document.getElementById("adminInstallModal");
-  if(m) m.style.display = "none";
-}
-
-if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('./sw.js?v=20260909')
-      .then(function(reg){ console.log('Admin SW registered:', reg.scope); })
-      .catch(function(err){ console.warn('Admin SW error:', err); });
-  });
-}
 </script>
 </body>
 </html>

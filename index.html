@@ -369,8 +369,8 @@ mark{background:var(--gold);color:#000;border-radius:3px;padding:0 2px}
 .pagesub{color:var(--muted);font-size:.9rem;margin:-.4rem 0 .7rem}
 @media print{.appbar,.tabbar,.tabs,.scorebar,.timer,.palette,.topbtn,.footer,.qfilter,.mm-tools,.backlink,.sbox,.fab,.chatbar,#sug{display:none!important}.phone{box-shadow:none;max-width:none}.main{padding:0}}
 /* ===== لوگو ===== */
-.alogo{background:none;box-shadow:none;padding:0}
-.alogo svg{width:44px;height:44px;display:block}
+.alogo{background:none;box-shadow:none;padding:0;display:flex;align-items:center;justify-content:center}
+.alogo svg, .alogo img{width:42px;height:42px;display:block;border-radius:50%;object-fit:contain}
 .aicon{font-family:inherit}
 /* ===== سۈنئى ئەقىل ياردەمچى ===== */
 .fab{position:fixed;bottom:calc(var(--tabh) + 16px);left:14px;width:60px;height:60px;border-radius:50%;
@@ -452,7 +452,7 @@ mark{background:var(--gold);color:#000;border-radius:3px;padding:0 2px}
 
 /* ===== باش بەت لوگو + پىكىر تاختىسى ===== */
 .greet .hlogo{position:absolute;left:.8rem;top:.8rem;z-index:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
-.greet .hlogo svg{width:54px;height:54px;display:block}
+.greet .hlogo svg, .greet .hlogo img{width:56px;height:56px;display:block;border-radius:50%;object-fit:contain}
 .fb{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:.8rem;margin-bottom:.4rem}
 .fb-form input,.fb-form textarea{width:100%;border:2px solid var(--line);border-radius:10px;
   font-family:inherit;font-size:.95rem;padding:.4rem .7rem;margin-bottom:.5rem;background:#fff}
@@ -471,8 +471,8 @@ mark{background:var(--gold);color:#000;border-radius:3px;padding:0 2px}
   align-items:center;justify-content:center;padding:1rem}
 .rcard{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:1.3rem 1.2rem;
   max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.4);border-top:6px solid var(--gold)}
-.rlogo{text-align:center}
-.rlogo svg{width:76px;height:76px}
+.rlogo{text-align:center;margin-bottom:.4rem}
+.rlogo svg, .rlogo img{width:80px;height:80px;display:inline-block;border-radius:50%;object-fit:contain;filter:drop-shadow(0 3px 10px rgba(10,92,82,0.25))}
 .rcard h3{text-align:center;color:var(--teal-dark);margin:.3rem 0}
 .rsub{text-align:center;color:var(--muted);font-size:.88rem;margin:.2rem 0 .5rem}
 .rcard label{display:block;font-weight:bold;font-size:.92rem;margin:.5rem 0 .15rem}
@@ -563,7 +563,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 <div class="phone">
 <header class="appbar">
   <div class="appbar-in">
-    <div class="alogo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><radialGradient id="tg" cx="38%" cy="30%" r="95%"><stop offset="0" stop-color="#18a184"/><stop offset="1" stop-color="#07332c"/></radialGradient></defs><rect x="8" y="8" width="496" height="496" rx="120" fill="url(#tg)"/><rect x="32" y="32" width="448" height="448" rx="98" fill="none" stroke="#c9a227" stroke-width="15"/><g fill="#c9a227"><rect x="234" y="58" width="44" height="44"/><rect x="234" y="58" width="44" height="44" transform="rotate(45 256 80)"/></g><circle cx="256" cy="80" r="8" fill="#07332c"/><path d="M256 268 C214 224 208 170 222 126 C262 160 274 218 256 268 Z" fill="#2bb673"/><path d="M256 268 C298 224 304 170 290 126 C250 160 238 218 256 268 Z" fill="#7ed6a5"/><path d="M256 262 C243 222 243 184 256 150 C269 184 269 222 256 262 Z" fill="#1e8e4d"/><rect x="272" y="140" width="38" height="150" rx="19" transform="rotate(28 291 215)" fill="#f6f4ec" stroke="#c9a227" stroke-width="9"/><path d="M128 296 h256 c0 68 -58 116 -128 116 s-128 -48 -128 -116 z" fill="#f6f4ec" stroke="#c9a227" stroke-width="11"/><rect x="112" y="276" width="288" height="36" rx="18" fill="#c9a227"/><rect x="214" y="406" width="84" height="26" rx="10" fill="#a8861c"/><path d="M158 352 h36 l14 -26 20 52 15 -34 11 8 h44" fill="none" stroke="#0a5c52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="alogo"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى" class="app-logo"></div>
     <div class="abrand">
       <b>ئۇيغۇر تېبابىتى ئۆگىنىش</b>
       <small id="appbarLessonCount">نەزەرىيە قىسمى</small>
@@ -2343,7 +2343,7 @@ function aiInit(){
 }
 
 /* ===== لوگو (تېبابەت سىمۋولى) ===== */
-var LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><radialGradient id="tg2" cx="38%" cy="30%" r="95%"><stop offset="0" stop-color="#18a184"/><stop offset="1" stop-color="#07332c"/></radialGradient></defs><rect x="8" y="8" width="496" height="496" rx="120" fill="url(#tg2)"/><rect x="32" y="32" width="448" height="448" rx="98" fill="none" stroke="#c9a227" stroke-width="15"/><g fill="#c9a227"><rect x="234" y="58" width="44" height="44"/><rect x="234" y="58" width="44" height="44" transform="rotate(45 256 80)"/></g><circle cx="256" cy="80" r="8" fill="#07332c"/><path d="M256 268 C214 224 208 170 222 126 C262 160 274 218 256 268 Z" fill="#2bb673"/><path d="M256 268 C298 224 304 170 290 126 C250 160 238 218 256 268 Z" fill="#7ed6a5"/><path d="M256 262 C243 222 243 184 256 150 C269 184 269 222 256 262 Z" fill="#1e8e4d"/><rect x="272" y="140" width="38" height="150" rx="19" transform="rotate(28 291 215)" fill="#f6f4ec" stroke="#c9a227" stroke-width="9"/><path d="M128 296 h256 c0 68 -58 116 -128 116 s-128 -48 -128 -116 z" fill="#f6f4ec" stroke="#c9a227" stroke-width="11"/><rect x="112" y="276" width="288" height="36" rx="18" fill="#c9a227"/><rect x="214" y="406" width="84" height="26" rx="10" fill="#a8861c"/><path d="M158 352 h36 l14 -26 20 52 15 -34 11 8 h44" fill="none" stroke="#0a5c52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var LOGO_SVG = '<img src="icon-192.png" alt="ئۇيغۇر تېبابىتى" class="brand-emblem">';
 
 /* ===== سوئال-پىكىر تاختىسى ===== */
 function renderFb(){
