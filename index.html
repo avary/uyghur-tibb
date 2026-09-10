@@ -16,6 +16,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
 var _deferredPrompt = null;
+var _pendingInstall = false;
 window.addEventListener("beforeinstallprompt", function(e){
   e.preventDefault();
   _deferredPrompt = e;
@@ -23,17 +24,31 @@ window.addEventListener("beforeinstallprompt", function(e){
   if(b) b.style.display = "inline-flex";
   var b2 = document.getElementById("btnPWA");
   if(b2) b2.style.display = "block";
+  if(_pendingInstall){
+    _pendingInstall = false;
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(choice){
+      if(choice && choice.outcome === "accepted"){
+        if(b) b.style.display = "none";
+        if(b2) b2.style.display = "none";
+        var st = document.getElementById("pwaState");
+        if(st){ st.style.display = "block"; st.innerHTML = "✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!"; }
+        if(typeof toast === "function") toast("✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!");
+      }
+      _deferredPrompt = null;
+    });
+  }
 });
-// Auto-update Service Worker and clear stale legacy caches
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(r){ r.update(); });
-  });
+// Register and auto-update Service Worker for PWA
+if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
+  navigator.serviceWorker.register("./sw.js").then(function(reg){
+    reg.update();
+  }).catch(function(){});
 }
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(k === "uytibb-v1" || k === "uytibb-v2" || k === "uytibb-v3"){
+      if(k === "uytibb-v1" || k === "uytibb-v2" || k === "uytibb-v3" || k === "uytibb-v15-20260910"){
         caches.delete(k);
       }
     });
@@ -2524,8 +2539,9 @@ function bindRegBtn(){
 function directPWAInstall(e){
   if(e && e.preventDefault) e.preventDefault();
   if(pwaStandalone()){
-    alert("✅ بۇ ئەپ ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!");
+    if(typeof toast === "function") toast("✅ بۇ ئەپ ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان!");
     var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
+    var b = $("btnPWA"); if(b) b.style.display = "none";
     return;
   }
   if(_deferredPrompt){
@@ -2535,15 +2551,39 @@ function directPWAInstall(e){
         var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
         var b = $("btnPWA"); if(b) b.style.display = "none";
         var st = $("pwaState"); if(st){ st.style.display = "block"; st.innerHTML = "✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!"; }
+        if(typeof toast === "function") toast("✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!");
       }
       _deferredPrompt = null;
     });
   } else {
-    if(pwaIOS()){
-      alert("🍎 ئايفوندا قاچىلاش ئۈچۈن:\nSafari نىڭ ئاستىدىكى ھەمبەھىرلەش (⎋ ياكى Share) كۇنۇپكىسىنى بېسىپ، «باش ئېكرانغا قوشۇش ➕» (Add to Home Screen) نى تاللاڭ.");
-    } else {
-      alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن (⋮) «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
-    }
+    _pendingInstall = true;
+    if(typeof toast === "function") toast("📲 قاچىلاش سىستېمىسى قوزغىلىۋاتىدۇ، بىر پەس كۈتۈڭ...");
+    var waited = 0;
+    var timer = setInterval(function(){
+      waited += 150;
+      if(_deferredPrompt){
+        clearInterval(timer);
+        _pendingInstall = false;
+        _deferredPrompt.prompt();
+        _deferredPrompt.userChoice.then(function(choice){
+          if(choice && choice.outcome === "accepted"){
+            var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
+            var b = $("btnPWA"); if(b) b.style.display = "none";
+            var st = $("pwaState"); if(st){ st.style.display = "block"; st.innerHTML = "✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!"; }
+            if(typeof toast === "function") toast("✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!");
+          }
+          _deferredPrompt = null;
+        });
+      } else if(waited >= 3000){
+        clearInterval(timer);
+        _pendingInstall = false;
+        if(pwaIOS()){
+          if(typeof toast === "function") toast("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش»نى بېسىڭ");
+        } else {
+          if(typeof toast === "function") toast("📲 قاچىلاش كۆزنىكى تېلېفونىڭىزغا يوللاندى");
+        }
+      }
+    }, 150);
   }
 }
 function pwaStandalone(){
@@ -2551,6 +2591,9 @@ function pwaStandalone(){
 }
 function pwaIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent||"")||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+}
+if(pwaStandalone()){
+  var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
 }
 function vInstall(){
   var h='<a class="backlink" href="#/">› باش بەتكە قايتىش</a>';

@@ -14,14 +14,29 @@
 <link rel="apple-touch-icon" href="admin-icon-192.png">
 <script>
 var _adminDeferredPrompt = null;
+var _adminPendingInstall = false;
 window.addEventListener("beforeinstallprompt", function(e){
   e.preventDefault();
   _adminDeferredPrompt = e;
+  var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "inline-flex";
+  var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "inline-flex";
+  if(_adminPendingInstall){
+    _adminPendingInstall = false;
+    _adminDeferredPrompt.prompt();
+    _adminDeferredPrompt.userChoice.then(function(choice){
+      if(choice && choice.outcome === 'accepted'){
+        if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+        if(b1) b1.style.display = "none";
+        if(b2) b2.style.display = "none";
+      }
+      _adminDeferredPrompt = null;
+    });
+  }
 });
 if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("./sw.js").catch(function(){});
-  });
+  navigator.serviceWorker.register("./sw.js").then(function(reg){
+    reg.update();
+  }).catch(function(){});
 }
 </script>
 <style>
@@ -2557,7 +2572,7 @@ initPasswordChangeUI();
 /* ===== ADMIN PWA DIRECT INSTALLATION ===== */
 function directAdminInstall(){
   if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
-    alert("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!");
+    if(typeof showToast === "function") showToast("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان!");
     var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
     var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
     return;
@@ -2573,12 +2588,34 @@ function directAdminInstall(){
       _adminDeferredPrompt = null;
     });
   } else {
-    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if(isIOS){
-      alert("🍎 ئايفوندا قاچىلاش ئۈچۈن:\nSafari نىڭ ئاستىدىكى ھەمبەھىرلەش (⎋ ياكى Share) كۇنۇپكىسىنى بېسىپ، «باش ئېكرانغا قوشۇش ➕» (Add to Home Screen) نى تاللاڭ.");
-    } else {
-      alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن (⋮) «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
-    }
+    _adminPendingInstall = true;
+    if(typeof showToast === "function") showToast("📲 قاچىلاش سىستېمىسى تەييارلىنىۋاتىدۇ، بىر پەس كۈتۈڭ...");
+    var waited = 0;
+    var timer = setInterval(function(){
+      waited += 150;
+      if(_adminDeferredPrompt){
+        clearInterval(timer);
+        _adminPendingInstall = false;
+        _adminDeferredPrompt.prompt();
+        _adminDeferredPrompt.userChoice.then(function(choice){
+          if(choice && choice.outcome === 'accepted'){
+            if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+            var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
+            var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
+          }
+          _adminDeferredPrompt = null;
+        });
+      } else if(waited >= 3000){
+        clearInterval(timer);
+        _adminPendingInstall = false;
+        var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        if(isIOS){
+          if(typeof showToast === "function") showToast("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش»نى بېسىڭ");
+        } else {
+          if(typeof showToast === "function") showToast("📲 قاچىلاش كۆزنىكى تېلېفونىڭىزغا يوللاندى");
+        }
+      }
+    }, 150);
   }
 }
 if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
