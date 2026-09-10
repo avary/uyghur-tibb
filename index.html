@@ -2625,33 +2625,45 @@ function downloadOfflineHTML(appName){
 }
 function vInstall(){
   var h='<a class="backlink" href="#/">› باش بەتكە قايتىش</a>';
-  h+='<h2 class="pagettl">📲 ئەپنى يۈكلەش ۋە قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش» ئەپىنى تېلېفون ياكى كومپىيوتېرىڭىزغا يۈكلەپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
+  h+='<h2 class="pagettl">📲 ئەپلەرنى يۈكلەش ۋە قاچىلاش</h2><p class="pagesub">«ئالدى بەت (ئۆگىنىش ئەپى)» ۋە «ئارقا بەت (باشقۇرۇش مەركىزى)» ئەپلىرىنى ئايرىم-ئايرىم قاچىلاپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
   
-  // Card 1: Direct PWA App Install
-  h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.6rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
-  h+='  <div style="margin-bottom:.8rem"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى" style="width:72px;height:72px;border-radius:50%"></div>';
-  h+='  <h3 style="margin:0 0 .6rem;color:var(--teal-dark);font-size:1.25rem">📱 / 💻 بىۋاسىتە ئەپ قىلىپ قاچىلاش</h3>';
-  h+='  <p style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.3rem">تېلېفون ياكى كومپىيوتېرغا ئەپ سۈپىتىدە قاچىلاپ قويسىڭىز، سىنبەلگىدىن بىرلا چېكىپ، تور بولمىسىمۇ ئەركىن ئوقۇيالايسىز.</p>';
-  h+='  <button class="btn btn-gold btn-block" id="btnPWA" onclick="directPWAInstall(event)" style="font-size:1.05rem;font-weight:bold;padding:.85rem;margin-bottom:.8rem">📲 ھازىرلا قاچىلاش</button>';
+  // Card 1: FRONTEND APP (Student Learning App)
+  h+='<div class="card" style="background:var(--card);border:2px solid var(--teal);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.4rem;text-align:center">';
+  h+='  <div style="margin-bottom:.8rem"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى ئۆگىنىش ئەپى" style="width:76px;height:76px;border-radius:50%;box-shadow:0 4px 12px rgba(10,92,82,.2)"></div>';
+  h+='  <span class="badge" style="background:var(--teal-light);color:var(--teal-dark);font-size:.85rem;margin-bottom:.4rem;padding:.2rem .8rem">📱 1. ئالدى بەت (ئۆگىنىش ئەپى)</span>';
+  h+='  <h3 style="margin:.4rem 0 .5rem;color:var(--teal-dark);font-size:1.3rem">ئۇيغۇر تېبابىتى ئۆگىنىش</h3>';
+  h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">10 دەرسلىك، زېھىن خەرىتىسى، 261 سىناق سوئالى ۋە ئەسلى كىتابلارنى تورسىز ئۆگىنىش ئەپى.</p>';
+  h+='  <div style="display:flex;flex-direction:column;gap:.6rem">';
+  h+='    <button class="btn btn-gold btn-block" id="btnPWA" onclick="directPWAInstall(event)" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 ئۆگىنىش ئەپىنى بىۋاسىتە قاچىلاش (PWA)</button>';
+  h+='    <button class="btn btn-line btn-block" id="btnDesktopShortcut" style="font-size:.9rem;padding:.65rem">🖥️ ئۆگىنىش ئەپىنىڭ ئۈستەل يۈزى قىسقا يولى (.url)</button>';
+  h+='    <button class="btn btn-line btn-block" id="btnDownloadOffline" style="font-size:.9rem;padding:.65rem">💾 تورسىز تولۇق نەشرىنى چۈشۈرۈش (Offline HTML)</button>';
+  h+='  </div>';
   h+='  <p class="pagesub" id="pwaState" style="display:none;margin:.5rem 0"></p>';
   h+='</div>';
 
-  // Card 2: Dedicated Computer Download Options
-  h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.4rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem">';
-  h+='  <h3 style="margin:0 0 .8rem;color:var(--teal-dark);font-size:1.15rem;display:flex;align-items:center;gap:.4rem">💻 كومپىيوتېر (PC / Windows / Mac) ئۈچۈن قوشۇمچە يۈكلەش تاللاشلىرى</h3>';
-  h+='  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">كومپىيوتېرىڭىزدا ئەڭ راھەت ئىشلىتىش ئۈچۈن خالىغان ئۇسۇلدا يۈكلىسىڭىز بولىدۇ:</p>';
-  h+='  <div style="display:flex;flex-direction:column;gap:.7rem">';
-  h+='    <button class="btn btn-teal btn-block" id="btnDesktopShortcut" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">🖥️ ئۈستەل يۈزى قىسقا يولىنى چۈشۈرۈش (.url Shortcut)</button>';
-  h+='    <button class="btn btn-line btn-block" id="btnDownloadOffline" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">💾 تورسىز تولۇق ھۆججەتنى كومپىيوتېرغا چۈشۈرۈش (Offline HTML)</button>';
-  h+='    <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
+  // Card 2: BACKEND ADMIN APP (Admin Management Center)
+  h+='<div class="card" style="background:var(--card);border:2px solid var(--gold);border-radius:18px;padding:1.5rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.4rem;text-align:center">';
+  h+='  <div style="margin-bottom:.8rem"><img src="admin-icon-192.png" alt="باشقۇرۇش مەركىزى" style="width:76px;height:76px;border-radius:50%;box-shadow:0 4px 12px rgba(201,162,39,.25);background:#fff;padding:3px">';
+  h+='  </div>';
+  h+='  <span class="badge" style="background:var(--gold-light);color:#8a6a00;border:1px solid var(--gold);font-size:.85rem;margin-bottom:.4rem;padding:.2rem .8rem">🔐 2. ئارقا بەت (باشقۇرۇش مەركىزى)</span>';
+  h+='  <h3 style="margin:.4rem 0 .5rem;color:var(--teal-dark);font-size:1.3rem">ئۇيغۇر تېبابىتى باشقۇرۇش</h3>';
+  h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">دەرسلەرنىڭ PDF ھۆججىتىنى باشقۇرۇش، سوئاللارنى تەھرىرلەش ۋە ئوقۇغۇچى تەستىقلاش مەركىزى.</p>';
+  h+='  <div style="display:flex;flex-direction:column;gap:.6rem">';
+  h+='    <a href="./admin.html" class="btn btn-teal btn-block" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 باشقۇرۇش ئەپىنى ئېچىش ۋە قاچىلاش</a>';
+  h+='    <button class="btn btn-line btn-block" id="btnAdminShortcut" style="font-size:.9rem;padding:.65rem">🖥️ باشقۇرۇش ئەپىنىڭ ئۈستەل يۈزى قىسقا يولى (.url)</button>';
   h+='  </div>';
   h+='</div>';
 
-  h+='<div class="keybox"><b class="t">📌 كومپىيوتېردا ئەپ قىلىپ قاچىلاش ئۇسۇلى:</b> Chrome ياكى Edge تور كۆرگۈچىدە بۇ بەتنى ئاچقاندا، ئۈستى ئادرېس بالدىقىنىڭ ئەڭ ئوڭ تەرىپىدىكى <b>«ئەپنى قاچىلاش ⊕»</b> سىنبەلگىسىنى باسسىڭىز، كومپىيوتېرىڭىزنىڭ باش ئېكرانى (Desktop) ۋە پروگراممىلار تىزىملىكىگە مۇستەقىل ئەپ بولۇپ قاچىلىنىدۇ.</div>';
+  // Card 3: Link sharing
+  h+='<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
+  h+='  <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
+  h+='</div>';
+
+  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> يۇقىرىدىكى ئىككى ئەپ پۈتۈنلەي ئايرىم سىستېما بولۇپ، ئۆگىنىش ئەپى ۋە باشقۇرۇش مەركىزىنى ئايرىم-ئايرىم قاچىلىسىڭىز، تېلېفون ياكى كومپىيوتېرىڭىزنىڭ باش ئېكرانىدا ئۆز ئالدىغا ئايرىم سىنبەلگە بىلەن تۇرىدۇ.</div>';
   return h;
 }
 function bindInstall(){
-  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline");
+  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline"), as=$("btnAdminShortcut");
   if(st){
     if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
@@ -2660,8 +2672,14 @@ function bindInstall(){
   }
   if(ds){
     ds.onclick=function(){
-      var url=location.href.split("#")[0];
+      var url=location.origin + location.pathname;
       downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_ئۆگىنىش", url);
+    };
+  }
+  if(as){
+    as.onclick=function(){
+      var base=location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+      downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_باشقۇرۇش", base + "admin.html");
     };
   }
   if(dof){

@@ -367,12 +367,141 @@ table.data-table tr:hover { background: var(--teal-light); }
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @media(max-width: 768px) {
-  .topbar { flex-wrap: wrap; gap: .6rem; padding: .6rem .8rem; }
-  .top-actions { flex-wrap: wrap; gap: .4rem; width: 100%; justify-content: flex-end; }
+  .topbar {
+    padding: .5rem .75rem;
+    gap: .4rem;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand-box { gap: .5rem; }
+  .brand-box img { width: 32px; height: 32px; }
+  .brand-box h1 { font-size: .95rem; white-space: nowrap; }
+  
+  .top-actions {
+    gap: .3rem;
+    width: 100%;
+    justify-content: space-between;
+    padding-top: .3rem;
+    border-top: 1px solid rgba(255,255,255,.15);
+    flex-wrap: nowrap;
+  }
+  .top-actions button, .top-actions a {
+    padding: .35rem .5rem !important;
+    font-size: .78rem !important;
+    border-radius: 8px !important;
+    flex: 1 1 auto;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
   .admin-body { flex-direction: column; }
-  .sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; padding: .5rem; gap: .4rem; }
-  .sidebar .nav-student-link { width: auto !important; white-space: nowrap; margin-bottom: 0 !important; }
-  .content-pane { padding: .8rem; }
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-bottom: 1.5px solid var(--line);
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: .45rem .6rem;
+    gap: .4rem;
+    position: sticky;
+    top: 76px;
+    z-index: 90;
+    background: var(--card);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar .nav-student-link {
+    flex: 0 0 auto;
+    width: auto !important;
+    white-space: nowrap;
+    margin-bottom: 0 !important;
+    padding: .4rem .75rem !important;
+    font-size: .82rem !important;
+    border-radius: 18px !important;
+  }
+  .sidebar .nav-item {
+    flex: 0 0 auto;
+    width: auto !important;
+    white-space: nowrap;
+    padding: .4rem .75rem !important;
+    font-size: .82rem !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--line) !important;
+    background: var(--bg) !important;
+    margin-top: 0 !important;
+  }
+  .sidebar .nav-item.active {
+    background: var(--teal) !important;
+    color: #fff !important;
+    border-color: var(--teal) !important;
+  }
+
+  .content-pane { padding: .75rem .6rem 3rem; }
+  .panel-title { font-size: 1.15rem; gap: .4rem; margin-bottom: .8rem; }
+  
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: .5rem !important;
+    margin-bottom: 1rem;
+  }
+  .stat-card {
+    padding: .7rem .6rem;
+    gap: .5rem;
+    border-radius: 12px;
+  }
+  .stat-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
+    border-radius: 10px;
+  }
+  .stat-data b { font-size: 1.15rem; }
+  .stat-data span { font-size: .75rem; }
+
+  .card {
+    padding: .9rem .75rem;
+    border-radius: 14px;
+    margin-bottom: .9rem;
+  }
+  
+  .card div[style*="display:flex"] {
+    flex-direction: column !important;
+    gap: .5rem !important;
+  }
+  .card div[style*="display:flex"] .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    border-radius: 10px;
+  }
+  table.data-table { font-size: .8rem; }
+  table.data-table th, table.data-table td {
+    padding: .5rem .55rem;
+    white-space: nowrap;
+  }
+
+  .modal-overlay { padding: .6rem; }
+  .modal-box {
+    padding: 1.1rem .9rem;
+    border-radius: 16px;
+    max-height: 88vh;
+    width: 100%;
+  }
+
+  .login-wrap { padding: 1rem .6rem; }
+  .login-card {
+    padding: 1.6rem 1.2rem;
+    border-radius: 20px;
+  }
 }
 </style>
 </head>
@@ -381,8 +510,8 @@ table.data-table tr:hover { background: var(--teal-light); }
 <!-- 1. LOGIN SCREEN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
-    <div class="login-logo">
-      <img src="admin-icon-192.png" alt="ئۇيغۇر تېبابىتى باشقۇرۇش مەركىزى" style="width:96px;height:96px;border-radius:50%;background:#ffffff;padding:6px;box-shadow:0 4px 16px rgba(10,92,82,0.25)">
+    <div class="login-logo" style="width:76px;height:76px;border-radius:50%;padding:4px;box-shadow:0 4px 16px rgba(10,92,82,0.25);background:#fff;margin:0 auto .8rem;display:flex;align-items:center;justify-content:center">
+      <img src="admin-icon-192.png" alt="ئۇيغۇر تېبابىتى باشقۇرۇش مەركىزى" style="width:100%;height:100%;border-radius:50%">
     </div>
     <h2>🔐 ئارقا سەھنە باشقۇرۇش مەركىزى</h2>
     <p>«ئۇيغۇر تېبابىتى» دەرس، سوئال ۋە ئوقۇغۇچىلارنى باشقۇرۇش</p>
@@ -404,7 +533,10 @@ table.data-table tr:hover { background: var(--teal-light); }
     <div style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem;display:flex;flex-direction:column;gap:.6rem">
       <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
       <button type="button" onclick="directAdminInstall()" id="adminInstallBtn" class="btn btn-gold btn-sm" style="width:100%;justify-content:center;cursor:pointer;font-weight:bold;color:#2e2200;display:flex;align-items:center;gap:.4rem;padding:.6rem">
-        <span>📲</span> بىۋاستە چۈشۈرۈش (ئەپ قىلىپ قاچلاش)
+        <span>📲</span> باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)
+      </button>
+      <button type="button" onclick="downloadAdminShortcut()" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.5rem">
+        <span>🖥️</span> ئۈستەل يۈزى قىسقا يولى (.url)
       </button>
     </div>
   </div>
