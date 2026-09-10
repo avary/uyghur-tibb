@@ -118,7 +118,7 @@ Set these in the Vercel project (Settings → Environment Variables):
 | `SUPABASE_URL` | e.g. `https://<ref>.supabase.co` (driver `supabase` only) |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server-side** only (driver `supabase` only) |
 | `ADMIN_PASSWORD` | the admin login password (also signs tokens) — both drivers |
-| `ALLOWED_ORIGIN` | your app origin, e.g. `https://uyghur-tibb.vercel.app` |
+| `ALLOWED_ORIGIN` | your app origin, e.g. `https://uyghur-tibb-mu.vercel.app` |
 
 > An explicit `DB_DRIVER` with missing credentials makes the API **fail closed** (500s on
 > startup) rather than silently reporting empties — the env var table above must match the
@@ -221,7 +221,7 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
    `DB_DRIVER=supabase`, `SUPABASE_URL=...`, `SUPABASE_SERVICE_ROLE_KEY=...`,
    `ADMIN_PASSWORD=...` (and everything for MySQL instead if you picked `mysql`).
    Do this in the **Production** (and any Preview) environments.
-3. Set **`ALLOWED_ORIGIN`** to the deployed URL, e.g. `https://uyghur-tibb.vercel.app`.
+3. Set **`ALLOWED_ORIGIN`** to the deployed URL, e.g. `https://uyghur-tibb-mu.vercel.app`.
    Requests from any other origin are rejected with `403`; if it is left unset, cross-origin
    requests fail closed (`503`). Same-origin requests (an admin panel hosted on the same
    domain) always work.

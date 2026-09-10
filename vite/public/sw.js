@@ -1,7 +1,7 @@
 // uyghur-tibb Vue app service worker.
 // Cache-on-demand with network-first navigation so the hashed Vite build
 // always refreshes, while assets stay available offline.
-const CACHE_NAME = 'uytibb-vue-v1';
+const CACHE_NAME = 'uytibb-vue-v2';
 const SHELL = [
   './',
   './index.html',
