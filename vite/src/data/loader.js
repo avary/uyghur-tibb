@@ -15,8 +15,12 @@ function customLessons() {
     if (!raw) return null
     const custom = JSON.parse(raw)
     if (!Array.isArray(custom) || !custom.length) return null
-    return custom.map((L, idx) => {
+    const merged = custom.map((L, idx) => {
       const lid = L.id || (idx + 1)
+      const def = (window.DEFAULT_LESSONS || []).find(x => Number(x.id) === Number(lid))
+      if (def && def.quiz && (!L.quiz || L.quiz.length < def.quiz.length)) {
+        L.quiz = def.quiz.slice()
+      }
       if (lid >= 1 && lid <= 10) {
         L.pdfUrl = 'pdf/lesson-' + lid + '.pdf?v=20260909_original'
         delete L.pdfData
@@ -26,6 +30,10 @@ function customLessons() {
       L.pdfTitle = L.pdfTitle || ((L.title ? (lid + '-دەرسلىك: ' + L.title) : (lid + '-دەرس')) + ' كىتابى (PDF)')
       return L
     })
+    try {
+      localStorage.setItem('uytibb_custom_lessons', JSON.stringify(merged))
+    } catch (e) {}
+    return merged
   } catch (e) { return null }
 }
 
