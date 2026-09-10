@@ -536,7 +536,10 @@ table.data-table tr:hover { background: var(--teal-light); }
         <span>📲</span> باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)
       </button>
       <button type="button" onclick="downloadAdminShortcut()" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.5rem">
-        <span>🖥️</span> ئۈستەل يۈزى قىسقا يولى (.url)
+        <span>🖥️</span> كومپىيوتېر ئۈستەل يۈزى قىسقا يولى (.url)
+      </button>
+      <button type="button" onclick="downloadAdminOfflineHTML()" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.5rem">
+        <span>💾</span> تورسىز باشقۇرۇش ھۆججىتى (Offline HTML)
       </button>
     </div>
   </div>
@@ -598,9 +601,13 @@ table.data-table tr:hover { background: var(--teal-light); }
         </div>
 
         <div class="card">
-          <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">🚀 تېز مەشغۇلاتلار</h3>
+          <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">🚀 باشقۇرۇش ئەپىنى كۆپىيوتېر ۋە تېلېفونغا قاچىلاش</h3>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
+            <button class="btn btn-gold" onclick="directAdminInstall()" style="font-weight:bold;color:#2e2200">📲 باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)</button>
+            <button class="btn btn-line" onclick="downloadAdminShortcut()" style="font-weight:bold">🖥️ كومپىيوتېر ئۈستەل يۈزى قىسقا يولى (.url)</button>
+            <button class="btn btn-line" onclick="downloadAdminOfflineHTML()" style="font-weight:bold">💾 تورسىز باشقۇرۇش ھۆججىتى (Offline HTML)</button>
+          </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap">
-            <button class="btn btn-gold" onclick="directAdminInstall()" style="font-weight:bold;color:#2e2200">📲 باشقۇرۇش ئەپىنى بىۋاستە چۈشۈرۈش</button>
             <button class="btn btn-teal" onclick="switchTab('lessons')">📄 بارلىق دەرسلەرنىڭ PDF سىنى باشقۇرۇش</button>
             <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
             <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
@@ -2775,6 +2782,23 @@ function downloadAdminShortcut(){
   a.click();
   document.body.removeChild(a);
   if(typeof showToast === "function") showToast("🖥️ باشقۇرۇش ئۈستەل يۈزى قىسقا يولى كومپىيوتېرىڭىزغا چۈشۈرۈلدى!");
+}
+function downloadAdminOfflineHTML(){
+  if(typeof showToast === "function") showToast("💾 تورسىز باشقۇرۇش ھۆججىتى تەييارلىنىۋاتىدۇ...");
+  fetch("./admin.html")
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      var blob = new Blob([html], {type: "text/html;charset=utf-8"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "uyghur_tibb_admin_offline.html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if(typeof showToast === "function") showToast("✅ تورسىز باشقۇرۇش تولۇق ھۆججىتى چۈشۈرۈلدى!");
+    }).catch(function(){
+      if(typeof showToast === "function") showToast("⚠️ ھۆججەتنى چۈشۈرۈشتە كاشىلا كۆرۈلدى.");
+    });
 }
 var triggerAdminInstall = directAdminInstall;
 </script>
