@@ -2595,27 +2595,79 @@ function pwaIOS(){
 if(pwaStandalone()){
   var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
 }
+function downloadDesktopShortcut(appName, url){
+  var shortcutContent = "[InternetShortcut]\r\nURL=" + url + "\r\nIconIndex=0\r\n";
+  var blob = new Blob([shortcutContent], {type: "application/internet-shortcut"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = appName + ".url";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if(typeof toast === "function") toast("🖥️ ئۈستەل يۈزى قىسقا يولى كومپىيوتېرىڭىزغا چۈشۈرۈلدى!");
+}
+function downloadOfflineHTML(appName){
+  if(typeof toast === "function") toast("💾 تورسىز ھۆججەت تەييارلىنىۋاتىدۇ...");
+  fetch("./index.html")
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      var blob = new Blob([html], {type: "text/html;charset=utf-8"});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = appName + "_offline.html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if(typeof toast === "function") toast("✅ تورسىز تولۇق ھۆججەت كومپىيوتېرىڭىزغا چۈشۈرۈلدى!");
+    }).catch(function(){
+      if(typeof toast === "function") toast("⚠️ ھۆججەتنى چۈشۈرۈشتە كاشىلا كۆرۈلدى.");
+    });
+}
 function vInstall(){
   var h='<a class="backlink" href="#/">› باش بەتكە قايتىش</a>';
-  h+='<h2 class="pagettl">📲 ئەپنى قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش» ئەپىنى بىۋاسىتە قاچىلاپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
+  h+='<h2 class="pagettl">📲 ئەپنى يۈكلەش ۋە قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش» ئەپىنى تېلېفون ياكى كومپىيوتېرىڭىزغا يۈكلەپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
+  
+  // Card 1: Direct PWA App Install
   h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.6rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
   h+='  <div style="margin-bottom:.8rem"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى" style="width:72px;height:72px;border-radius:50%"></div>';
-  h+='  <h3 style="margin:0 0 .6rem;color:var(--teal-dark);font-size:1.25rem">ئەپنى بىۋاسىتە قاچىلاش</h3>';
-  h+='  <p style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.3rem">تېلېفونىڭىزغا قاچىلاپ قويسىڭىز، باش ئېكراندىن بىرلا چېكىپ، تور بولمىسىمۇ ئەركىن ئوقۇيالايسىز.</p>';
+  h+='  <h3 style="margin:0 0 .6rem;color:var(--teal-dark);font-size:1.25rem">📱 / 💻 بىۋاسىتە ئەپ قىلىپ قاچىلاش</h3>';
+  h+='  <p style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.3rem">تېلېفون ياكى كومپىيوتېرغا ئەپ سۈپىتىدە قاچىلاپ قويسىڭىز، سىنبەلگىدىن بىرلا چېكىپ، تور بولمىسىمۇ ئەركىن ئوقۇيالايسىز.</p>';
   h+='  <button class="btn btn-gold btn-block" id="btnPWA" onclick="directPWAInstall(event)" style="font-size:1.05rem;font-weight:bold;padding:.85rem;margin-bottom:.8rem">📲 ھازىرلا قاچىلاش</button>';
   h+='  <p class="pagesub" id="pwaState" style="display:none;margin:.5rem 0"></p>';
-  h+='  <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
   h+='</div>';
-  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بۇ ئەپ پۈتۈنلەي تورسىز ئىشلەيدۇ. بىر قېتىم كىرىپ قاچىلىۋالسىڭىز، ھېچقانداق تور كېرەك قىلماستىن پۈتۈن دەرسلەر ۋە ئەسلى كىتابلارنى تولۇق ئوقۇيالايسىز.</div>';
+
+  // Card 2: Dedicated Computer Download Options
+  h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.4rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem">';
+  h+='  <h3 style="margin:0 0 .8rem;color:var(--teal-dark);font-size:1.15rem;display:flex;align-items:center;gap:.4rem">💻 كومپىيوتېر (PC / Windows / Mac) ئۈچۈن قوشۇمچە يۈكلەش تاللاشلىرى</h3>';
+  h+='  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">كومپىيوتېرىڭىزدا ئەڭ راھەت ئىشلىتىش ئۈچۈن خالىغان ئۇسۇلدا يۈكلىسىڭىز بولىدۇ:</p>';
+  h+='  <div style="display:flex;flex-direction:column;gap:.7rem">';
+  h+='    <button class="btn btn-teal btn-block" id="btnDesktopShortcut" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">🖥️ ئۈستەل يۈزى قىسقا يولىنى چۈشۈرۈش (.url Shortcut)</button>';
+  h+='    <button class="btn btn-line btn-block" id="btnDownloadOffline" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">💾 تورسىز تولۇق ھۆججەتنى كومپىيوتېرغا چۈشۈرۈش (Offline HTML)</button>';
+  h+='    <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem;display:flex;align-items:center;justify-content:center;gap:.5rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
+  h+='  </div>';
+  h+='</div>';
+
+  h+='<div class="keybox"><b class="t">📌 كومپىيوتېردا ئەپ قىلىپ قاچىلاش ئۇسۇلى:</b> Chrome ياكى Edge تور كۆرگۈچىدە بۇ بەتنى ئاچقاندا، ئۈستى ئادرېس بالدىقىنىڭ ئەڭ ئوڭ تەرىپىدىكى <b>«ئەپنى قاچىلاش ⊕»</b> سىنبەلگىسىنى باسسىڭىز، كومپىيوتېرىڭىزنىڭ باش ئېكرانى (Desktop) ۋە پروگراممىلار تىزىملىكىگە مۇستەقىل ئەپ بولۇپ قاچىلىنىدۇ.</div>';
   return h;
 }
 function bindInstall(){
-  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink");
+  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline");
   if(st){
     if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
   if(b){
     b.onclick=directPWAInstall;
+  }
+  if(ds){
+    ds.onclick=function(){
+      var url=location.href.split("#")[0];
+      downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_ئۆگىنىش", url);
+    };
+  }
+  if(dof){
+    dof.onclick=function(){
+      downloadOfflineHTML("Uyghur_Tibb_Theory");
+    };
   }
   if(cp) cp.onclick=function(){
     var url=location.href.split("#")[0];

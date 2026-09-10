@@ -6,11 +6,13 @@
   "scope": "./",
   "id": "/admin.html",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#071916",
   "theme_color": "#0a5c52",
   "dir": "rtl",
   "lang": "ug",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "admin-icon-192.png",

@@ -2622,6 +2622,18 @@ if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.s
   var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
   var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
 }
+function downloadAdminShortcut(){
+  var url = location.href.split("#")[0];
+  var shortcutContent = "[InternetShortcut]\r\nURL=" + url + "\r\nIconIndex=0\r\n";
+  var blob = new Blob([shortcutContent], {type: "application/internet-shortcut"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ئۇيغۇر_تېبابىتى_باشقۇرۇش.url";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if(typeof showToast === "function") showToast("🖥️ باشقۇرۇش ئۈستەل يۈزى قىسقا يولى كومپىيوتېرىڭىزغا چۈشۈرۈلدى!");
+}
 var triggerAdminInstall = directAdminInstall;
 </script>
 </body>

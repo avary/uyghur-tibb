@@ -6,10 +6,32 @@
   "scope": "./",
   "id": "/index.html",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0a5c52",
   "theme_color": "#0a5c52",
   "dir": "rtl",
   "lang": "ug",
+  "categories": ["education", "books", "medical"],
+  "shortcuts": [
+    {
+      "name": "دەرسلەر",
+      "short_name": "دەرسلەر",
+      "url": "./index.html#/lessons",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "PDF كۇتۇپخانىسى",
+      "short_name": "PDF",
+      "url": "./index.html#/books",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "سىناق مەركىزى",
+      "short_name": "سىناق",
+      "url": "./index.html#/exam",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    }
+  ],
   "icons": [
     {
       "src": "icon-192.png",
