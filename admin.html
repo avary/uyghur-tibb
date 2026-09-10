@@ -11,7 +11,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="تېبابەت باشقۇرۇش">
-<link rel="apple-touch-icon" href="admin-icon-192.png">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script>
 var _adminDeferredPrompt = null;
 var _adminPendingInstall = false;
@@ -612,6 +614,7 @@ table.data-table tr:hover { background: var(--teal-light); }
             <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
             <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
             <button class="btn btn-line" onclick="openAddQuestionModal()">➕ يېڭى سىناق سوئالى قوشۇش</button>
+            <button class="btn btn-teal" onclick="forceResetDefaultData()" style="font-weight:bold;background:#0a5c52">🔄 بارلىق دەرس ۋە سوئاللارنى ئەسلىگە قايتۇرۇش</button>
           </div>
         </div>
 
@@ -1181,6 +1184,38 @@ function saveAdmins(list){
   localStorage.setItem("uytibb_admins", JSON.stringify(list));
 }
 
+/* ===== FIREBASE AUTHENTICATION CONFIGURATION ===== */
+var firebaseConfig = {
+  apiKey: "AIzaSyAuPmUyWHMM8fzZLB1REZuU3tLL7x9qRio",
+  authDomain: "tibabet-cb963.firebaseapp.com",
+  projectId: "tibabet-cb963",
+  storageBucket: "tibabet-cb963.firebasestorage.app",
+  messagingSenderId: "1017557523516",
+  appId: "1:1017557523516:web:943243d018deaab54bf739",
+  measurementId: "G-16R2Y1M93V"
+};
+
+var fbAuth = null;
+if (typeof firebase !== "undefined") {
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    fbAuth = firebase.auth();
+    fbAuth.onAuthStateChanged(function(user) {
+      if (user) {
+        sessionStorage.setItem("uytibb_admin_auth", "true");
+        sessionStorage.setItem("uytibb_admin_user_name", user.displayName || user.email || "باشقۇرغۇچى");
+        sessionStorage.setItem("uytibb_admin_user_role", "super");
+        localStorage.setItem("uytibb_is_admin", "true");
+        checkAuth();
+      }
+    });
+  } catch(e) {
+    console.warn("Firebase Auth init error:", e);
+  }
+}
+
 function checkAuth(){
   var authed = sessionStorage.getItem("uytibb_admin_auth") === "true";
   if(authed){
@@ -1211,64 +1246,92 @@ function normInputText(str){
 function doAdminLogin(){
   var userInp = document.getElementById("adminUserInp");
   var passInp = document.getElementById("adminPass");
-  var userVal = normInputText(userInp ? userInp.value : "");
-  var passVal = normInputText(passInp ? passInp.value : "");
+  var rawUser = userInp ? userInp.value.trim() : "";
+  var rawPass = passInp ? passInp.value.trim() : "";
+  var userVal = normInputText(rawUser);
+  var passVal = normInputText(rawPass);
 
   // If password was entered into username box and pass box is empty, swap
   if(userVal && !passVal){
     passVal = userVal;
+    rawPass = rawUser;
     userVal = "";
+    rawUser = "";
   }
 
-  var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
-  var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
-
-  var matched = null;
-  // Emergency master rescue: tibb2026 always works!
-  if(passVal === "tibb2026"){
-    matched = { username: "admin", name: curSavedName, role: "super" };
-  } else if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
-    // If username is empty or matches admin name, check against saved master password
-    if(passVal === curSavedPass){
-      matched = { username: "admin", name: curSavedName, role: "super" };
-    }
-  }
-
-  // If not matched yet, check all registered admin accounts
-  if(!matched){
-    var admins = getAdmins();
-    matched = admins.find(function(a){
-      var aU = normInputText(a.username);
-      var aP = normInputText(a.pass);
-      var aN = normInputText(a.name);
-      if(!userVal){
-        return aP === passVal;
-      } else {
-        return (aU === userVal || aN === userVal) && aP === passVal;
-      }
-    });
-  }
-
-  if(matched){
-    sessionStorage.setItem("uytibb_admin_auth", "true");
-    sessionStorage.setItem("uytibb_admin_user_name", matched.name);
-    sessionStorage.setItem("uytibb_admin_user_role", matched.role);
-    localStorage.setItem("uytibb_is_admin", "true");
-    try {
-      var prog = JSON.parse(localStorage.getItem("uytibb_v1") || "{}");
-      prog.user = Object.assign(prog.user || {}, { name: matched.name, status: "approved" });
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }catch(e){}
-    var errEl = document.getElementById("loginErr");
-    if(errEl) errEl.style.display = "none";
-    checkAuth();
-  } else {
-    var errEl = document.getElementById("loginErr");
+  var errEl = document.getElementById("loginErr");
+  var showErr = function(msg) {
     if(errEl) {
       errEl.style.display = "block";
       errEl.style.background = "#ffebee";
       errEl.style.color = "var(--red)";
-      errEl.innerHTML = '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>';
+      errEl.innerHTML = msg || '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>';
+    }
+  };
+
+  // Helper for successful login
+  var handleSuccess = function(name, role) {
+    sessionStorage.setItem("uytibb_admin_auth", "true");
+    sessionStorage.setItem("uytibb_admin_user_name", name || "باشقۇرغۇچى");
+    sessionStorage.setItem("uytibb_admin_user_role", role || "super");
+    localStorage.setItem("uytibb_is_admin", "true");
+    try {
+      var prog = JSON.parse(localStorage.getItem("uytibb_v1") || "{}");
+      prog.user = Object.assign(prog.user || {}, { name: name || "باشقۇرغۇچى", status: "approved" });
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    } catch(e){}
+    if(errEl) errEl.style.display = "none";
+    checkAuth();
+  };
+
+  // 1. If Firebase Auth is available and email contains @ or looks like an email/username
+  if(fbAuth && rawPass && (rawUser.includes("@") || rawUser === "admin" || userVal === "admin")) {
+    var emailToUse = rawUser.includes("@") ? rawUser : (rawUser + "@tibabet-cb963.firebaseapp.com");
+    fbAuth.signInWithEmailAndPassword(emailToUse, rawPass)
+      .then(function(cred){
+        var user = cred.user;
+        handleSuccess(user.displayName || user.email || "باشقۇرغۇچى", "super");
+      })
+      .catch(function(error){
+        // Fallback to local authentication check
+        fallbackLocalLogin();
+      });
+    return;
+  }
+
+  fallbackLocalLogin();
+
+  function fallbackLocalLogin() {
+    var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
+    var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
+
+    var matched = null;
+    if(passVal === "tibb2026"){
+      matched = { username: "admin", name: curSavedName, role: "super" };
+    } else if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
+      if(passVal === curSavedPass){
+        matched = { username: "admin", name: curSavedName, role: "super" };
+      }
+    }
+
+    if(!matched){
+      var admins = getAdmins();
+      matched = admins.find(function(a){
+        var aU = normInputText(a.username);
+        var aP = normInputText(a.pass);
+        var aN = normInputText(a.name);
+        if(!userVal){
+          return aP === passVal;
+        } else {
+          return (aU === userVal || aN === userVal) && aP === passVal;
+        }
+      });
+    }
+
+    if(matched){
+      handleSuccess(matched.name, matched.role);
+    } else {
+      showErr();
     }
   }
 }
@@ -1320,6 +1383,9 @@ if(toggleVisBtn){
 
 
 document.getElementById("logoutBtn").onclick = function(){
+  if(fbAuth){
+    fbAuth.signOut().catch(function(){});
+  }
   sessionStorage.removeItem("uytibb_admin_auth");
   sessionStorage.removeItem("uytibb_admin_user_name");
   sessionStorage.removeItem("uytibb_admin_user_role");
@@ -1365,47 +1431,87 @@ function closePdfModal(){
 
 /* 4. INITIALIZE DATA */
 function initAdmin(){
+  var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
+  var defaultT = window.DEFAULT_TEACHERS || window.TEACHERS || [];
+
+  if(!defaultL || !defaultL.length){
+    setTimeout(initAdmin, 50);
+    return;
+  }
+
   var rawL = localStorage.getItem("uytibb_custom_lessons");
   if(rawL){
     try {
       LESSONS_DATA = JSON.parse(rawL);
-      if(Array.isArray(LESSONS_DATA)){
-        LESSONS_DATA.forEach(function(L, idx){
-          var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS.find(function(x){ return x.id === L.id; })) || (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]);
-          if(def && def.quiz && (!L.quiz || L.quiz.length < def.quiz.length)){
-            L.quiz = def.quiz.slice();
-          }
-          if(!L.pdfUrl && def && def.pdfUrl) L.pdfUrl = def.pdfUrl;
-          if(!L.pdfTitle && def && def.pdfTitle) L.pdfTitle = def.pdfTitle;
-        });
-        try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
-      }
-    } catch(e){ LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice(); }
+    } catch(e){ LESSONS_DATA = []; }
+  }
+  
+  if(!Array.isArray(LESSONS_DATA) || LESSONS_DATA.length < defaultL.length){
+    LESSONS_DATA = JSON.parse(JSON.stringify(defaultL));
+    try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
   } else {
-    LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice();
+    LESSONS_DATA.forEach(function(L, idx){
+      if(!L) return;
+      var def = (defaultL.find(function(x){ return x.id === L.id; })) || defaultL[idx];
+      if(def){
+        if(!L.title) L.title = def.title;
+        if(!L.subtitle) L.subtitle = def.subtitle;
+        if(!L.short) L.short = def.short;
+        if(!L.desc) L.desc = def.desc;
+        if(!L.goals || !L.goals.length) L.goals = (def.goals || []).slice();
+        if(!L.sections || !L.sections.length) L.sections = JSON.parse(JSON.stringify(def.sections || []));
+        if(!L.quiz || !L.quiz.length || (def.quiz && L.quiz.length < def.quiz.length)){
+          L.quiz = JSON.parse(JSON.stringify(def.quiz || []));
+        }
+        if(!L.pdfUrl && def.pdfUrl) L.pdfUrl = def.pdfUrl;
+        if(!L.pdfTitle && def.pdfTitle) L.pdfTitle = def.pdfTitle;
+      }
+    });
+  }
+
+  // Verify total quiz questions; if less than 100, restore from default data
+  var totalQ = 0;
+  LESSONS_DATA.forEach(function(l){ if(l && l.quiz) totalQ += l.quiz.length; });
+  if(totalQ < 100 && defaultL.length >= 10){
+    LESSONS_DATA = JSON.parse(JSON.stringify(defaultL));
+    try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
   }
 
   var rawT = localStorage.getItem("uytibb_custom_teachers");
   if(rawT){
-    try { TEACHERS_DATA = JSON.parse(rawT); } catch(e){ TEACHERS_DATA = window.DEFAULT_TEACHERS.slice(); }
+    try { TEACHERS_DATA = JSON.parse(rawT); } catch(e){ TEACHERS_DATA = []; }
+  }
+  if(!Array.isArray(TEACHERS_DATA) || !TEACHERS_DATA.length){
+    TEACHERS_DATA = JSON.parse(JSON.stringify(defaultT));
   } else {
-    TEACHERS_DATA = (window.DEFAULT_TEACHERS || []).slice();
+    TEACHERS_DATA.forEach(function(T, idx){
+      if(!T) return;
+      var def = (defaultT.find(function(x){ return x.name === T.name; })) || defaultT[idx];
+      if(def){
+        if(!T.name) T.name = def.name;
+        if(!T.years) T.years = def.years;
+        if(!T.field) T.field = def.field;
+        if(!T.era) T.era = def.era;
+        if(!T.works) T.works = def.works;
+        if(!T.bio) T.bio = def.bio;
+      }
+    });
   }
 
   if(!currentLessonId || !getLessonById(currentLessonId)){
     currentLessonId = LESSONS_DATA.length ? LESSONS_DATA[0].id : 1;
   }
 
-  updateDashboardStats();
-    syncStudentsFromServer();
-  populateLessonSelector();
-  loadLessonToForm(currentLessonId);
-  renderQuestionTable();
-  renderTeachersTable();
-  loadStudentData();
-  renderFeedbackTable();
-  renderAdminsTable();
-  initPasswordChangeUI();
+  switchTab("dash");
+  try { updateDashboardStats(); } catch(e){ console.error("updateDashboardStats error:", e); }
+  try { populateLessonSelector(); } catch(e){ console.error("populateLessonSelector error:", e); }
+  try { loadLessonToForm(currentLessonId); } catch(e){ console.error("loadLessonToForm error:", e); }
+  try { renderQuestionTable(); } catch(e){ console.error("renderQuestionTable error:", e); }
+  try { renderTeachersTable(); } catch(e){ console.error("renderTeachersTable error:", e); }
+  try { loadStudentData(); } catch(e){ console.error("loadStudentData error:", e); }
+  try { renderFeedbackTable(); } catch(e){ console.error("renderFeedbackTable error:", e); }
+  try { renderAdminsTable(); } catch(e){ console.error("renderAdminsTable error:", e); }
+  try { initPasswordChangeUI(); } catch(e){ console.error("initPasswordChangeUI error:", e); }
 }
 
 function saveAllCustomData(){
@@ -1415,6 +1521,23 @@ function saveAllCustomData(){
   showToast("✅ بارلىق ئۆزگىرىشلەر ساقلاندى!");
 }
 document.getElementById("quickSaveBtn").onclick = saveAllCustomData;
+
+function forceResetDefaultData(){
+  if(confirm("بارلىق 10 دەرس ۋە 261 سوئالنى ئەسلى ھالىتىگە قايتۇرامسىز؟")){
+    localStorage.removeItem("uytibb_custom_lessons");
+    localStorage.removeItem("uytibb_custom_teachers");
+    var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
+    var defaultT = window.DEFAULT_TEACHERS || window.TEACHERS || [];
+    LESSONS_DATA = JSON.parse(JSON.stringify(defaultL));
+    TEACHERS_DATA = JSON.parse(JSON.stringify(defaultT));
+    try {
+      localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA));
+      localStorage.setItem("uytibb_custom_teachers", JSON.stringify(TEACHERS_DATA));
+    } catch(e){}
+    initAdmin();
+    showToast("✅ بارلىق 10 دەرس ۋە 261 سوئال ئەسلىگە كەلتۈرۈلدى!");
+  }
+}
 
 /* 5. DASHBOARD STATS */
 function updateDashboardStats(){
@@ -1511,13 +1634,53 @@ function loadLessonToForm(id){
   renderSectionsEditor(L);
 }
 
-// PDF Uploader & SMART AUTO-FILL
+// PDF Uploader & SMART AUTO-FILL WITH DRAG & DROP
 var pdfDropzone = document.getElementById("pdfDropzone");
 var pdfFileInput = document.getElementById("pdfFileInput");
-pdfDropzone.onclick = function(){ pdfFileInput.click(); };
-pdfFileInput.onchange = function(e){
-  var file = e.target.files[0];
+
+if(pdfDropzone){
+  pdfDropzone.onclick = function(){ if(pdfFileInput) pdfFileInput.click(); };
+
+  ["dragenter", "dragover"].forEach(function(eventName){
+    pdfDropzone.addEventListener(eventName, function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      pdfDropzone.style.borderColor = "var(--teal-dark)";
+      pdfDropzone.style.background = "var(--teal-light)";
+    }, false);
+  });
+
+  ["dragleave", "drop"].forEach(function(eventName){
+    pdfDropzone.addEventListener(eventName, function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      pdfDropzone.style.borderColor = "var(--line)";
+      pdfDropzone.style.background = "var(--card)";
+    }, false);
+  });
+
+  pdfDropzone.addEventListener("drop", function(e){
+    var dt = e.dataTransfer;
+    var files = dt ? dt.files : null;
+    if(files && files.length){
+      processPdfFile(files[0]);
+    }
+  }, false);
+}
+
+if(pdfFileInput){
+  pdfFileInput.onchange = function(e){
+    var file = e.target.files[0];
+    if(file) processPdfFile(file);
+  };
+}
+
+function processPdfFile(file){
   if(!file) return;
+  if(file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")){
+    alert("⚠️ پەقەت PDF ھۆججەتلىرىنىلا (.pdf) تاللاڭ!");
+    return;
+  }
   var L = getLessonById(currentLessonId);
   if(!L) return;
 
@@ -1533,16 +1696,13 @@ pdfFileInput.onchange = function(e){
     L.pdfUrl = "pdf/" + file.name;
     L.pdfTitle = (cleanTitle || (L.id + "-دەرس")) + " كىتابى (PDF)";
 
-    // AUTO-FILL LESSON FIELDS:
     if(!L.title || L.title === (L.id + "-دەرسلىك بىلىملىرى") || L.title.indexOf("يېڭى دەرس") >= 0){
       L.title = cleanTitle || (L.id + "-دەرسلىك تېبابەت بىلىملىرى");
     }
     if(!L.subtitle || L.subtitle === "يېڭى تولۇقلانغان دەرس مەزمۇنى"){
       L.subtitle = "مەزكۇر دەرسلىكنىڭ كىتابتىكى ئەسلى مەزمۇنى، نەزەرىيەسى ۋە ئەمەلىي تەسىرى";
     }
-    if(!L.short){
-      L.short = L.id + "-دەرس";
-    }
+    if(!L.short) L.short = L.id + "-دەرس";
     if(!L.desc || L.desc === "بۇ دەرس ئارقا سەھنىدىن يېڭىدىن قوشۇلدى"){
       L.desc = "مەزكۇر دەرسلىككە تېبابەت دەرسلىك كىتابچىسى تولۇق كىرگۈزۈلگەن بولۇپ، ئۆگىنىش ۋە ئەمەلىيەتتە قوللىنىشقا مۇۋاپىق.";
     }
@@ -1569,10 +1729,10 @@ pdfFileInput.onchange = function(e){
     loadLessonToForm(currentLessonId);
     saveAllCustomData();
     populateLessonSelector();
-    showToast("✅ PDF قوشۇلدى ۋە دەرس مەزمۇنلىرى ئاپتوماتىك تولدۇرۇلدى!");
+    showToast("✅ PDF كىتابى سىستېمىغا كىرگۈزۈلدى!");
   };
   reader.readAsDataURL(file);
-};
+}
 
 document.getElementById("previewPdfBtn").onclick = function(){
   var L = getLessonById(currentLessonId);
@@ -2273,14 +2433,60 @@ function syncStudentsFromServer(){
 }
 
 
+function getDeletedPhones(){
+  try { return JSON.parse(localStorage.getItem("uytibb_deleted_phones")||"[]"); } catch(e){ return []; }
+}
+function markPhoneDeleted(phone){
+  var pStr = String(phone||"").trim();
+  if(!pStr || pStr === "undefined") return;
+  var del = getDeletedPhones();
+  if(!del.includes(pStr)){
+    del.push(pStr);
+    localStorage.setItem("uytibb_deleted_phones", JSON.stringify(del));
+  }
+}
+function unmarkPhoneDeleted(phone){
+  var pStr = String(phone||"").trim();
+  if(!pStr) return;
+  var del = getDeletedPhones().filter(function(x){ return x !== pStr; });
+  localStorage.setItem("uytibb_deleted_phones", JSON.stringify(del));
+}
+
+function getDeletedNames(){
+  try { return JSON.parse(localStorage.getItem("uytibb_deleted_names")||"[]"); } catch(e){ return []; }
+}
+function markNameDeleted(name){
+  var nStr = String(name||"").trim();
+  if(!nStr || nStr === "undefined" || nStr === "ئوقۇغۇچى") return;
+  var del = getDeletedNames();
+  if(!del.includes(nStr)){
+    del.push(nStr);
+    localStorage.setItem("uytibb_deleted_names", JSON.stringify(del));
+  }
+}
+function unmarkNameDeleted(name){
+  var nStr = String(name||"").trim();
+  if(!nStr) return;
+  var del = getDeletedNames().filter(function(x){ return x !== nStr; });
+  localStorage.setItem("uytibb_deleted_names", JSON.stringify(del));
+}
+
 function renderStudentsTableOnly(){
   try {
+    var deletedP = getDeletedPhones();
+    var deletedN = getDeletedNames();
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     allSt = allSt.filter(function(st){
       var nm = (st.name || "").trim();
-      return nm !== "سىناق ئوقۇغۇچى" && nm !== "سىناق" && !nm.startsWith("سىناق") && st.phone !== "13800000000" && st.phone !== "admin";
+      var p = String(st.phone||"").trim();
+      if(nm === "سىناق ئوقۇغۇچى" || nm === "سىناق" || nm.startsWith("سىناق")) return false;
+      if(p === "13800000000" || p === "admin") return false;
+      if(p && p !== "undefined" && deletedP.includes(p)) return false;
+      if(nm && nm !== "undefined" && deletedN.includes(nm)) return false;
+      return true;
     });
     localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
     var pendingTbody = document.getElementById("pendingStudentsTableBody");
     var approvedTbody = document.getElementById("approvedStudentsTableBody");
     if(!pendingTbody || !approvedTbody) return;
@@ -2291,15 +2497,17 @@ function renderStudentsTableOnly(){
       pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
     } else {
       pendingTbody.innerHTML = "";
-      pendingList.forEach(function(st){
+      pendingList.forEach(function(st, idx){
         var tr = document.createElement("tr");
-        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
-          + '<td style="direction:ltr;text-align:right"><b>' + esc(st.phone) + '</b></td>'
+        var pPhone = String(st.phone||"").trim();
+        var pName = String(st.name||"ئوقۇغۇچى").trim();
+        tr.innerHTML = '<td><b>' + esc(pName) + '</b></td>'
+          + '<td style="direction:ltr;text-align:right"><b>' + esc(pPhone) + '</b></td>'
           + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
           + '<td><span class="badge badge-gold">⏳ تەستىق كۈتۈۋاتىدۇ</span></td>'
           + '<td style="text-align:center;white-space:nowrap">'
-          + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">✅ تەستىقلاش (ئىجازەت)</button> '
-          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">❌ رەت قىلىش</button>'
+          + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">✅ تەستىقلاش (ئىجازەت)</button> '
+          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">❌ رەت قىلىش</button>'
           + '</td>';
         pendingTbody.appendChild(tr);
       });
@@ -2309,18 +2517,20 @@ function renderStudentsTableOnly(){
       approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تەستىقلانغان ئوقۇغۇچى يوق.</td></tr>';
     } else {
       approvedTbody.innerHTML = "";
-      approvedList.forEach(function(st){
+      approvedList.forEach(function(st, idx){
         var isBlocked = st.status === "blocked";
+        var pPhone = String(st.phone||"").trim();
+        var pName = String(st.name||"ئوقۇغۇچى").trim();
         var tr = document.createElement("tr");
-        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
-          + '<td style="direction:ltr;text-align:right">' + esc(st.phone) + '</td>'
+        tr.innerHTML = '<td><b>' + esc(pName) + '</b></td>'
+          + '<td style="direction:ltr;text-align:right">' + esc(pPhone) + '</td>'
           + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
           + '<td><span class="badge ' + (isBlocked ? 'badge-red' : 'badge-green') + '">' + (isBlocked ? '⛔ چەكلەنگەن' : '✅ ئىجازەت بېرىلدى') + '</span></td>'
           + '<td style="text-align:center;white-space:nowrap">'
           + (isBlocked ? 
-              '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">🔓 قايتا ئېچىش</button> ' : 
-              '  <button class="btn btn-line btn-sm" onclick="blockStudent(\'' + esc(st.phone) + '\')">⛔ توختىتىش</button> ')
-          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">🗑️ ئۆچۈرۈش</button>'
+              '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">🔓 قايتا ئېچىش</button> ' : 
+              '  <button class="btn btn-line btn-sm" onclick="blockStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">⛔ توختىتىش</button> ')
+          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">🗑️ ئۆچۈرۈش</button>'
           + '</td>';
         approvedTbody.appendChild(tr);
       });
@@ -2331,88 +2541,57 @@ function renderStudentsTableOnly(){
 
 function loadStudentData(){
   try {
+    var deletedP = getDeletedPhones();
+    var deletedN = getDeletedNames();
+    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+
     // Live Supabase Sync
     if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
       Supabase.getStudents().then(function(sbStudents){
         if(sbStudents && sbStudents.length){
           var changed = false;
+          var curSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+          var curDelP = getDeletedPhones();
+          var curDelN = getDeletedNames();
           sbStudents.forEach(function(s){
-            var ex = allSt.find(function(x){ return x.phone === s.phone; });
+            var sPhone = String(s.phone||"").trim();
+            var sName = String(s.name||"").trim();
+            if(sPhone && curDelP.includes(sPhone)) return;
+            if(sName && curDelN.includes(sName)) return;
+            var ex = curSt.find(function(x){ return (sPhone && String(x.phone||"").trim() === sPhone) || (sName && String(x.name||"").trim() === sName); });
             if(!ex){
-              allSt.unshift({ name: s.name, phone: s.phone, status: s.status, when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
+              curSt.unshift({ name: s.name, phone: s.phone, status: s.status, when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
               changed = true;
             } else if(s.status && ex.status !== s.status){
               ex.status = s.status; changed = true;
             }
           });
           if(changed){
-            localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+            localStorage.setItem("uytibb_all_students", JSON.stringify(curSt));
             renderStudentsTableOnly();
           }
         }
       }).catch(function(){});
     }
-    var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
 
     // Ensure student from uytibb_v1 is listed
-    if(prog.user && !allSt.some(function(u){return u.phone === prog.user.phone;})){
-      var stUser = Object.assign({ status: "approved" }, prog.user);
-      allSt.unshift(stUser);
-      localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+    if(prog.user && (prog.user.phone || prog.user.name)){
+      var pPhone = String(prog.user.phone||"").trim();
+      var pName = String(prog.user.name||"").trim();
+      if(!deletedP.includes(pPhone) && !deletedN.includes(pName) && !allSt.some(function(u){ return (pPhone && String(u.phone||"").trim() === pPhone) || (pName && String(u.name||"").trim() === pName); })){
+        var stUser = Object.assign({ status: "approved" }, prog.user);
+        allSt.unshift(stUser);
+        localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+      }
     }
 
-    var pendingTbody = document.getElementById("pendingStudentsTableBody");
-    var approvedTbody = document.getElementById("approvedStudentsTableBody");
-
-    var pendingList = allSt.filter(function(s){ return s.status === "pending"; });
-    var approvedList = allSt.filter(function(s){ return s.status !== "pending"; });
-
-    // Render Pending
-    if(!pendingList.length){
-      pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
-    } else {
-      pendingTbody.innerHTML = "";
-      pendingList.forEach(function(st){
-        var tr = document.createElement("tr");
-        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
-          + '<td style="direction:ltr;text-align:right"><b>' + esc(st.phone) + '</b></td>'
-          + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
-          + '<td><span class="badge badge-gold">⏳ تەستىق كۈتۈۋاتىدۇ</span></td>'
-          + '<td style="text-align:center;white-space:nowrap">'
-          + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">✅ تەستىقلاش (ئىجازەت)</button> '
-          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">❌ رەت قىلىش</button>'
-          + '</td>';
-        pendingTbody.appendChild(tr);
-      });
-    }
-
-    // Render Approved
-    if(!approvedList.length){
-      approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تەستىقلانغان ئوقۇغۇچى يوق.</td></tr>';
-    } else {
-      approvedTbody.innerHTML = "";
-      approvedList.forEach(function(st){
-        var isBlocked = st.status === "blocked";
-        var tr = document.createElement("tr");
-        tr.innerHTML = '<td><b>' + esc(st.name) + '</b></td>'
-          + '<td style="direction:ltr;text-align:right">' + esc(st.phone) + '</td>'
-          + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
-          + '<td><span class="badge ' + (isBlocked ? 'badge-red' : 'badge-green') + '">' + (isBlocked ? '⛔ چەكلەنگەن' : '✅ ئىجازەت بېرىلدى') + '</span></td>'
-          + '<td style="text-align:center;white-space:nowrap">'
-          + (isBlocked ? 
-              '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(st.phone) + '\')">🔓 قايتا ئېچىش</button> ' : 
-              '  <button class="btn btn-line btn-sm" onclick="blockStudent(\'' + esc(st.phone) + '\')">⛔ توختىتىش</button> ')
-          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(st.phone) + '\')">🗑️ ئۆچۈرۈش</button>'
-          + '</td>';
-        approvedTbody.appendChild(tr);
-      });
-    }
+    renderStudentsTableOnly();
 
     // Exams
     var exams = prog.exams || [];
     var tbodyEx = document.getElementById("examsTableBody");
-    if(exams.length){
+    if(tbodyEx && exams.length){
       tbodyEx.innerHTML = "";
       exams.forEach(function(ex){
         var tr = document.createElement("tr");
@@ -2427,74 +2606,120 @@ function loadStudentData(){
     }
 
     updateDashboardStats();
-  } catch(e){}
+  } catch(e){ console.error("loadStudentData error:", e); }
 }
 
-function approveStudent(phone){
+function approveStudent(phone, name, idx){
+  var pStr = String(phone||"").trim();
+  var nStr = String(name||"").trim();
+  if(pStr) unmarkPhoneDeleted(pStr);
+  if(nStr) unmarkNameDeleted(nStr);
+
   var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  var st = allSt.find(function(u){ return u.phone === phone; });
+  var st = allSt.find(function(u){
+    var up = String(u.phone||"").trim();
+    var un = String(u.name||"").trim();
+    return (pStr && up === pStr) || (nStr && un === nStr);
+  });
   if(st){
     st.status = "approved";
-    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-
-    // Update current active student progress if matched
-    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-    if(prog.user && prog.user.phone === phone){
-      prog.user.status = "approved";
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "update_status", phone: phone, status: "approved" })
-      }).catch(function(){});
-    }catch(e){}
-        if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-      Supabase.updateStudentStatus(phone, "approved");
-    }
-    loadStudentData();
-    showToast("✅ «" + st.name + "» غا دەرس كۆرۈش ئىجازىتى بېرىلدى!");
+  } else {
+    st = { name: nStr || ("ئوقۇغۇچى (" + pStr + ")"), phone: pStr, status: "approved", when: "بۈگۈن" };
+    allSt.unshift(st);
   }
-}
-
-function blockStudent(phone){
-  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  var st = allSt.find(function(u){ return u.phone === phone; });
-  if(st){
-    st.status = "blocked";
-    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
-    try {
-      fetch("/api/students", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ action: "update_status", phone: phone, status: "blocked" })
-      }).catch(function(){});
-    }catch(e){}
-
-    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-    if(prog.user && prog.user.phone === phone){
-      prog.user.status = "blocked";
-      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
-    }
-    loadStudentData();
-    showToast("⛔ «" + st.name + "» نىڭ ئىجازىتى توختىتىلدى.");
-  }
-}
-
-function deleteStudent(phone){
-  if(!confirm("بۇ ئوقۇغۇچىنىڭ ئۇچۇرىنى ئۆچۈرۈشنى جەزملەشتۈرەمسىز؟")) return;
-  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
-  allSt = allSt.filter(function(u){ return u.phone !== phone; });
   localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
 
   var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-  if(prog.user && prog.user.phone === phone){
-    delete prog.user;
-    localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+  if(prog.user){
+    var pup = String(prog.user.phone||"").trim();
+    var pun = String(prog.user.name||"").trim();
+    if((pStr && pup === pStr) || (nStr && pun === nStr)){
+      prog.user.status = "approved";
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
   }
-  loadStudentData();
-  showToast("🗑️ ئوقۇغۇچى ئۆچۈرۈلدى.");
+  if(typeof Supabase !== "undefined" && Supabase.getConfig().connected && pStr){
+    try { Supabase.updateStudentStatus(pStr, "approved"); } catch(e){}
+  }
+  renderStudentsTableOnly();
+  showToast("✅ «" + (st.name||pStr||nStr) + "» غا دەرس كۆرۈش ئىجازىتى بېرىلدى!");
+}
+
+function blockStudent(phone, name, idx){
+  var pStr = String(phone||"").trim();
+  var nStr = String(name||"").trim();
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  var st = allSt.find(function(u){
+    var up = String(u.phone||"").trim();
+    var un = String(u.name||"").trim();
+    return (pStr && up === pStr) || (nStr && un === nStr);
+  });
+  if(st){
+    st.status = "blocked";
+    localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected && pStr){
+      try { Supabase.updateStudentStatus(pStr, "blocked"); } catch(e){}
+    }
+    var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+    if(prog.user){
+      var pup = String(prog.user.phone||"").trim();
+      var pun = String(prog.user.name||"").trim();
+      if((pStr && pup === pStr) || (nStr && pun === nStr)){
+        prog.user.status = "blocked";
+        localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+      }
+    }
+    renderStudentsTableOnly();
+    showToast("⛔ «" + (st.name||pStr||nStr) + "» نىڭ ئىجازىتى توختىتىلدى.");
+  }
+}
+
+function deleteStudent(phone, name, idx){
+  var pStr = String(phone||"").trim();
+  var nStr = String(name||"").trim();
+
+  if(pStr && pStr !== "undefined") markPhoneDeleted(pStr);
+  if(nStr && nStr !== "undefined") markNameDeleted(nStr);
+
+  var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+  var target = null;
+  if(pStr && pStr !== "undefined"){
+    target = allSt.find(function(u){ return String(u.phone||"").trim() === pStr; });
+  }
+  if(!target && nStr && nStr !== "undefined"){
+    target = allSt.find(function(u){ return String(u.name||"").trim() === nStr; });
+  }
+
+  var nameStr = target ? (target.name || target.phone || nStr || pStr) : (nStr || pStr || "ئوقۇغۇچى");
+
+  allSt = allSt.filter(function(u, i){
+    if(target && u === target) return false;
+    var up = String(u.phone||"").trim();
+    var un = String(u.name||"").trim();
+    if(pStr && pStr !== "undefined" && up && up === pStr) return false;
+    if(nStr && nStr !== "undefined" && un && un === nStr) return false;
+    return true;
+  });
+  localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+
+  var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+  if(prog.user){
+    var pup = String(prog.user.phone||"").trim();
+    var pun = String(prog.user.name||"").trim();
+    if((pStr && pStr !== "undefined" && pup === pStr) || (nStr && nStr !== "undefined" && pun === nStr)){
+      delete prog.user;
+      localStorage.setItem("uytibb_v1", JSON.stringify(prog));
+    }
+  }
+  if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+    var realPhone = (target && target.phone) || (pStr !== "undefined" ? pStr : "");
+    if(realPhone){
+      try { Supabase.deleteStudent(realPhone); } catch(e){}
+      try { Supabase.updateStudentStatus(realPhone, "rejected"); } catch(e){}
+    }
+  }
+  renderStudentsTableOnly();
+  showToast("🗑️ «" + nameStr + "» نىڭ ئۇچۇرى رەت قىلىندى / ئۆچۈرۈلدى.");
 }
 
 document.getElementById("exportStudentsBtn").onclick = function(){

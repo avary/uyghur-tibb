@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v22-20260910';
+const CACHE_NAME = 'uytibb-v30-20260910_datajs_fix';
 const ASSETS = [
   './',
   './index.html',

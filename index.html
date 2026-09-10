@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ئۇيغۇر تېبابىتى نەزەرىيە ئۆگىنىش</title>
-<meta name="description" content="ئۇيغۇر تېبابىتى نەزەرىيە قىسمى: 10 دەرس، زېھىن خەرىتىسى، 261 مەشىق سوئالى، سىناق">
+<meta name="description" content="ئۇيغۇر تېبابىتى نەزەرىيە قىسمى: 11 دەرس، زېھىن خەرىتىسى، 572 مەشىق سوئالى، سىناق">
 <meta name="theme-color" content="#0a5c52">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -621,6 +621,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 
 
 <script src="supabase.js"></script>
+<script src="data.js"></script>
 <script>
 /* ===== ئەپ پروگراممىسى (تېلېفون ئۇسلۇبى) ===== */
 var LESSONS = [];
@@ -1660,25 +1661,28 @@ function checkStudentApproval(){
 function vBooks(){
   var pdfLessons = (LESSONS || []).map(function(L){
     var item = Object.assign({}, L);
-    if(!item.pdfUrl) item.pdfUrl = "pdf/lesson-" + item.id + ".pdf";
+    if(!item.pdfUrl && !item.pdfData) item.pdfUrl = "pdf/lesson-" + item.id + ".pdf?v=20260909_original";
     if(!item.pdfTitle) item.pdfTitle = (item.title ? (item.id + "-دەرسلىك: " + item.title) : (item.id + "-دەرس")) + " كىتابى (PDF)";
     return item;
   });
 
   var h = '<a class="backlink" href="#/lessons">› بارلىق دەرسلەرگە قايتىش</a>';
   h += '<div class="lhead" style="margin-bottom:1.2rem;background:linear-gradient(135deg,rgba(18,135,111,.15),rgba(201,162,39,.18));padding:1.2rem;border-radius:16px;border:1.5px solid var(--gold);box-shadow:var(--shadow)">'
-    + '<div style="display:flex;align-items:center;gap:.8rem">'
-    + '  <span style="font-size:2.4rem">📖</span>'
-    + '  <div>'
-    + '    <h2 style="margin:0;font-size:1.35rem;color:var(--teal-dark)">📚 دەرسلىك ئەسلى كىتابلىرى (PDF كۇتۇپخانىسى)</h2>'
-    + '    <p style="margin:.3rem 0 0;font-size:.9rem;color:var(--ink);opacity:.9">ئۇيغۇر تېبابىتى دەرسلىكلىرىنىڭ تولۇق PDF ئەسلى نۇسخىلىرى — ھەقسىز ۋە چەكلىمىسىز پۈتۈن ئېكراندا ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</p>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">'
+    + '  <div style="display:flex;align-items:center;gap:.8rem">'
+    + '    <span style="font-size:2.4rem">📖</span>'
+    + '    <div>'
+    + '      <h2 style="margin:0;font-size:1.35rem;color:var(--teal-dark)">📚 دەرسلىك ئەسلى كىتابلىرى (PDF كۇتۇپخانىسى)</h2>'
+    + '      <p style="margin:.3rem 0 0;font-size:.9rem;color:var(--ink);opacity:.9">ئۇيغۇر تېبابىتى دەرسلىكلىرىنىڭ تولۇق PDF ئەسلى نۇسخىلىرى — ھەقسىز ۋە چەكلىمىسىز پۈتۈن ئېكراندا ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</p>'
+    + '    </div>'
     + '  </div>'
+    + '  <a class="btn btn-teal btn-sm" href="admin.html" style="font-weight:bold;text-decoration:none;padding:.6rem 1.2rem;border-radius:10px">➕ يېڭى PDF كىتاب كىرگۈزۈش (ئارقا سەھنە)</a>'
     + '</div>'
     + '</div>';
 
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));gap:1.1rem;margin-bottom:2rem">';
   pdfLessons.forEach(function(L){
-    var pUrl = "pdf/lesson-" + L.id + ".pdf?v=20260909_original";
+    var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
     h += '<div class="book-card" style="background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
       + '<div>'
@@ -1691,7 +1695,7 @@ function vBooks(){
       + '</div>'
       + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">'
       + '  <a class="btn btn-gold btn-sm" href="' + esc(pUrl) + '" target="_blank" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#2e2200;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem">'
-      + '    <span>🚀</span> كىتابنى ئايرىم ئېچىش (PDF) ↗'
+      + '    <span>🚀</span> كىتابنى ئېچىش (PDF) ↗'
       + '  </a>'
       + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" download="' + esc(pTitle) + '.pdf" style="text-align:center;justify-content:center;text-decoration:none;font-weight:bold;border-radius:10px;padding:.6rem 1.1rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.3rem">'
       + '    <span>⬇️</span> كىتابنى چۈشۈرۈش'
@@ -1903,15 +1907,10 @@ function loadCustomData(){
     }
   }catch(e){}
 
-  LESSONS = (window.DEFAULT_LESSONS || []).map(function(l){ return Object.assign({}, l); });
+  LESSONS = (window.LESSONS || []).map(function(l){ return Object.assign({}, l); });
   (LESSONS || []).forEach(function(L, idx){
     var lid = L.id || (idx+1);
-    if(lid >= 1 && lid <= 10){
-      L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
-      delete L.pdfData;
-    } else {
-      if(!L.pdfUrl) L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
-    }
+    if(!L.pdfUrl && !L.pdfData) L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
     if(!L.pdfTitle) L.pdfTitle = (L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)";
   });
 
@@ -1927,11 +1926,8 @@ function loadCustomData(){
             if(defL && defL.quiz && (!L.quiz || L.quiz.length < defL.quiz.length)){
               L.quiz = defL.quiz.slice();
             }
-            if(lid >= 1 && lid <= 10){
+            if(!L.pdfUrl && !L.pdfData){
               L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
-              delete L.pdfData;
-            } else {
-              L.pdfUrl = L.pdfUrl || ("pdf/lesson-" + lid + ".pdf");
             }
             L.pdfTitle = L.pdfTitle || ((L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)");
             return L;
