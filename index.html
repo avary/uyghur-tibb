@@ -1903,6 +1903,7 @@ function loadCustomData(){
     }
   }catch(e){}
 
+  LESSONS = (window.DEFAULT_LESSONS || []).map(function(l){ return Object.assign({}, l); });
   (LESSONS || []).forEach(function(L, idx){
     var lid = L.id || (idx+1);
     if(lid >= 1 && lid <= 10){
@@ -1922,6 +1923,10 @@ function loadCustomData(){
         if(Array.isArray(custom) && custom.length){
           LESSONS = custom.map(function(L, idx){
             var lid = L.id || (idx+1);
+            var defL = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS.find(function(x){ return x.id === lid; }));
+            if(defL && defL.quiz && (!L.quiz || L.quiz.length < defL.quiz.length)){
+              L.quiz = defL.quiz.slice();
+            }
             if(lid >= 1 && lid <= 10){
               L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
               delete L.pdfData;
@@ -1931,6 +1936,7 @@ function loadCustomData(){
             L.pdfTitle = L.pdfTitle || ((L.title ? (lid + "-دەرسلىك: " + L.title) : (lid + "-دەرس")) + " كىتابى (PDF)");
             return L;
           });
+          try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS)); } catch(e){}
         }
       } catch(e){}
     }

@@ -1371,10 +1371,14 @@ function initAdmin(){
       LESSONS_DATA = JSON.parse(rawL);
       if(Array.isArray(LESSONS_DATA)){
         LESSONS_DATA.forEach(function(L, idx){
-          var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]) || {};
-          if(!L.pdfUrl && def.pdfUrl) L.pdfUrl = def.pdfUrl;
-          if(!L.pdfTitle && def.pdfTitle) L.pdfTitle = def.pdfTitle;
+          var def = (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS.find(function(x){ return x.id === L.id; })) || (window.DEFAULT_LESSONS && window.DEFAULT_LESSONS[idx]);
+          if(def && def.quiz && (!L.quiz || L.quiz.length < def.quiz.length)){
+            L.quiz = def.quiz.slice();
+          }
+          if(!L.pdfUrl && def && def.pdfUrl) L.pdfUrl = def.pdfUrl;
+          if(!L.pdfTitle && def && def.pdfTitle) L.pdfTitle = def.pdfTitle;
         });
+        try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
       }
     } catch(e){ LESSONS_DATA = (window.DEFAULT_LESSONS || []).slice(); }
   } else {

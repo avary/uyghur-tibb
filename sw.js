@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v21-20260910';
+const CACHE_NAME = 'uytibb-v22-20260910';
 const ASSETS = [
   './',
   './index.html',
