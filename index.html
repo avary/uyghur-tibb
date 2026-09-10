@@ -15,6 +15,15 @@
 <link rel="icon" href="icon-512.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
+var _deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  _deferredPrompt = e;
+  var b = document.getElementById("topInstallBtn");
+  if(b) b.style.display = "inline-flex";
+  var b2 = document.getElementById("btnPWA");
+  if(b2) b2.style.display = "block";
+});
 // Auto-update Service Worker and clear stale legacy caches
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -569,7 +578,7 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
       <small id="appbarLessonCount">نەزەرىيە قىسمى</small>
     </div>
     
-    <a class="aicon" href="#/install" title="قاچىلاش" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .8rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.18)">📲 قاچىلاش</a>
+    <button type="button" class="aicon" id="topInstallBtn" onclick="directPWAInstall(event)" title="قاچىلاش" style="background:#eab308;color:#2e2200;font-weight:bold;font-size:.85rem;width:auto;padding:0 .8rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;border-radius:10px;border:none;box-shadow:0 2px 6px rgba(0,0,0,.18);cursor:pointer;font-family:inherit">📲 قاچىلاش</button>
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     
     <button class="aicon" id="themeBtn" title="كېچە / كۈندۈز ھالى">🌙</button>
@@ -2511,17 +2520,31 @@ function bindRegBtn(){
   b.onclick=function(){ var s=getProg(); showRegModal(s.user?"profile":"reg", true); };
 }
 
-/* ===== ئەپنى قاچىلاش 📲 ===== */
-var _deferredPrompt=null;
-window.addEventListener("beforeinstallprompt",function(e){
-  e.preventDefault(); _deferredPrompt=e;
-  var b=$("btnPWA"); if(b) b.style.display="block";
-  var s=$("pwaState"); if(s) s.style.display="none";
-});
-if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
-  window.addEventListener("load",function(){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
-  });
+/* ===== ئەپنى بىۋاسىتە قاچىلاش 📲 ===== */
+function directPWAInstall(e){
+  if(e && e.preventDefault) e.preventDefault();
+  if(pwaStandalone()){
+    alert("✅ بۇ ئەپ ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!");
+    var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
+    return;
+  }
+  if(_deferredPrompt){
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(choice){
+      if(choice && choice.outcome === "accepted"){
+        var topB = $("topInstallBtn"); if(topB) topB.style.display = "none";
+        var b = $("btnPWA"); if(b) b.style.display = "none";
+        var st = $("pwaState"); if(st){ st.style.display = "block"; st.innerHTML = "✅ ئەپ تېلېفونىڭىزغا قاچىلاندى!"; }
+      }
+      _deferredPrompt = null;
+    });
+  } else {
+    if(pwaIOS()){
+      alert("🍎 ئايفوندا قاچىلاش ئۈچۈن:\nSafari نىڭ ئاستىدىكى ھەمبەھىرلەش (⎋ ياكى Share) كۇنۇپكىسىنى بېسىپ، «باش ئېكرانغا قوشۇش ➕» (Add to Home Screen) نى تاللاڭ.");
+    } else {
+      alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن (⋮) «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
+    }
+  }
 }
 function pwaStandalone(){
   return (window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
@@ -2533,10 +2556,10 @@ function vInstall(){
   var h='<a class="backlink" href="#/">› باش بەتكە قايتىش</a>';
   h+='<h2 class="pagettl">📲 ئەپنى قاچىلاش</h2><p class="pagesub">«ئۇيغۇر تېبابىتى ئۆگىنىش» ئەپىنى بىۋاسىتە قاچىلاپ، تورسىزمۇ راھەت پايدىلىنىڭ</p>';
   h+='<div class="card" style="background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:1.6rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
-  h+='  <div style="font-size:3.2rem;margin-bottom:.5rem">📲</div>';
+  h+='  <div style="margin-bottom:.8rem"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى" style="width:72px;height:72px;border-radius:50%"></div>';
   h+='  <h3 style="margin:0 0 .6rem;color:var(--teal-dark);font-size:1.25rem">ئەپنى بىۋاسىتە قاچىلاش</h3>';
   h+='  <p style="color:var(--muted);font-size:.92rem;line-height:1.6;margin-bottom:1.3rem">تېلېفونىڭىزغا قاچىلاپ قويسىڭىز، باش ئېكراندىن بىرلا چېكىپ، تور بولمىسىمۇ ئەركىن ئوقۇيالايسىز.</p>';
-  h+='  <button class="btn btn-gold btn-block" id="btnPWA" style="font-size:1.05rem;font-weight:bold;padding:.85rem;margin-bottom:.8rem">📲 ھازىرلا قاچىلاش</button>';
+  h+='  <button class="btn btn-gold btn-block" id="btnPWA" onclick="directPWAInstall(event)" style="font-size:1.05rem;font-weight:bold;padding:.85rem;margin-bottom:.8rem">📲 ھازىرلا قاچىلاش</button>';
   h+='  <p class="pagesub" id="pwaState" style="display:none;margin:.5rem 0"></p>';
   h+='  <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
   h+='</div>';
@@ -2549,14 +2572,7 @@ function bindInstall(){
     if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
   if(b){
-    b.onclick=function(){
-      if(_deferredPrompt){
-        _deferredPrompt.prompt();
-        _deferredPrompt.userChoice.then(function(){ _deferredPrompt=null; b.style.display="none"; });
-      } else {
-        alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
-      }
-    };
+    b.onclick=directPWAInstall;
   }
   if(cp) cp.onclick=function(){
     var url=location.href.split("#")[0];

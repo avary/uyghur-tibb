@@ -2558,6 +2558,8 @@ initPasswordChangeUI();
 function directAdminInstall(){
   if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
     alert("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!");
+    var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
+    var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
     return;
   }
   if(_adminDeferredPrompt){
@@ -2565,12 +2567,23 @@ function directAdminInstall(){
     _adminDeferredPrompt.userChoice.then(function(choice){
       if(choice && choice.outcome === 'accepted'){
         if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+        var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
+        var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
       }
       _adminDeferredPrompt = null;
     });
   } else {
-    alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if(isIOS){
+      alert("🍎 ئايفوندا قاچىلاش ئۈچۈن:\nSafari نىڭ ئاستىدىكى ھەمبەھىرلەش (⎋ ياكى Share) كۇنۇپكىسىنى بېسىپ، «باش ئېكرانغا قوشۇش ➕» (Add to Home Screen) نى تاللاڭ.");
+    } else {
+      alert("تېلېفونىڭىزنىڭ تور كۆرگۈچ (Chrome / Safari / Edge) تىزىملىكىدىن (⋮) «باش ئېكرانغا قوشۇش» ياكى «ئەپنى قاچىلاش»نى تاللاڭ.");
+    }
   }
+}
+if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
+  var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
+  var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
 }
 var triggerAdminInstall = directAdminInstall;
 </script>
