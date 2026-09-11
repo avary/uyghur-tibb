@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v38-20260911_fix_renderdaily_renderterm';
+const CACHE_NAME = 'uytibb-v39-20260911_force_refresh_no_cache';
 const ASSETS = [
   './',
   './index.html',
@@ -45,12 +45,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // 1. Navigation / Document: NETWORK-FIRST
+  // 1. Navigation / Document: NETWORK-FIRST (revalidate with server)
   const isNav = event.request.mode === 'navigate' || event.request.destination === 'document'
     || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html');
   if (isNav) {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-cache' })
         .then((response) => {
           if (response && response.status === 200) {
             const copy = response.clone();
