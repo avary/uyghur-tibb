@@ -1176,31 +1176,77 @@ function doSearch(){
 var examState=null, timerInt=null;
 function vExam(){
   var total=countQ();
-  var h='<h2 class="pagettl">📝 چوڭ سىناق ۋە مەشىق</h2>';
-  h+='<div class="exam-setup"><h3 style="margin:.1rem 0 .4rem;font-size:1.05rem">⚙️ سىناق تەڭشىكى</h3>'
+  var s=getProg();
+  var wrongN=(s.wrong||[]).length;
+  var h='<h2 class="pagettl">📝 چوڭ سىناق ۋە مەشىق مەركىزى</h2>';
+  h+='<div style="background:linear-gradient(135deg,rgba(201,162,39,.18),rgba(14,124,111,.15));border:1.5px solid var(--gold);border-radius:18px;padding:1.2rem;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;box-shadow:var(--shadow)">'
+    +'<div><b style="font-size:1.15rem;color:var(--teal-dark)">⚡ كۈندىلىك 5 سوئال تېز سىنىقى</b><p style="margin:.2rem 0 0;font-size:.9rem;color:var(--ink);opacity:.9">ھەر كۈنى 3 مىنۇتتا بارلىق دەرسلەردىن زېھنىڭىزنى يېڭىلاڭ!</p></div>'
+    +'<button class="btn btn-gold" onclick="startDailyChallenge()" style="font-weight:bold;color:#2e2200;padding:.6rem 1.2rem">🚀 تېز سىناقنى باشلاش (5 سوئال)</button>'
+    +'</div>';
+  h+='<div class="exam-setup"><h3 style="margin:.1rem 0 .4rem;font-size:1.05rem">⚙️ سىناق ئۆزگىچە تەڭشىكى</h3>'
     +'<p class="pagesub">ئومۇمىي سوئال ئامبىرى: جەمئىي '+total+' تۈرلۈك سىناق سوئالى • ئۆتۈش نومۇرى: %60</p>'
-    +'<label>📚 دائىرە:</label><select id="exScope"><option value="all">ھەممە دەرس (ئومۇمىي سىناق)</option>'
+    +'<label>📚 سىناق دائىرىسى:</label><select id="exScope"><option value="all">ھەممە دەرس (ئومۇمىي سىناق)</option>'
+    +'<option value="wrong">⭐ پەقەت خاتا ئىشلىگەن سوئاللار ئامبىرى ('+wrongN+' دانە)</option>'
     +LESSONS.map(function(L){return '<option value="'+L.id+'">'+L.id+'-دەرس: '+esc(L.title)+'</option>';}).join("")+'</select>'
     +'<label>🏷️ سوئال تۈرلىرى:</label><div class="tchecks" id="exTypes">'+'<label><input type="checkbox" value="choice" checked>☑ تاللاش</label>'+'<label><input type="checkbox" value="tf" checked>✓✗ توغرا-خاتا</label>'+'<label><input type="checkbox" value="blank" checked>✎ بوش ئورۇن</label>'+'<label><input type="checkbox" value="match" checked>🔗 تۇتاشتۇرۇش</label><label><input type="checkbox" value="essay" checked>✍ بايان (جاۋاب بېرىش)</label></div>'+'<p class="pagesub" id="exPool"></p>'
-    +'<label>🔢 سىناق سوئال سانى (50 تىن كۆپ مەشىق):</label><select id="exCount"><option value="50" selected>50 سوئال (ئۆلچەملىك مەشىق)</option><option value="60">60 سوئال</option><option value="80">80 سوئال</option><option value="100">100 سوئال (چوڭ سىناق)</option><option value="150">150 سوئال</option><option value="all">ھەممىسى ('+total+' سوئال)</option><option value="30">30 سوئال (تېز سىناق)</option></select>'
-    +'<label>⏱️ ۋاقىت:</label><select id="exTime"><option value="3600" selected>60 مىنۇت</option><option value="5400">90 مىنۇت</option><option value="7200">120 مىنۇت</option><option value="2700">45 مىنۇت</option><option value="0">ۋاقىت چەكلىمىسىز (تەتقىق مەشىق)</option></select>'
-    +'<div style="margin-top:.8rem"><button class="btn btn-gold btn-block" id="exStart">🚀 سىناقنى باشلاش</button></div></div>';
-  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بارلىق سوئال تۈرلىرى (تاللاش، توغرا-خاتا، بوش ئورۇن، تۇتاشتۇرۇش ۋە جاۋاب بېرىش بايان سوئاللىرى) تەكشۈرۈلۈپ، ئىمتىھان ئومۇمىي نەتىجىسى ۋە نومۇرىغا تولۇق قوشۇلىدۇ.</div>';
+    +'<label>🔢 سىناق سوئال سانى:</label><select id="exCount"><option value="30">30 سوئال (تېز سىناق)</option><option value="50" selected>50 سوئال (ئۆلچەملىك سىناق)</option><option value="60">60 سوئال</option><option value="80">80 سوئال</option><option value="100">100 سوئال (چوڭ سىناق)</option><option value="150">150 سوئال</option><option value="all">ھەممىسى ('+total+' سوئال)</option></select>'
+    +'<label>⏱️ ئىمتىھان ۋاقىت چەكلىمىسى:</label><select id="exTime"><option value="900" selected>⏱️ 15 مىنۇت (تەقلىدىي ئىمتىھان)</option><option value="300">⏱️ 5 مىنۇت (تېز سىناق)</option><option value="1800">⏱️ 30 مىنۇت (ئوتتۇراھال ئىمتىھان)</option><option value="3600">⏱️ 60 مىنۇت (چوڭ ئىمتىھان)</option><option value="0">⏱️ ۋاقىتسىز (ئادەتتىكى مەشىق)</option></select>'
+    +'<div style="margin-top:1rem"><button class="btn btn-gold btn-block" id="exStart" style="font-weight:bold;font-size:1.05rem;padding:.75rem">🚀 سىناقنى باشلاش</button></div></div>';
+  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> بارلىق سوئال تۈرلىرى تەكشۈرۈلۈپ، ئىمتىھان ئومۇمىي نەتىجىسى ۋە دەرسلەر بويىچە ئاجىز نۇقتىلار تەھلىلى جەدۋىلى چىقىرىپ بېرىلىدۇ.</div>';
   return h;
+}
+function startDailyChallenge(){
+  var pool=[];
+  LESSONS.forEach(function(L){
+    L.quiz.forEach(function(q,i){
+      if(q.type==="choice"||q.type==="tf") pool.push({q:q, lid:L.id, idx:i});
+    });
+  });
+  pool=shuffle(pool).slice(0,5);
+  if(!pool.length){ alert("⚠️ سوئاللار ئېلىنمىدى!"); return; }
+  examState={
+    pool:pool,
+    timeLeft:180,
+    total:180,
+    scope:"⚡ كۈندىلىك 5 سوئال سىنىقى",
+    isDaily:true,
+    startAt:Date.now(),
+    submitted:false
+  };
+  renderExam();
 }
 function startExam(){
   var scope=$("exScope").value, cntRaw=$("exCount").value, time=parseInt($("exTime").value,10);
   var types=[];
   document.querySelectorAll('#exTypes input:checked').forEach(function(c){ types.push(c.value); });
-  if(!types.length){ alert("ئاز دېگەندە بىر سوئال تۈرىنى تاللاڭ!"); return; }
+  if(!types.length){ alert("⚠️ ئاز دېگەندە بىر سوئال تۈرىنى تاللاڭ!"); return; }
   var pool=[];
-  LESSONS.forEach(function(L){
-    if(scope!=="all"&&String(L.id)!==String(scope)) return;
-    L.quiz.forEach(function(q,i){ if(types.indexOf(q.type)>=0) pool.push({q:q, lid:L.id, idx:i}); });
-  });
-  var want=cntRaw==="all"?pool.length:parseInt(cntRaw,10); pool=shuffle(pool).slice(0, Math.min(want, pool.length));
-  if(!pool.length){ alert("سوئال يوق!"); return; }
-  examState={pool:pool, timeLeft:time, total:time, scope: scope==="all"?"ھەممە دەرس":(scope+"-دەرس"), startAt:Date.now(), submitted:false};
+  if(scope==="wrong"){
+    var s=getProg(), wrongList=s.wrong||[];
+    if(!wrongList.length){
+      alert("🎉 سىزنىڭ تېخى خاتا ئىشلىگەن سوئالىڭىز يوق! بارلىق سوئاللارنى توغرىلىغانسىز.");
+      return;
+    }
+    wrongList.forEach(function(item){
+      var parts=String(item).split(":");
+      var lid=parseInt(parts[0],10), idx=parseInt(parts[1],10);
+      var L=lessonById(lid);
+      if(L&&L.quiz&&L.quiz[idx]){
+        var q=L.quiz[idx];
+        if(types.indexOf(q.type)>=0) pool.push({q:q, lid:lid, idx:idx});
+      }
+    });
+  } else {
+    LESSONS.forEach(function(L){
+      if(scope!=="all"&&String(L.id)!==String(scope)) return;
+      L.quiz.forEach(function(q,i){ if(types.indexOf(q.type)>=0) pool.push({q:q, lid:L.id, idx:i}); });
+    });
+  }
+  var want=cntRaw==="all"?pool.length:parseInt(cntRaw,10);
+  pool=shuffle(pool).slice(0, Math.min(want, pool.length));
+  if(!pool.length){ alert("⚠️ تاللانغان دائىرىدە سىناق سوئالى تېپىلمىدى!"); return; }
+  var scopeLabel=scope==="all"?"ھەممە دەرس (ئومۇمىي سىناق)":(scope==="wrong"?"⭐ خاتا سوئاللار سىنىقى":(scope+"-دەرس"));
+  examState={pool:pool, timeLeft:time, total:time, scope:scopeLabel, isWrongMode:(scope==="wrong"), startAt:Date.now(), submitted:false};
   renderExam();
 }
 function updExPool(){
@@ -1208,11 +1254,24 @@ function updExPool(){
   var scope=$("exScope").value, types=[];
   document.querySelectorAll('#exTypes input:checked').forEach(function(c){ types.push(c.value); });
   var n=0;
-  LESSONS.forEach(function(L){
-    if(scope!=="all"&&String(L.id)!==String(scope)) return;
-    L.quiz.forEach(function(q){ if(types.indexOf(q.type)>=0) n++; });
-  });
-  box.textContent="📌 تاللانغان دائىرە ۋە تۈردە "+n+" سوئال بار.";
+  if(scope==="wrong"){
+    var s=getProg();
+    (s.wrong||[]).forEach(function(item){
+      var parts=String(item).split(":");
+      var lid=parseInt(parts[0],10), idx=parseInt(parts[1],10);
+      var L=lessonById(lid);
+      if(L&&L.quiz&&L.quiz[idx]){
+        if(types.indexOf(L.quiz[idx].type)>=0) n++;
+      }
+    });
+    box.textContent="📌 خاتا سوئاللار ئىچىدە تاللانغان تۈرگە كىرىدىغان "+n+" سوئال بار.";
+  } else {
+    LESSONS.forEach(function(L){
+      if(scope!=="all"&&String(L.id)!==String(scope)) return;
+      L.quiz.forEach(function(q){ if(types.indexOf(q.type)>=0) n++; });
+    });
+    box.textContent="📌 تاللانغان دائىرە ۋە تۈردە "+n+" سوئال بار.";
+  }
 }
 function renderExam(){
   clearInterval(timerInt);
@@ -1224,7 +1283,7 @@ function renderExam(){
       examState.timeLeft--;
       var el=$("etimer");
       if(el){ var m=Math.floor(examState.timeLeft/60), s2=examState.timeLeft%60; el.textContent="⏱️ "+m+":"+(s2<10?"0":"")+s2; if(examState.timeLeft<300) el.classList.add("danger"); }
-      if(examState.timeLeft<=0){ clearInterval(timerInt); submitExam(true); }
+      if(examState.timeLeft<=0){ clearInterval(timerInt); if(typeof toast==="function") toast("⏱️ ئىمتىھان ۋاقىت چەكلىمىسى توشتى!"); submitExam(true); }
     },1000);
   }
   h+='<div class="palette" id="epal">'+examState.pool.map(function(_,i){return '<button class="pal" data-p="'+i+'">'+(i+1)+'</button>';}).join("")+'</div>';
@@ -1254,9 +1313,23 @@ function examTrack(e){
 function submitExam(auto){
   if(!examState||examState.submitted) return;
   examState.submitted=true; clearInterval(timerInt);
-  var tot=0, got=0;
-  var nw=0, byLid={};
-  examState.pool.forEach(function(it,i){ var r=checkQuestion(it.q, "ex_"+i); tot+=r.max; got+=r.score; if(r.max>0&&r.score<r.max){ addWrong(it.lid, it.idx); nw++; } if(r.max>0){ byLid[it.lid]=byLid[it.lid]||[0,0]; byLid[it.lid][0]+=r.score; byLid[it.lid][1]+=r.max; } });
+  var tot=0, got=0, nw=0, byLid={}, clearedCount=0;
+  examState.pool.forEach(function(it,i){
+    var r=checkQuestion(it.q, "ex_"+i);
+    tot+=r.max; got+=r.score;
+    if(r.max>0){
+      byLid[it.lid]=byLid[it.lid]||[0,0];
+      byLid[it.lid][0]+=r.score;
+      byLid[it.lid][1]+=r.max;
+      if(r.score<r.max){
+        addWrong(it.lid, it.idx);
+        nw++;
+      } else if(examState.isWrongMode && r.score===r.max){
+        removeWrong(it.lid, it.idx);
+        clearedCount++;
+      }
+    }
+  });
   var pct=tot?Math.round(got/tot*100):0;
   var used=Math.round((Date.now()-examState.startAt)/1000), um=Math.floor(used/60), us=used%60;
   var s=getProg();
@@ -1267,11 +1340,33 @@ function submitExam(auto){
   var nEssay=examState.pool.filter(function(it){return it.q.type==="essay";}).length;
   var h='<div class="result-hero"><div>🎓 سىناق نەتىجىڭىز '+(auto?"(ۋاقىت توشتى)":"")+'</div>'
     +'<div class="big">%'+pct+'</div>'
-    +'<div>توغرا: '+got.toFixed(1)+' / '+tot+' • ۋاقىت: '+um+' مىنۇت '+us+' سېكۇنت'+(nEssay?('<br>✍ بايان سوئال: '+nEssay+' — نومۇرغا كىرمەيدۇ، ئۈلگە جاۋابى تۆۋەندە'):'')+'</div>'
-    +(nw?'<div style="margin-top:.3rem">⭐ '+nw+' خاتا سوئال <a href="#/wrong" style="color:#ffe9a8">توپلامغا ساقلاندى ‹</a></div>':'')
-    +'<div style="font-size:1.2rem;margin-top:.3rem">'+(pct>=90?"🌟 ئېسىل! سىز تەييار!":pct>=60?"✅ ئۆتتىڭىز!":"❌ قايتا تەييارلىنىڭ")+'</div>'
-    +'<div style="margin-top:.7rem;display:flex;gap:.5rem;justify-content:center"><a class="btn btn-gold" href="#/exam">↻ يېڭى سىناق</a><button class="btn btn-teal" id="btnCard">🏆 نەتىجە كارتىسى</button><a class="btn btn-line" href="#/">باش بەت</a></div></div>';
-  h+='<h3>🔍 توغرا جاۋابلار</h3><div class="warn">خاتا ئىشلىگەن سوئالىڭىزنىڭ دەرسىگە قايتىڭ.</div>';
+    +'<div>توغرا: '+got.toFixed(1)+' / '+tot+' • ئىشلىتىلگەن ۋاقىت: '+um+' مىنۇت '+us+' سېكۇنت'+(nEssay?('<br>✍ بايان سوئال: '+nEssay+' — نومۇرغا كىرمەيدۇ، ئۈلگە جاۋابى تۆۋەندە'):'')+'</div>';
+  if(examState.isWrongMode && clearedCount>0){
+    h+='<div style="margin-top:.4rem;background:rgba(255,255,255,.2);padding:.4rem .8rem;border-radius:10px">🎉 <b>'+clearedCount+' خاتا سوئال</b> تۈزەتكۈچىدىن ئۆچۈرۈلۈپ تازىلاندى!</div>';
+  } else if(nw>0){
+    h+='<div style="margin-top:.4rem">⭐ '+nw+' خاتا سوئال <a href="#/wrong" style="color:#ffe9a8;font-weight:bold">خاتا سوئاللار توپلىمىغا ساقلاندى ‹</a></div>';
+  }
+  h+='<div style="font-size:1.2rem;margin-top:.4rem">'+(pct>=90?"🌟 ئېسىل! سىز ناھايىتى ياخشى تەييارلىنىپسىز!":(pct>=60?"✅ ئۆتتىڭىز!":"❌ كاپالەتلىك قايتا تەكرارلاڭ"))+'</div>'
+    +'<div style="margin-top:.8rem;display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap"><a class="btn btn-gold" href="#/exam">↻ يېڭى سىناق</a><button class="btn btn-teal" id="btnCard">🏆 نەتىجە كارتىسى</button><a class="btn btn-line" href="#/">باش بەت</a></div></div>';
+
+  // Diagnostic breakdown
+  h+='<div style="background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:1.2rem;margin:1.2rem 0;box-shadow:var(--shadow)">';
+  h+='<h4 style="margin:0 0 .8rem;color:var(--teal-dark);font-size:1.15rem">📊 دەرسلەر بويىچە ئۆگىنىش ئاجىز نۇقتىلىرى تەھلىلى:</h4>';
+  h+='<div style="display:flex;flex-direction:column;gap:.6rem">';
+  Object.keys(byLid).forEach(function(lid){
+    var L=lessonById(lid);
+    var sc=byLid[lid][0], mx=byLid[lid][1];
+    var lpct=mx?Math.round(sc/mx*100):0;
+    var statusBadge=lpct>=80?'<span class="badge badge-green">✅ ئېسىل (%'+lpct+')</span>':(lpct>=60?'<span class="badge badge-gold">📊 ياخشى (%'+lpct+')</span>':'<span class="badge badge-red">⚠️ تەكرارلاش كېرەك (%'+lpct+')</span>');
+    var readBtn=lpct<60?'<a class="btn btn-teal btn-sm" href="#/lesson/'+lid+'" style="font-size:.82rem;padding:.2rem .6rem">📖 دەرسكە ئۆتۈش</a>':'';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);padding:.65rem .9rem;border-radius:12px;flex-wrap:wrap;gap:.4rem">'
+      +'<div><b>'+(L?(L.id+'-دەرس: '+esc(L.title)):(lid+'-دەرس'))+'</b><br><small style="color:var(--muted)">'+sc.toFixed(1)+' / '+mx+' نومۇر</small></div>'
+      +'<div style="display:flex;align-items:center;gap:.4rem">'+statusBadge+readBtn+'</div>'
+      +'</div>';
+  });
+  h+='</div></div>';
+
+  h+='<h3>🔍 توغرا جاۋابلار ۋە ئىزاھاتلار</h3><div class="warn">خاتا ئىشلىگەن سوئالىڭىزنىڭ دەرسىگە ئۆتۈپ قايتا ئوقۇڭ.</div>';
   h+='<div id="revlist">';
   examState.pool.forEach(function(it,i){
     var qq=Object.assign({}, it.q);
@@ -1279,6 +1374,7 @@ function submitExam(auto){
     h+=qHTML(qq, "rv_"+i, i, true);
   });
   h+='</div>';
+
   $("main").innerHTML=h;
   $("btnCard").onclick=function(){ showCard({pct:pct,got:got.toFixed(1),tot:tot,um:um,us:us,scope:examState.scope,when:when}); };
   examState.pool.forEach(function(it,i){
@@ -1303,7 +1399,6 @@ function submitExam(auto){
   window.scrollTo(0,0);
 }
 
-
 /* ===== ئوقتۇرۇش: داۋاملاشتۇرۇش + مۇكاپات + توپلام + كارتا ===== */
 var _toastT=null;
 function toast(msg){
@@ -1321,6 +1416,9 @@ var BADGES=[
  {id:"quizall",ic:"🌟",t:"ئەلاچى",d:"ھەممە دەرس مەشىق %60+"},
  {id:"pass",ic:"✅",t:"ئۆتكۈچى",d:"سىناقتىن ئۆتۈش"},
  {id:"star90",ic:"🏆",t:"يۇلتۇز",d:"سىناقتىن %90+"},
+ {id:"perfect100",ic:"🎯",t:"يۈز نومۇر",d:"سىناقتىن %100 ئېلىپ ئۆتۈش"},
+ {id:"daily5",ic:"⚡",t:"تېز سىناقچى",d:"كۈندىلىك تېز سىناقنى ئورۇنلاش"},
+ {id:"wrongCleared",ic:"🛡️",t:"پۈتۈنلەي تۈزەتكۈچى",d:"بارلىق خاتا سوئاللارنى تازىلاش"},
  {id:"streak3",ic:"🔥",t:"3 كۈنلۈك",d:"3 كۈن داۋاملاشتۇرۇش"},
  {id:"streak7",ic:"🔥",t:"ھەپتىلىك",d:"7 كۈن داۋاملاشتۇرۇش"},
  {id:"streak30",ic:"💎",t:"ئالماس",d:"30 كۈن داۋاملاشتۇرۇش"},
@@ -1335,7 +1433,13 @@ function earnedIds(s){
   });
   if(reads>=1)e.read1=1; if(reads>=5)e.read5=1; if(reads>=10)e.read10=1;
   if(q60>=1)e.quiz60=1; if(qall)e.quizall=1;
-  (s.exams||[]).forEach(function(ex){ if(ex.pct>=60)e.pass=1; if(ex.pct>=90)e.star90=1; });
+  (s.exams||[]).forEach(function(ex){
+    if(ex.pct>=60)e.pass=1;
+    if(ex.pct>=90)e.star90=1;
+    if(ex.pct===100)e.perfect100=1;
+    if(ex.scope&&ex.scope.indexOf("كۈندىلىك")>=0)e.daily5=1;
+  });
+  if((s.wrong||[]).length===0 && (s.exams||[]).length>0) e.wrongCleared=1;
   var st=s.streak||{best:0};
   if(st.best>=3)e.streak3=1; if(st.best>=7)e.streak7=1; if(st.best>=30)e.streak30=1;
   if((s.fixedN||0)>=5)e.fixer=1;
