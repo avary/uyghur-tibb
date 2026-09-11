@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { loadData } from '../data/loader'
+import { loadData, syncLessonsCache } from '../data/loader'
 
 // Source of truth for the admin content editors (lessons + teachers).
 // Mirrors the vanilla admin.html model:
@@ -126,6 +126,7 @@ export const useContent = defineStore('content', {
   actions: {
     init() {
       if (this.loaded) return
+      syncLessonsCache()
       const def = cloneDefaults()
 
       let lessons = def.lessons

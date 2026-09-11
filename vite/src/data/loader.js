@@ -9,9 +9,31 @@ export function loadData() {
   return { lessons: window.DEFAULT_LESSONS || [], teachers: window.DEFAULT_TEACHERS || [] }
 }
 
-function customLessons() {
+const LS_LESSONS = 'uytibb_custom_lessons'
+const CACHE_MIN_LESSONS = 11
+const CACHE_MIN_QUESTIONS = 500
+
+// Mirrors upstream's autoRepairLessonsCache: a cached copy that falls short of
+// the current default dataset is dropped so the app falls back to DEFAULT_LESSONS.
+export function syncLessonsCache() {
   try {
-    const raw = localStorage.getItem('uytibb_custom_lessons')
+    const raw = localStorage.getItem(LS_LESSONS)
+    if (!raw) return
+    const custom = JSON.parse(raw)
+    let qSum = 0
+    if (Array.isArray(custom)) custom.forEach(l => { if (l && l.quiz) qSum += l.quiz.length })
+    if (!Array.isArray(custom) || custom.length < CACHE_MIN_LESSONS || qSum < CACHE_MIN_QUESTIONS) {
+      localStorage.removeItem(LS_LESSONS)
+    }
+  } catch (e) {
+    try { localStorage.removeItem(LS_LESSONS) } catch (_) {}
+  }
+}
+
+function customLessons() {
+  syncLessonsCache()
+  try {
+    const raw = localStorage.getItem(LS_LESSONS)
     if (!raw) return null
     const custom = JSON.parse(raw)
     if (!Array.isArray(custom) || !custom.length) return null
@@ -21,8 +43,8 @@ function customLessons() {
       if (def && def.quiz && (!L.quiz || L.quiz.length < def.quiz.length)) {
         L.quiz = def.quiz.slice()
       }
-      if (lid >= 1 && lid <= 10) {
-        L.pdfUrl = 'pdf/lesson-' + lid + '.pdf?v=20260909_original'
+      if (lid >= 1 && lid <= 11) {
+        L.pdfUrl = (def && def.pdfUrl) || ('pdf/lesson-' + lid + '.pdf?v=20260909_original')
         delete L.pdfData
       } else {
         L.pdfUrl = L.pdfUrl || ('pdf/lesson-' + lid + '.pdf')
@@ -31,7 +53,7 @@ function customLessons() {
       return L
     })
     try {
-      localStorage.setItem('uytibb_custom_lessons', JSON.stringify(merged))
+      localStorage.setItem(LS_LESSONS, JSON.stringify(merged))
     } catch (e) {}
     return merged
   } catch (e) { return null }
