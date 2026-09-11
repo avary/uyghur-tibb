@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v30-20260910_datajs_fix';
+const CACHE_NAME = 'uytibb-v31-20260911_install_student_fix';
 const ASSETS = [
   './',
   './index.html',

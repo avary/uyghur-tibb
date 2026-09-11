@@ -2546,7 +2546,36 @@ function loadStudentData(){
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
 
-    // Live Supabase Sync
+    // PRIMARY: Fetch from /api/students (Vercel serverless → Supabase)
+    fetch("/api/students")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.students && d.students.length){
+          var curSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
+          var curDelP = getDeletedPhones();
+          var curDelN = getDeletedNames();
+          var changed = false;
+          d.students.forEach(function(s){
+            var sPhone = String(s.phone||"").trim();
+            var sName = String(s.name||"").trim();
+            if(sPhone && curDelP.includes(sPhone)) return;
+            if(sName && curDelN.includes(sName)) return;
+            var ex = curSt.find(function(x){ return (sPhone && String(x.phone||"").trim() === sPhone); });
+            if(!ex){
+              curSt.unshift({ name: s.name, phone: s.phone, status: s.status||"pending", when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
+              changed = true;
+            } else if(s.status && ex.status !== s.status){
+              ex.status = s.status; changed = true;
+            }
+          });
+          if(changed){
+            localStorage.setItem("uytibb_all_students", JSON.stringify(curSt));
+            renderStudentsTableOnly();
+          }
+        }
+      }).catch(function(){});
+
+    // FALLBACK: Supabase direct
     if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
       Supabase.getStudents().then(function(sbStudents){
         if(sbStudents && sbStudents.length){

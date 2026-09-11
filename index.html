@@ -1853,6 +1853,10 @@ function router(){
 
   // 9. Install Page
   if(hash === "#/install"){
+    if(pwaStandalone()){
+      location.hash = "#/";
+      return;
+    }
     main.innerHTML = vInstall();
     bindInstall();
     renderNav();
@@ -2746,6 +2750,14 @@ function showRegModal(mode, closable){
     }
     localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
 
+    // Register via Vercel serverless API (primary)
+    fetch("/api/students", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "register", user: { name: nm, phone: ph, status: "pending" } })
+    }).catch(function(){});
+
+    // Also register via Supabase direct (fallback)
     if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
       Supabase.registerStudent({ name: nm, phone: ph, status: "pending" });
     }
