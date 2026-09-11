@@ -1728,7 +1728,6 @@ function vBooks(){
     + '      <p style="margin:.3rem 0 0;font-size:.9rem;color:var(--ink);opacity:.9">ئۇيغۇر تېبابىتى دەرسلىكلىرىنىڭ تولۇق PDF ئەسلى نۇسخىلىرى — ھەقسىز ۋە چەكلىمىسىز پۈتۈن ئېكراندا ئوقۇڭ ياكى چۈشۈرۈۋېلىڭ</p>'
     + '    </div>'
     + '  </div>'
-    + '  <a class="btn btn-teal btn-sm" href="admin.html" style="font-weight:bold;text-decoration:none;padding:.6rem 1.2rem;border-radius:10px">➕ يېڭى PDF كىتاب كىرگۈزۈش (ئارقا سەھنە)</a>'
     + '</div>'
     + '</div>';
 
@@ -3004,8 +3003,9 @@ function vInstall(){
   h+='  <h3 style="margin:.4rem 0 .5rem;color:var(--teal-dark);font-size:1.3rem">ئۇيغۇر تېبابىتى باشقۇرۇش</h3>';
   h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">دەرسلەرنىڭ PDF ھۆججىتىنى باشقۇرۇش، سوئاللارنى تەھرىرلەش ۋە ئوقۇغۇچى تەستىقلاش مەركىزى.</p>';
   h+='  <div style="display:flex;flex-direction:column;gap:.6rem">';
-  h+='    <a href="./admin.html" class="btn btn-teal btn-block" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 باشقۇرۇش ئەپىنى ئېچىش ۋە قاچىلاش</a>';
+  h+='    <a href="./admin.html" class="btn btn-teal btn-block" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 باشقۇرۇش ئەپىنى ئېچىش ۋە قاچىلاش (PWA)</a>';
   h+='    <button class="btn btn-line btn-block" id="btnAdminShortcut" style="font-size:.9rem;padding:.65rem">🖥️ باشقۇرۇش ئەپىنىڭ ئۈستەل يۈزى قىسقا يولى (.url)</button>';
+  h+='    <button class="btn btn-line btn-block" id="btnAdminOffline" style="font-size:.9rem;padding:.65rem">💾 تورسىز باشقۇرۇش ھۆججىتىنى چۈشۈرۈش (Offline HTML)</button>';
   h+='  </div>';
   h+='</div>';
 
@@ -3018,7 +3018,7 @@ function vInstall(){
   return h;
 }
 function bindInstall(){
-  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline"), as=$("btnAdminShortcut");
+  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline"), as=$("btnAdminShortcut"), ao=$("btnAdminOffline");
   if(st){
     if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
@@ -3035,6 +3035,25 @@ function bindInstall(){
     as.onclick=function(){
       var base=location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
       downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_باشقۇرۇش", base + "admin.html");
+    };
+  }
+  if(ao){
+    ao.onclick=function(){
+      if(typeof toast === "function") toast("💾 تورسىز باشقۇرۇش ھۆججىتى تەييارلىنىۋاتىدۇ...");
+      fetch("./admin.html")
+        .then(function(r){ return r.text(); })
+        .then(function(html){
+          var blob = new Blob([html], {type: "text/html;charset=utf-8"});
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "uyghur_tibb_admin_offline.html";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          if(typeof toast === "function") toast("✅ تورسىز باشقۇرۇش ھۆججىتى چۈشۈرۈلدى!");
+        }).catch(function(){
+          if(typeof toast === "function") toast("⚠️ ھۆججەتنى چۈشۈرۈشتە كاشىلا كۆرۈلدى.");
+        });
     };
   }
   if(dof){

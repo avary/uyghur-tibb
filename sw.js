@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v39-20260911_force_refresh_no_cache';
+const CACHE_NAME = 'uytibb-v40-20260911_admin_download_books_cleanup';
 const ASSETS = [
   './',
   './index.html',
