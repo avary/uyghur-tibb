@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PDF كۇتۇپخانىسى">
+<script src="data.js"></script>
 <script>
 var _booksDeferredPrompt = null;
 window.addEventListener("beforeinstallprompt", function(e){
@@ -29,7 +30,6 @@ function directBooksInstall(){
     _booksDeferredPrompt.prompt();
     _booksDeferredPrompt.userChoice.then(function(choice){
       if(choice && choice.outcome === 'accepted'){
-        alert("🎉 PDF كۇتۇپخانىسى ئەپى تېلېفونىڭىزغا قاچىلاندى!");
         var btn = document.getElementById("booksInstallBtn");
         if(btn) btn.style.display = "none";
       }
@@ -39,21 +39,8 @@ function directBooksInstall(){
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if(isIOS){
       alert("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش» (Add to Home Screen) نى بېسىپ قاچىلاڭ.");
-    } else {
-      alert("📲 باش ئېكرانغا قوشۇش ئۈچۈن تور كۆرگۈچ تىزىملىكىدىن «ئەپنى قاچىلاش» ياكى «ئۈستەل يۈزىگە قوشۇش»نى بېسىڭ.");
     }
   }
-}
-function downloadBooksShortcut(){
-  var url = location.href.split("#")[0];
-  var shortcutContent = "[InternetShortcut]\r\nURL=" + url + "\r\nIconIndex=0\r\n";
-  var blob = new Blob([shortcutContent], {type: "application/internet-shortcut"});
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ئۇيغۇر_تېبابىتى_PDF_كۇتۇپخانىسى.url";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
 }
 </script>
 <style>
@@ -176,7 +163,6 @@ a { color: var(--teal-dark); text-decoration: none; }
       </div>
       <div style="display:flex;gap:.6rem;flex-wrap:wrap">
         <button onclick="directBooksInstall()" class="btn btn-gold">📲 PDF كۇتۇپخانىسى ئەپىنى قاچىلاش (PWA)</button>
-        <button onclick="downloadBooksShortcut()" class="btn btn-line">🖥️ ئۈستەل يۈزى قىسقا يولى (.url)</button>
       </div>
     </div>
   </div>
@@ -189,28 +175,32 @@ a { color: var(--teal-dark); text-decoration: none; }
 </div>
 
 <script>
-var BOOKS_LESSONS = [
-  { id: 1, title: "1-دەرسلىك: ئۇيغۇر تېبابىتى ئاساسىي نەزەرىيىسى", subtitle: "ئۇيغۇر تېبابىتى ئاساسى نەزەرىيەسى (ئىسسىق، سوغۇق، قۇرۇق، نەملىك)" },
-  { id: 2, title: "2-دەرسلىك: ئادەم ئەزاسى تاشقى كۆرۈنۈش ئىلمى", subtitle: "ئادەم ئەناتومىيەسى ۋە تەبىئىي ئەزالار" },
-  { id: 3, title: "3-دەرسلىك: ئادەم ئەزاسى فىزىئولوگىيىسى", subtitle: "فىزىئولوگىيە ۋە خىلىتلار تەڭپۇڭلۇقى" },
-  { id: 4, title: "4-دەرسلىك: كېسەللىكلەر پاتولوگىيىسى", subtitle: "پاتولوگىيە ۋە مىجاز ئۆزگىرىشلىرى" },
-  { id: 5, title: "5-دەرسلىك: كېسەللىكلەر تەشخىس ئىلمى (تامۇر تەشخىسى)", subtitle: "تامۇر ۋە سۈيدۈك ئارقىلىق تەشخىس قىلىش" },
-  { id: 6, title: "6-دەرسلىك: ئۇيغۇر تېبابىتى داۋالاش ئاساسلىرى", subtitle: "پەرقلىق داۋالاش ۋە ئوزۇقلۇق بىلەن داۋالاش" },
-  { id: 7, title: "7-دەرسلىك: پىششىق دورىلار ئىلمى (مۇرەككەپ دورىلار)", subtitle: "ئىترىپىل، مەجۈن، شەربەت ۋە مۇرەككەپ نۇسخىلار" },
-  { id: 8, title: "8-دەرسلىك: كېسەللىكلەرنىڭ ئالدىنى ئېلىش ئىلمى", subtitle: "ساغلاملىقنى ئاسراش ۋە ئالتە زۆرۈر ئامىل" },
-  { id: 9, title: "9-دەرسلىك: ساقلىقنى ساقلاش ئىلمى (ھىپپوكرات ئاساسلىرى)", subtitle: "ھىپپوكرات ۋە جالىنوستىن قالغان تېبابەت تەبىئىتى" },
-  { id: 10, title: "10-دەرسلىك: خام دورىلار ئىلمى (تېبابەت ئۆسۈملۈكلىرى)", subtitle: "تەبىئىي ئۆسۈملۈك، ھايۋانات ۋە مەنبەلەر" },
-  { id: 11, title: "11-دەرسلىك: يۈرەك ۋە قان تامۇر كېسەللىكلىرى داۋالىنىشى", subtitle: "يۈرەك ۋە قان تامۇر كېسەللىكلىرىنى ئۇيغۇر تېبابىتىدە داۋالاش" }
-];
+function getBooksLessons(){
+  var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
+  var lessons = defaultL.slice();
+  try {
+    var customRaw = localStorage.getItem("uytibb_custom_lessons");
+    if(customRaw){
+      var parsed = JSON.parse(customRaw);
+      if(Array.isArray(parsed) && parsed.length >= defaultL.length){
+        lessons = parsed;
+      }
+    }
+  }catch(e){}
+  return lessons;
+}
 
 function checkAuthApproved(){
   try {
-    var raw = localStorage.getItem("uytibb_progress_v2");
-    if(raw){
-      var prog = JSON.parse(raw);
-      if(prog && prog.user && prog.user.status === "approved"){
-        return true;
-      }
+    var raw1 = localStorage.getItem("uytibb_v1");
+    if(raw1){
+      var p1 = JSON.parse(raw1);
+      if(p1 && p1.user && p1.user.status === "approved") return true;
+    }
+    var raw2 = localStorage.getItem("uytibb_progress_v2");
+    if(raw2){
+      var p2 = JSON.parse(raw2);
+      if(p2 && p2.user && p2.user.status === "approved") return true;
     }
   }catch(e){}
   return false;
@@ -220,18 +210,23 @@ function renderBooks(filter){
   var grid = document.getElementById("booksGrid");
   if(!grid) return;
   var term = (filter || "").toLowerCase().trim();
+  var lessons = getBooksLessons();
   var h = "";
-  BOOKS_LESSONS.forEach(function(L){
-    if(term && L.title.toLowerCase().indexOf(term) < 0 && L.subtitle.toLowerCase().indexOf(term) < 0 && (L.id + "").indexOf(term) < 0) return;
-    var pdfUrl = "pdf/lesson-" + L.id + ".pdf?v=20260909_original";
+  lessons.forEach(function(L){
+    var title = L.title || (L.id + "-دەرسلىك");
+    var subtitle = L.subtitle || L.desc || (title + " ئەسلى كىتابى");
+    if(term && title.toLowerCase().indexOf(term) < 0 && subtitle.toLowerCase().indexOf(term) < 0 && (L.id + "").indexOf(term) < 0) return;
+    var pdfUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    var pdfTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
+
     h += '<div class="book-card">'
       + '<div>'
       + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'
       + '    <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">📄 ' + L.id + '-دەرس كىتابى</span>'
       + '    <span style="font-size:1.8rem">📕</span>'
       + '  </div>'
-      + '  <h3 style="margin:.3rem 0;font-size:1.15rem;color:var(--teal-dark)">' + L.title + '</h3>'
-      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">' + L.subtitle + '</p>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.15rem;color:var(--teal-dark)">' + escHtml(pdfTitle) + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">' + escHtml(subtitle) + '</p>'
       + '</div>'
       + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem">'
       + '  <a class="btn btn-gold" href="' + pdfUrl + '" target="_blank" style="flex:1;font-size:.9rem">🚀 كىتابنى ئېچىش (PDF) ↗</a>'
@@ -241,6 +236,8 @@ function renderBooks(filter){
   if(!h) h = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted)">دەرسلىك كىتابى تېپىلمىدى.</div>';
   grid.innerHTML = h;
 }
+
+function escHtml(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 function filterBooks(){
   var inp = document.getElementById("bookSearchInp");

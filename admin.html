@@ -1035,6 +1035,41 @@ table.data-table tr:hover { background: var(--teal-light); }
   </div>
 </div>
 
+<!-- MODAL: EDIT PDF BOOK (STANDALONE PDF LIBRARY EDITING) -->
+<div class="modal-overlay" id="pdfBookEditModal">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-head">
+      <h3>✏️ PDF كىتابنى تەھرىرلەش (PDF كۇتۇپخانىسى)</h3>
+      <button class="close-btn" onclick="closePdfBookEditModal()">✕</button>
+    </div>
+    <input type="hidden" id="editPdfBookLessonId">
+    <div class="inp-group">
+      <label>PDF كىتاب نامى (Title):</label>
+      <input type="text" id="editPdfBookTitleInp" class="inp">
+    </div>
+    <div class="inp-group">
+      <label>قىسقا تېما ئىزاھاتى (Subtitle / Description):</label>
+      <input type="text" id="editPdfBookSubInp" class="inp">
+    </div>
+    <div class="inp-group">
+      <label>يېڭى PDF ھۆججىتى تاللاش (.pdf):</label>
+      <input type="file" id="editPdfBookFileInput" class="inp" accept="application/pdf">
+      <small style="color:var(--muted)">كومپىيوتېر ياكى تېلېفوندىن يېڭى .pdf ھۆججەت تاللىسىڭىز كونىسى ئالماشتۇرۇلىدۇ.</small>
+    </div>
+    <div class="inp-group">
+      <label>ياكى PDF URL / نىسپىي ئادرېسى:</label>
+      <input type="text" id="editPdfBookUrlInp" class="inp">
+    </div>
+    <div style="display:flex;gap:.8rem;justify-content:space-between;align-items:center;margin-top:1.2rem">
+      <button class="btn btn-red btn-sm" onclick="removePdfBookFromLibrary()">🗑️ PDF نى چىقىرىۋېتىش</button>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn btn-line" onclick="closePdfBookEditModal()">بىكار قىلىش</button>
+        <button class="btn btn-teal" onclick="saveEditedPdfBook()">💾 ساقلاش</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ADD/EDIT QUESTION -->
 <!-- MODAL: ADD/EDIT TEACHER -->
 <div class="modal-overlay" id="teacherModal">
@@ -1463,7 +1498,7 @@ document.getElementById("logoutBtn").onclick = function(){
   checkAuth();
 };
 
-/* 3. TAB SWITCHING */
+/* 3. TAB SWITCHING & PDF LIBRARY MANAGER */
 function renderAdminPdfBooksTable(){
   var tbody = document.getElementById("adminPdfBooksTbody");
   if(!tbody) return;
@@ -1481,16 +1516,100 @@ function renderAdminPdfBooksTable(){
       + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 PDF تەييار</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
       + '  <a class="btn btn-teal btn-sm" href="' + pUrl + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
-      + '  <button class="btn btn-line btn-sm" onclick="editLessonPdfDirect(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
+      + '  <button class="btn btn-gold btn-sm" onclick="openEditPdfBookModal(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
       + '</div></td>'
       + '</tr>';
   });
   tbody.innerHTML = h;
 }
 function editLessonPdfDirect(lid){
-  switchTab("lessons");
-  var sel = document.getElementById("lessonSelect");
-  if(sel){ sel.value = lid; onLessonSelectChange(); }
+  openEditPdfBookModal(lid);
+}
+
+var _editingPdfLessonId = null;
+
+function openEditPdfBookModal(lid){
+  _editingPdfLessonId = lid;
+  var L = getLessonById(lid);
+  if(!L) return;
+
+  var idInp = document.getElementById("editPdfBookLessonId");
+  var titleInp = document.getElementById("editPdfBookTitleInp");
+  var subInp = document.getElementById("editPdfBookSubInp");
+  var urlInp = document.getElementById("editPdfBookUrlInp");
+  var fileInp = document.getElementById("editPdfBookFileInput");
+
+  if(idInp) idInp.value = lid;
+  if(titleInp) titleInp.value = L.pdfTitle || (L.title ? (L.id + "-دەرسلىك: " + L.title) : (L.id + "-دەرس")) + " كىتابى (PDF)";
+  if(subInp) subInp.value = L.subtitle || L.desc || "";
+  if(urlInp) urlInp.value = L.pdfUrl || (L.pdfData ? "(يەرلىك PDF سانلىق مەلۇماتى)" : "");
+  if(fileInp) fileInp.value = "";
+
+  var m = document.getElementById("pdfBookEditModal");
+  if(m) m.style.display = "flex";
+}
+
+function closePdfBookEditModal(){
+  _editingPdfLessonId = null;
+  var m = document.getElementById("pdfBookEditModal");
+  if(m) m.style.display = "none";
+}
+
+function saveEditedPdfBook(){
+  if(!_editingPdfLessonId) return;
+  var L = getLessonById(_editingPdfLessonId);
+  if(!L) return;
+
+  var newTitle = (document.getElementById("editPdfBookTitleInp") ? document.getElementById("editPdfBookTitleInp").value.trim() : "");
+  var newSub = (document.getElementById("editPdfBookSubInp") ? document.getElementById("editPdfBookSubInp").value.trim() : "");
+  var newUrl = (document.getElementById("editPdfBookUrlInp") ? document.getElementById("editPdfBookUrlInp").value.trim() : "");
+  var fileInp = document.getElementById("editPdfBookFileInput");
+  var file = (fileInp && fileInp.files && fileInp.files[0]) ? fileInp.files[0] : null;
+
+  if(!newTitle){
+    alert("⚠️ كىتاب نامىنى يېزىڭ!");
+    return;
+  }
+
+  function commitEdit(){
+    L.pdfTitle = newTitle;
+    if(newSub) L.subtitle = newSub;
+    if(newUrl && newUrl !== "(يەرلىك PDF سانلىق مەلۇماتى)") L.pdfUrl = newUrl;
+
+    saveAllCustomData();
+    populateLessonSelector();
+    renderAdminPdfBooksTable();
+    closePdfBookEditModal();
+    showToast("✅ PDF كىتابى تەھرىرلەندى!");
+  }
+
+  if(file){
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      L.pdfData = evt.target.result;
+      L.pdfUrl = "pdf/" + file.name;
+      commitEdit();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    commitEdit();
+  }
+}
+
+function removePdfBookFromLibrary(){
+  if(!_editingPdfLessonId) return;
+  var L = getLessonById(_editingPdfLessonId);
+  if(!L) return;
+  if(!confirm("«" + (L.pdfTitle || L.title) + "» نىڭ PDF كىتابىنى كۇتۇپخانىدىن چىقىرىۋېتەمسىز؟")){
+    return;
+  }
+  delete L.pdfData;
+  delete L.pdfUrl;
+  delete L.pdfTitle;
+  saveAllCustomData();
+  renderAdminPdfBooksTable();
+  closePdfBookEditModal();
+  showToast("🗑️ PDF كىتابى كۇتۇپخانىدىن چىقىرىۋېتىلدى.");
 }
 
 function openPdfAddModal(){
@@ -1613,6 +1732,13 @@ function initAdmin(){
     LESSONS_DATA = JSON.parse(JSON.stringify(defaultL));
     try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
   } else {
+    // Deduplicate LESSONS_DATA by ID
+    var seenIds = {};
+    LESSONS_DATA = LESSONS_DATA.filter(function(l){
+      if(!l || !l.id || seenIds[l.id]) return false;
+      seenIds[l.id] = true;
+      return true;
+    });
     LESSONS_DATA.forEach(function(L, idx){
       if(!L) return;
       var def = (defaultL.find(function(x){ return x.id === L.id; })) || defaultL[idx];
@@ -1630,6 +1756,7 @@ function initAdmin(){
         if(!L.pdfTitle && def.pdfTitle) L.pdfTitle = def.pdfTitle;
       }
     });
+    try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
   }
 
   // Verify total quiz questions; if less than 500, restore from default data
