@@ -1704,6 +1704,52 @@ function vBooks(){
   return h;
 }
 
+function vWaitingApproval(user, status){
+  var nm = esc((user && user.name) || "ئوقۇغۇچى");
+  var ph = esc((user && user.phone) || "");
+  var h = '<div style="padding:2.5rem 1rem;max-width:520px;margin:2rem auto;text-align:center;background:var(--card);border-radius:20px;box-shadow:var(--shadow);border:1.5px solid var(--gold)">'
+    + '<div style="font-size:3.5rem;margin-bottom:1rem">⏳</div>'
+    + '<h2 style="color:var(--teal-dark);margin:0 0 .6rem;font-size:1.4rem">ئەسسالامۇ ئەلەيكۇم، ' + nm + '!</h2>'
+    + '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:.9rem;padding:.3rem .9rem;margin-bottom:1rem;display:inline-block">⏳ تەستىقلىنىشنى كۈتۈۋاتىدۇ</span>'
+    + '<p style="color:var(--muted);line-height:1.8;margin:1rem 0 1.5rem;font-size:.95rem">تىزىملىتىش ئۇچۇرىڭىز تاپشۇرۇۋېلىندى. باشقۇرغۇچى تەستىقلىغاندىن كېيىن بارلىق دەرسلىكلەر ۋە مەشىق سوئاللىرى تولۇق ئېچىلىدۇ.</p>'
+    + '<div style="background:var(--bg);padding:1rem;border-radius:12px;margin-bottom:1.5rem;text-align:right;font-size:.9rem;color:var(--ink)">'
+    + '  <div>👤 <b>ئىسمىڭىز:</b> ' + nm + '</div>'
+    + '  <div style="margin-top:.4rem">📱 <b>تېلېفون:</b> ' + ph + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">'
+    + '  <a href="#/" class="btn btn-gold btn-block" style="max-width:220px">🏠 باش بەتكە قايتىش</a>'
+    + '  <a href="#/books" class="btn btn-teal btn-block" style="max-width:220px">📚 PDF كىتابخانىسى</a>'
+    + '</div>'
+    + '</div>';
+  return h;
+}
+
+var _approvalPollTimer = null;
+function startApprovalPoll(){
+  if(_approvalPollTimer) clearInterval(_approvalPollTimer);
+  _approvalPollTimer = setInterval(function(){
+    var s = getProg();
+    if(!s.user || !s.user.phone || s.user.status === "approved"){
+      clearInterval(_approvalPollTimer);
+      return;
+    }
+    fetch("/api/students")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.students){
+          var cur = d.students.find(function(u){ return u.phone === s.user.phone; });
+          if(cur && cur.status === "approved"){
+            clearInterval(_approvalPollTimer);
+            s.user.status = "approved";
+            saveProg(s);
+            if(typeof toast === "function") toast("🎉 تەستىقلاندىڭىز! دەرسلەر ئېچىلدى!");
+            router();
+          }
+        }
+      }).catch(function(){});
+  }, 10000);
+}
+
 function router(){
   stopTimer(); updStreak();
   var hash = location.hash || "#/";
@@ -1716,9 +1762,10 @@ function router(){
   var _isHome = (!hash || hash === "#/" || hash === "" || hash === "#");
   var _isTeachers = (hash === "#/teachers");
   var _isInstall = (hash === "#/install");
+  var _isBooks = (hash === "#/books" || hash === "#/pdf");
 
   // If user is not registered at all → show register form for all protected routes
-  if(!_u && !_isHome && !_isTeachers && !_isInstall){
+  if(!_u && !_isHome && !_isTeachers && !_isInstall && !_isBooks){
     main.innerHTML = '<div style="padding:2rem 1rem;max-width:480px;margin:2rem auto;text-align:center">'
       + '<div style="font-size:3rem;margin-bottom:.8rem">📚</div>'
       + '<h3 style="color:var(--teal-dark);margin:0 0 .5rem">كىرىش تەلەپ قىلىنىدۇ</h3>'
@@ -1731,7 +1778,7 @@ function router(){
   }
 
   // If user is registered but not approved → show waiting page for all protected routes
-  if(_u && _u.status !== "approved" && !_isHome && !_isTeachers && !_isInstall){
+  if(_u && _u.status !== "approved" && !_isHome && !_isTeachers && !_isInstall && !_isBooks){
     main.innerHTML = vWaitingApproval(_u, _u.status);
     renderNav();
     startApprovalPoll();
