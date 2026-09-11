@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v51-20260911_wrong_routes_and_l11_terms';
+const CACHE_NAME = 'uytibb-v52-20260911_all_lessons_terms_and_mindmaps_enriched';
 const ASSETS = [
   './',
   './index.html',
