@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(k === "uytibb-v1" || k === "uytibb-v2" || k === "uytibb-v3" || k === "uytibb-v15-20260910"){
+      if(k !== "uytibb-v36-20260911_force_11l_572q"){
         caches.delete(k);
       }
     });
@@ -623,6 +623,23 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
 <script src="supabase.js"></script>
 <script src="data.js"></script>
 <script>
+(function autoRepairLessonsCache(){
+  try {
+    var raw = localStorage.getItem("uytibb_custom_lessons");
+    if(raw){
+      var parsed = JSON.parse(raw);
+      var qSum = 0;
+      if(Array.isArray(parsed)){
+        parsed.forEach(function(l){ if(l && l.quiz) qSum += l.quiz.length; });
+      }
+      if(!Array.isArray(parsed) || parsed.length < 11 || qSum < 500){
+        localStorage.removeItem("uytibb_custom_lessons");
+      }
+    }
+  } catch(e){
+    localStorage.removeItem("uytibb_custom_lessons");
+  }
+})();
 /* ===== ئەپ پروگراممىسى (تېلېفون ئۇسلۇبى) ===== */
 var LESSONS = [];
 var TEACHERS = [];

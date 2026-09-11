@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v35-20260911_fix_authgate_blankscreen';
+const CACHE_NAME = 'uytibb-v36-20260911_force_11l_572q';
 const ASSETS = [
   './',
   './index.html',

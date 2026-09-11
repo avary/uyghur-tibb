@@ -1117,6 +1117,23 @@ table.data-table tr:hover { background: var(--teal-light); }
 <script src="data.js"></script>
 <script src="supabase.js"></script>
 <script>
+(function autoRepairAdminLessonsCache(){
+  try {
+    var raw = localStorage.getItem("uytibb_custom_lessons");
+    if(raw){
+      var parsed = JSON.parse(raw);
+      var qSum = 0;
+      if(Array.isArray(parsed)){
+        parsed.forEach(function(l){ if(l && l.quiz) qSum += l.quiz.length; });
+      }
+      if(!Array.isArray(parsed) || parsed.length < 11 || qSum < 500){
+        localStorage.removeItem("uytibb_custom_lessons");
+      }
+    }
+  } catch(e){
+    localStorage.removeItem("uytibb_custom_lessons");
+  }
+})();
 /* =========================================================
    «ئۇيغۇر تېبابىتى» ئارقا سەھنە باشقۇرۇش مەركىزى JS ماتورى
    ========================================================= */
