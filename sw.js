@@ -1,9 +1,8 @@
-const CACHE_NAME = 'uytibb-v31-20260911_install_student_fix';
+const CACHE_NAME = 'uytibb-v32-20260911_datajs_network_first';
 const ASSETS = [
   './',
   './index.html',
   './admin.html',
-  './data.js',
   './manifest.webmanifest',
   './admin.webmanifest',
   './icon-192.png',
@@ -46,8 +45,9 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // 1. Navigation / Document requests: NETWORK-FIRST so user ALWAYS gets the freshest HTML
-  const isNav = event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html');
+  // 1. Navigation / Document: NETWORK-FIRST
+  const isNav = event.request.mode === 'navigate' || event.request.destination === 'document'
+    || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html');
   if (isNav) {
     event.respondWith(
       fetch(event.request)
@@ -60,17 +60,31 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           if (url.pathname.endsWith('/admin.html')) {
-            return caches.match(event.request).then(cached => cached || caches.match('./admin.html'));
+            return caches.match('./admin.html');
           }
-          return caches.match(event.request).then((cached) => {
-            return cached || caches.match('./index.html') || caches.match('./');
-          });
+          return caches.match('./index.html') || caches.match('./');
         })
     );
     return;
   }
 
-  // PDFs: Network-first, cache fallback (always get fresh authentic PDF)
+  // 2. data.js & supabase.js: ALWAYS NETWORK-FIRST, no cache read (fresh data every time)
+  if (url.pathname.endsWith('/data.js') || url.pathname.endsWith('/supabase.js')) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 3. PDFs: Network-first, cache fallback
   if (url.pathname.includes('/pdf/')) {
     event.respondWith(
       fetch(event.request)
@@ -86,7 +100,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets & PDFs: Network with Cache Fallback (cache on-demand)
+  // 4. Static Assets: Network with Cache Fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
