@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(!k.includes("v57")){
+      if(!k.includes("v58")){
         caches.delete(k);
       }
     });
@@ -537,6 +537,10 @@ input,select,textarea,button{font-family:inherit}
 .dqstem{margin:.1rem 0 .55rem}
 .dq .qchips{display:grid;gap:.4rem;margin-bottom:.3rem}
 .dqfb{font-size:.92rem;line-height:1.8;min-height:1.2em}
+.dq-dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb;cursor:pointer;transition:transform .15s,background .15s;display:inline-block}
+.dq-dot.active{transform:scale(1.3);box-shadow:0 0 0 2px var(--gold)}
+.dq-dot.dot-ok{background:#22c55e}
+.dq-dot.dot-bad{background:#ef4444}
 .dterm{border-right:4px solid var(--teal)}
 .node.nlink{text-decoration:none;cursor:pointer;display:inline-block}
 a.node.nlink{color:#fff}
@@ -2943,31 +2947,139 @@ function renderFb(){
 }
 function dayNum(){ var n=new Date(); return n.getFullYear()*372+n.getMonth()*31+n.getDate(); }
 function allChoiceTf(){ var p=[]; LESSONS.forEach(function(L){ (L.quiz||[]).forEach(function(q){ if(q.type==="choice"||q.type==="tf") p.push({q:q,lid:L.id}); }); }); return p; }
+function getDailyQuestionIndices(pool, dn, count) {
+  count = count || 10;
+  if (!pool || !pool.length) return [];
+  if (pool.length <= count) {
+    var arr = []; for (var i = 0; i < pool.length; i++) arr.push(i); return arr;
+  }
+  var indices = [];
+  var seed = Math.abs(dn);
+  for (var k = 0; k < count * 10; k++) {
+    var idx = Math.abs((seed * 31 + k * 17 + k * k * 7) % pool.length);
+    if (indices.indexOf(idx) === -1) {
+      indices.push(idx);
+      if (indices.length >= count) break;
+    }
+  }
+  var fallback = 0;
+  while (indices.length < count && fallback < pool.length) {
+    if (indices.indexOf(fallback) === -1) indices.push(fallback);
+    fallback++;
+  }
+  return indices;
+}
 function renderDaily(){
   var box=$("dqbox"); if(!box) return;
   var pool=allChoiceTf(), dn=dayNum();
   if(!pool || !pool.length){ box.innerHTML=""; return; }
   var s=getProg();
-  var idx = Math.abs(dn) % pool.length;
-  if(!s.dailyQ||s.dailyQ.d!==dn||typeof s.dailyQ.i!=="number"||isNaN(s.dailyQ.i)){
-    s.dailyQ={d:dn,i:idx,ans:null}; saveProg(s);
+  if(!s.dailyQ||s.dailyQ.d!==dn||!Array.isArray(s.dailyQ.indices)||s.dailyQ.indices.length!==10){
+    s.dailyQ={d:dn,indices:getDailyQuestionIndices(pool,dn,10),curr:0,answers:{},completed:false,showSummary:false};
+    saveProg(s);
   }
   var st=s.dailyQ;
-  var qIdx = Math.abs(st.i || 0) % pool.length;
-  var it=pool[qIdx];
-  if(!it || !it.q){ box.innerHTML=""; return; }
-  var h='<div class="dq"><p class="dqstem"><span class="badge">'+it.lid+'-دەرس</span> '+esc(it.q.q)+'</p><div class="qchips">';
-  if(it.q.type==="choice") h+=(it.q.opts||[]).map(function(o,i){ return '<button class="qchip" data-dq="'+i+'">'+esc(o)+'</button>'; }).join("");
-  else h+='<button class="qchip" data-dq="1">✅ توغرا</button><button class="qchip" data-dq="0">❌ خاتا</button>';
-  h+='</div><div class="dqfb" id="dqfb">';
-  if(st.ans!=null){
-    var ok = it.q.type==="choice" ? (st.ans===it.q.a) : ((st.ans===1)===!!it.q.a);
-    var correct = it.q.type==="choice" ? (it.q.opts ? it.q.opts[it.q.a] : "") : (it.q.a?"توغرا":"خاتا");
-    h+=(ok?"✅ <b>توغرا!</b> ":"❌ <b>خاتا.</b> توغرا جاۋاب: <b>"+esc(correct)+"</b> ")+(it.q.exp?("<br>💡 "+esc(it.q.exp)):"");
+  st.answers=st.answers||{};
+  var totalQ=st.indices.length;
+
+  var answeredCount=0, correctCount=0;
+  for(var i=0; i<totalQ; i++){
+    if(st.answers[i]!==undefined && st.answers[i]!==null){
+      answeredCount++;
+      var qIdx=st.indices[i], item=pool[qIdx];
+      if(item && item.q){
+        var uAns=st.answers[i];
+        var ok = item.q.type==="choice" ? (uAns===item.q.a) : ((uAns===1)===!!item.q.a);
+        if(ok) correctCount++;
+      }
+    }
   }
-  h+='</div></div>';
-  box.innerHTML=h;
-  if(st.ans!=null){ box.querySelectorAll("[data-dq]").forEach(function(b){ b.disabled=true; var v=parseInt(b.getAttribute("data-dq"),10); var cv=it.q.type==="choice"?it.q.a:(it.q.a?1:0); if(v===cv) b.classList.add("ok"); else if(v===st.ans) b.classList.add("bad"); }); }
+  if(answeredCount >= totalQ) st.completed = true;
+
+  if(st.showSummary || (st.completed && st.curr>=totalQ)){
+    var dotsHTML='';
+    for(var i=0; i<totalQ; i++){
+      var qI=st.indices[i], itI=pool[qI];
+      var isOk = (st.answers[i]!==undefined && st.answers[i]!==null) ?
+        (itI.q.type==="choice" ? (st.answers[i]===itI.q.a) : ((st.answers[i]===1)===!!itI.q.a)) : false;
+      dotsHTML += '<span class="dq-dot '+(isOk?"dot-ok":"dot-bad")+'" data-dq-jump="'+i+'" title="'+(i+1)+'-سوئال"></span>';
+    }
+    var pct = Math.round((correctCount/totalQ)*100);
+    var hSum = '<div class="dq dq-summary" style="text-align:center; padding:1.1rem .8rem;">'
+      + '<div style="font-size:2rem; margin-bottom:.2rem;">🎉 🏆</div>'
+      + '<h4 style="margin:0 0 .3rem; color:var(--teal); font-size:1.1rem;">بۈگۈنكى 10 سوئالنى تاماملىدىڭىز!</h4>'
+      + '<p style="margin:0 0 .6rem; font-size:.92rem; color:#444;">نەتىجىڭىز: <b style="color:var(--teal); font-size:1.15rem;">10 نىڭ ئىچىدىن ' + correctCount + ' سوئالغا توغرا جاۋاب بەردىڭىز!</b> (%' + pct + ')</p>'
+      + '<div class="dq-dots" style="display:flex; justify-content:center; gap:6px; margin-bottom:.9rem;">' + dotsHTML + '</div>'
+      + '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">'
+      + '<button class="btn outline" data-dq-action="review" style="font-size:.85rem; padding:.4rem .8rem;">📋 سوئاللارنى قايتا كۆرۈش</button>'
+      + '<button class="btn primary" data-dq-action="restart" style="font-size:.85rem; padding:.4rem .8rem;">🔄 قايتا ئىشلەش</button>'
+      + '</div></div>';
+    box.innerHTML = hSum;
+    return;
+  }
+
+  if(typeof st.curr!=="number"||isNaN(st.curr)||st.curr<0||st.curr>=totalQ) st.curr=0;
+
+  var currIdx = st.curr;
+  var qIdx = st.indices[currIdx];
+  var it = pool[qIdx];
+  if(!it || !it.q){ box.innerHTML=""; return; }
+
+  var userAns = st.answers[currIdx];
+  var hasAns = (userAns !== undefined && userAns !== null);
+
+  var h = '<div class="dq">';
+  h += '<div class="dq-hdr" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem; padding-bottom:.4rem; border-bottom:1px dashed #e5e7eb;">';
+  h += '<span style="font-weight:bold; font-size:.88rem; color:var(--teal);">🎯 سوئال ' + (currIdx + 1) + ' / ' + totalQ + '</span>';
+  h += '<div class="dq-dots" style="display:flex; gap:4px; align-items:center;">';
+  for (var i = 0; i < totalQ; i++) {
+    var cls = "dq-dot";
+    if (i === currIdx) cls += " active";
+    if (st.answers[i] !== undefined && st.answers[i] !== null) {
+      var qI = st.indices[i];
+      var itI = pool[qI];
+      var okI = itI.q.type === "choice" ? (st.answers[i] === itI.q.a) : ((st.answers[i] === 1) === !!itI.q.a);
+      cls += okI ? " dot-ok" : " dot-bad";
+    }
+    h += '<span class="' + cls + '" data-dq-jump="' + i + '" title="' + (i + 1) + '-سوئال"></span>';
+  }
+  h += '</div></div>';
+
+  h += '<p class="dqstem"><span class="badge">' + it.lid + '-دەرس</span> ' + esc(it.q.q) + '</p><div class="qchips">';
+  if (it.q.type === "choice") {
+    h += (it.q.opts || []).map(function(o, i) {
+      return '<button class="qchip" data-dq="' + i + '">' + esc(o) + '</button>';
+    }).join("");
+  } else {
+    h += '<button class="qchip" data-dq="1">✅ توغرا</button><button class="qchip" data-dq="0">❌ خاتا</button>';
+  }
+  h += '</div><div class="dqfb" id="dqfb">';
+
+  if (hasAns) {
+    var ok = it.q.type === "choice" ? (userAns === it.q.a) : ((userAns === 1) === !!it.q.a);
+    var correct = it.q.type === "choice" ? (it.q.opts ? it.q.opts[it.q.a] : "") : (it.q.a ? "توغرا" : "خاتا");
+    h += (ok ? "✅ <b>توغرا!</b> " : "❌ <b>خاتا.</b> توغرا جاۋاب: <b>" + esc(correct) + "</b> ") + (it.q.exp ? ("<br>💡 " + esc(it.q.exp)) : "");
+    h += '<div style="margin-top:.6rem; text-align:left;">';
+    if (currIdx < totalQ - 1) {
+      h += '<button class="btn primary" data-dq-action="next" style="font-size:.85rem; padding:.35rem .85rem; border-radius:8px;">كېيىنكى سوئال ➔</button>';
+    } else {
+      h += '<button class="btn primary" data-dq-action="finish" style="font-size:.85rem; padding:.35rem .85rem; border-radius:8px;">نەتىجىنى كۆرۈش 🏆</button>';
+    }
+    h += '</div>';
+  }
+  h += '</div></div>';
+
+  box.innerHTML = h;
+
+  if (hasAns) {
+    box.querySelectorAll("[data-dq]").forEach(function(b) {
+      b.disabled = true;
+      var v = parseInt(b.getAttribute("data-dq"), 10);
+      var cv = it.q.type === "choice" ? it.q.a : (it.q.a ? 1 : 0);
+      if (v === cv) b.classList.add("ok");
+      else if (v === userAns) b.classList.add("bad");
+    });
+  }
 }
 function renderTerm(){
   var box=$("dtbox"); if(!box) return;
@@ -2981,8 +3093,48 @@ function bindHome(){
   renderFb(); renderDaily(); renderTerm();
   var dq = $("dqbox");
   if(dq) dq.onclick = function(e){
-    var b = e.target.closest("[data-dq]"); if(!b||b.disabled) return;
-    var s = getProg(); s.dailyQ.ans = parseInt(b.getAttribute("data-dq"), 10); saveProg(s); renderDaily();
+    var s = getProg();
+    if(!s||!s.dailyQ) return;
+    var dot = e.target.closest("[data-dq-jump]");
+    if (dot) {
+      var jIdx = parseInt(dot.getAttribute("data-dq-jump"), 10);
+      if (!isNaN(jIdx) && jIdx >= 0 && jIdx < 10) {
+        s.dailyQ.curr = jIdx;
+        s.dailyQ.showSummary = false;
+        saveProg(s);
+        renderDaily();
+        return;
+      }
+    }
+    var actBtn = e.target.closest("[data-dq-action]");
+    if (actBtn) {
+      var act = actBtn.getAttribute("data-dq-action");
+      if (act === "next") {
+        s.dailyQ.curr = (s.dailyQ.curr || 0) + 1;
+        s.dailyQ.showSummary = false;
+      } else if (act === "finish") {
+        s.dailyQ.completed = true;
+        s.dailyQ.showSummary = true;
+      } else if (act === "review") {
+        s.dailyQ.curr = 0;
+        s.dailyQ.showSummary = false;
+      } else if (act === "restart") {
+        s.dailyQ.answers = {};
+        s.dailyQ.curr = 0;
+        s.dailyQ.completed = false;
+        s.dailyQ.showSummary = false;
+      }
+      saveProg(s);
+      renderDaily();
+      return;
+    }
+    var b = e.target.closest("[data-dq]");
+    if (!b || b.disabled) return;
+    var ansVal = parseInt(b.getAttribute("data-dq"), 10);
+    s.dailyQ.answers = s.dailyQ.answers || {};
+    s.dailyQ.answers[s.dailyQ.curr] = ansVal;
+    saveProg(s);
+    renderDaily();
   };
   var b = $("fbSend");
   if(b) b.onclick = function(){

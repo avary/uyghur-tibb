@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v57-20260911_natural_uncapped_terms_all_lessons';
+const CACHE_NAME = 'uytibb-v58-20260911_daily_10_questions_flow';
 const ASSETS = [
   './',
   './index.html',
