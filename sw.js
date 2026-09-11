@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v53-20260911_all_45_properties_16_formulations_complete';
+const CACHE_NAME = 'uytibb-v54-20260911_all_47_formulations_complete';
 const ASSETS = [
   './',
   './index.html',
