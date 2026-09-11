@@ -590,11 +590,11 @@ table.data-table tr:hover { background: var(--teal-light); }
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-icon" style="background:#e8f0fe;color:#1a73e8">✍️</div>
-            <div class="stat-data"><b id="stQuestions">261</b><span>سوئال ئامبىرى</span></div>
+            <div class="stat-data"><b id="stQuestions">572</b><span>سوئال ئامبىرى</span></div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background:#fff4d9;color:#b28302">📄</div>
-            <div class="stat-data"><b id="stPdfs">10</b><span>PDF كىتاب بار دەرسلەر</span></div>
+            <div class="stat-data"><b id="stPdfs">11</b><span>PDF كىتاب بار دەرسلەر</span></div>
           </div>
           <div class="stat-card">
             <div class="stat-icon" style="background:#fce8e6;color:#c5221f">💬</div>
@@ -744,7 +744,7 @@ table.data-table tr:hover { background: var(--teal-light); }
               <option value="match">تۇتاشتۇرۇش</option>
               <option value="essay">بايان سوئال</option>
             </select>
-            <span style="color:var(--muted);font-size:.9rem" id="qCountText">جەمئىي: 261 سوئال</span>
+            <span style="color:var(--muted);font-size:.9rem" id="qCountText">جەمئىي: 572 سوئال</span>
           </div>
 
           <div class="table-wrap">
@@ -1469,10 +1469,10 @@ function initAdmin(){
     });
   }
 
-  // Verify total quiz questions; if less than 100, restore from default data
+  // Verify total quiz questions; if less than 500, restore from default data
   var totalQ = 0;
   LESSONS_DATA.forEach(function(l){ if(l && l.quiz) totalQ += l.quiz.length; });
-  if(totalQ < 100 && defaultL.length >= 10){
+  if(totalQ < 500 && defaultL.length >= 11){
     LESSONS_DATA = JSON.parse(JSON.stringify(defaultL));
     try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA)); } catch(e){}
   }
@@ -1523,7 +1523,7 @@ function saveAllCustomData(){
 document.getElementById("quickSaveBtn").onclick = saveAllCustomData;
 
 function forceResetDefaultData(){
-  if(confirm("بارلىق 10 دەرس ۋە 261 سوئالنى ئەسلى ھالىتىگە قايتۇرامسىز؟")){
+  if(confirm("بارلىق 11 دەرس ۋە 572 سوئالنى ئەسلى ھالىتىگە قايتۇرامسىز؟")){
     localStorage.removeItem("uytibb_custom_lessons");
     localStorage.removeItem("uytibb_custom_teachers");
     var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
@@ -1535,7 +1535,7 @@ function forceResetDefaultData(){
       localStorage.setItem("uytibb_custom_teachers", JSON.stringify(TEACHERS_DATA));
     } catch(e){}
     initAdmin();
-    showToast("✅ بارلىق 10 دەرس ۋە 261 سوئال ئەسلىگە كەلتۈرۈلدى!");
+    showToast("✅ بارلىق 11 دەرس ۋە 572 سوئال ئەسلىگە كەلتۈرۈلدى!");
   }
 }
 

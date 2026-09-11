@@ -1917,9 +1917,30 @@ function loadCustomData(){
 
   try {
     var raw = localStorage.getItem("uytibb_custom_lessons");
+    var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
     if(raw){
       try {
         var custom = JSON.parse(raw);
+        var totalQ = 0;
+        if(Array.isArray(custom)){
+          custom.forEach(function(l){ if(l && l.quiz) totalQ += l.quiz.length; });
+        }
+        if(!Array.isArray(custom) || custom.length < defaultL.length || totalQ < 500){
+          if(!Array.isArray(custom) || custom.length === 0 || totalQ < 300){
+            custom = JSON.parse(JSON.stringify(defaultL));
+          } else {
+            defaultL.forEach(function(def){
+              var ex = custom.find(function(x){ return x.id === def.id; });
+              if(!ex){
+                custom.push(JSON.parse(JSON.stringify(def)));
+              } else if(def.quiz && (!ex.quiz || ex.quiz.length < def.quiz.length)){
+                ex.quiz = JSON.parse(JSON.stringify(def.quiz));
+              }
+            });
+            custom.sort(function(a,b){ return (a.id||0) - (b.id||0); });
+          }
+          try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(custom)); } catch(e){}
+        }
         if(Array.isArray(custom) && custom.length){
           LESSONS = custom.map(function(L, idx){
             var lid = L.id || (idx+1);
@@ -2866,7 +2887,7 @@ function vInstall(){
   h+='  <div style="margin-bottom:.8rem"><img src="icon-192.png" alt="ئۇيغۇر تېبابىتى ئۆگىنىش ئەپى" style="width:76px;height:76px;border-radius:50%;box-shadow:0 4px 12px rgba(10,92,82,.2)"></div>';
   h+='  <span class="badge" style="background:var(--teal-light);color:var(--teal-dark);font-size:.85rem;margin-bottom:.4rem;padding:.2rem .8rem">📱 1. ئالدى بەت (ئۆگىنىش ئەپى)</span>';
   h+='  <h3 style="margin:.4rem 0 .5rem;color:var(--teal-dark);font-size:1.3rem">ئۇيغۇر تېبابىتى ئۆگىنىش</h3>';
-  h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">10 دەرسلىك، زېھىن خەرىتىسى، 261 سىناق سوئالى ۋە ئەسلى كىتابلارنى تورسىز ئۆگىنىش ئەپى.</p>';
+  h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">11 دەرسلىك، زېھىن خەرىتىسى، 572 سىناق سوئالى ۋە ئەسلى كىتابلارنى تورسىز ئۆگىنىش ئەپى.</p>';
   h+='  <div style="display:flex;flex-direction:column;gap:.6rem">';
   h+='    <button class="btn btn-gold btn-block" id="btnPWA" onclick="directPWAInstall(event)" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 ئۆگىنىش ئەپىنى بىۋاسىتە قاچىلاش (PWA)</button>';
   h+='    <button class="btn btn-line btn-block" id="btnDesktopShortcut" style="font-size:.9rem;padding:.65rem">🖥️ ئۆگىنىش ئەپىنىڭ ئۈستەل يۈزى قىسقا يولى (.url)</button>';
