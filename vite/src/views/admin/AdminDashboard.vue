@@ -8,6 +8,7 @@ import LessonsEditor from './LessonsEditor.vue'
 import QuestionsBank from './QuestionsBank.vue'
 import TeachersEditor from './TeachersEditor.vue'
 import ManagePanel from './ManagePanel.vue'
+import PdfLibrary from './PdfLibrary.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -211,6 +212,7 @@ const tabs = [
   { id: 'students', ic: '🎓', label: 'ئوقۇغۇچىلار' },
   { id: 'feedback', ic: '💬', label: 'پىكىر-سوئال' },
   { id: 'lessons', ic: '📖', label: 'دەرسلەر' },
+  { id: 'pdfbooks', ic: '📚', label: 'PDF كۇتۇپخانىسى' },
   { id: 'questions', ic: '☑', label: 'سوئاللار' },
   { id: 'teachers', ic: '👨‍🏫', label: 'ئۇستازلار' },
   { id: 'manage', ic: '🛠', label: 'تەڭشەك / زاپاس' }
@@ -334,6 +336,11 @@ const tabs = [
 
       <!-- LESSONS EDITOR -->
       <section v-show="tab === 'lessons'"><LessonsEditor /></section>
+
+      <!-- PDF BOOKS LIBRARY -->
+      <section v-show="tab === 'pdfbooks'">
+        <PdfLibrary @edit="tab = 'lessons'" />
+      </section>
 
       <!-- QUESTION BANK -->
       <section v-show="tab === 'questions'"><QuestionsBank /></section>
