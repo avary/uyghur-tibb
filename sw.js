@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v37-20260911_fix_lessons_overwrite';
+const CACHE_NAME = 'uytibb-v38-20260911_fix_renderdaily_renderterm';
 const ASSETS = [
   './',
   './index.html',
