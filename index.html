@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(k !== "uytibb-v39-20260911_force_refresh_no_cache"){
+      if(!k.includes("v56")){
         caches.delete(k);
       }
     });
