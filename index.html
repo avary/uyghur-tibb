@@ -97,8 +97,8 @@ html[data-view="desktop"] { --appw: 1040px; }
   }
   html:not([data-view="mobile"]) #llist,
   html[data-view="desktop"] #llist {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: .8rem;
   }
   html:not([data-view="mobile"]) .mstats,
@@ -707,6 +707,7 @@ function saveProg(s){
   store.set(merged);
 }
 function markRead(id){ var s=getProg(); s.lessons[id]=s.lessons[id]||{}; s.lessons[id].read=true; saveProg(s); }
+function unmarkRead(id){ var s=getProg(); s.lessons[id]=s.lessons[id]||{}; s.lessons[id].read=false; saveProg(s); }
 function saveBest(id, pct){ var s=getProg(); s.lessons[id]=s.lessons[id]||{}; if(!s.lessons[id].best||pct>s.lessons[id].best){s.lessons[id].best=pct;} saveProg(s); }
 function saveLast(id){ var s=getProg(); s.lastLesson=id; saveProg(s); }
 
@@ -864,7 +865,14 @@ function vLesson(id, tab){
   var L=lessonById(id); if(!L) return "<p>دەرس تېپىلمىدى.</p>";
   if(tab) lessonTab=tab;
   saveLast(id);
-  var h='<a class="backlink" href="#/lessons">› دەرسلەرگە قايتىش</a>';
+  var prevL = lessonById(L.id - 1);
+  var nextL = lessonById(L.id + 1);
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">';
+  h+='<a class="backlink" href="#/lessons" style="margin:0">› دەرسلەرگە قايتىش</a>';
+  h+='<div style="display:flex;gap:.4rem">';
+  if(prevL) h+='<a class="btn btn-line btn-sm" href="#/lesson/'+prevL.id+'">‹ '+prevL.id+'-دەرس</a>';
+  if(nextL) h+='<a class="btn btn-line btn-sm" href="#/lesson/'+nextL.id+'">'+nextL.id+'-دەرس ›</a>';
+  h+='</div></div>';
   h+='<div class="lhead"><h2>'+L.id+'-دەرس: '+esc(L.title)+'</h2><p class="sub">'+esc(L.subtitle||"")+'</p></div>';
   if(L.goals&&L.goals.length){
     h+='<div class="goals"><b>🎯 ئۆگىنىش مەقسىتى:</b><ul>';
@@ -892,15 +900,45 @@ function renderTabBody(L){
       if(s.points&&s.points.length){ h+='<div class="keybox"><b class="t">📌 مۇھىم نۇقتىلار:</b><ul>'; s.points.forEach(function(p){h+='<li>'+p+'</li>';}); h+='</ul></div>'; }
       h+='</section>';
     });
-    h+='<button class="btn btn-teal btn-block" id="btnRead">✓ بۇ دەرسنى ئوقۇدۇم</button>';
-    var nid=L.id+1;
-    if(lessonById(nid)) h+='<a class="btn btn-gold btn-block" style="margin-top:.5rem" href="#/lesson/'+nid+'">كېيىنكى دەرس ‹</a>';
+
+    var isRead = !!((getProg().lessons || {})[L.id] || {}).read;
+    if(isRead){
+      h+='<button class="btn btn-line btn-block" id="btnRead" style="margin-top:1rem;color:var(--green);border-color:var(--green);font-weight:bold">✓ بۇ دەرسنى ئوقۇدىڭىز (ئوقۇلمىدى دەپ ئۆزگەرتىش ↺)</button>';
+    } else {
+      h+='<button class="btn btn-teal btn-block" id="btnRead" style="margin-top:1rem;font-weight:bold">✓ بۇ دەرسنى ئوقۇدۇم (ئوقۇلدى دەپ بەلگىلەش)</button>';
+    }
+
+    var prevL = lessonById(L.id - 1);
+    var nextL = lessonById(L.id + 1);
+    h+='<div style="display:flex;gap:.8rem;margin-top:.8rem;flex-wrap:wrap">';
+    if(prevL){
+      h+='<a class="btn btn-line" style="flex:1;justify-content:center;padding:.7rem 1rem" href="#/lesson/'+prevL.id+'">‹ ئالدىنقى دەرس ('+prevL.id+'-دەرس)</a>';
+    }
+    if(nextL){
+      h+='<a class="btn btn-gold" style="flex:1;justify-content:center;padding:.7rem 1rem;font-weight:bold;color:#2e2200" href="#/lesson/'+nextL.id+'">كېيىنكى دەرس ('+nextL.id+'-دەرس) ›</a>';
+    }
+    h+='</div>';
+
     box.innerHTML=h;
     box.querySelectorAll("table.tbl").forEach(function(t){
       var w=document.createElement("div"); w.className="tblwrap"; t.parentNode.insertBefore(w,t); w.appendChild(t);
     });
     bindMark(box, L); jumpFlash(box, L);
-    var br=$("btnRead"); if(br) br.onclick=function(){ markRead(L.id); checkBadges(); br.textContent="✓ بەلگىلەندى — رەھمەت!"; br.disabled=true; };
+    var br=$("btnRead");
+    if(br){
+      br.onclick=function(){
+        var st = !!((getProg().lessons || {})[L.id] || {}).read;
+        if(st){
+          unmarkRead(L.id);
+          if(typeof toast === "function") toast("○ دەرس كۆرسەتكۈچى ئوقۇلمىدى دەپ ئۆزگەرتىلدى");
+        } else {
+          markRead(L.id);
+          checkBadges();
+          if(typeof toast === "function") toast("✅ دەرس ئوقۇلدى دەپ بەلگىلەندى!");
+        }
+        renderTabBody(L);
+      };
+    }
   } else if(lessonTab==="mind"){
     var h2='<div class="mm-tools"><button class="btn btn-teal btn-sm" id="mmExp">➕ ھەممىنى ئېچىش</button><button class="btn btn-line btn-sm" id="mmCol">➖ ھەممىنى يېپىش</button><span class="mm-count" id="mmCount"></span></div>';
     h2+='<div class="mm-wrap">'+mmHTML(L.mindmap,0,true)+'</div>';
