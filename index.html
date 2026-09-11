@@ -658,6 +658,12 @@ function forceAppUpdate(){
 
 (function autoRepairLessonsCache(){
   try {
+    var CURRENT_VER = "v49_20260911_force_all";
+    var savedVer = localStorage.getItem("uytibb_app_ver");
+    if(savedVer !== CURRENT_VER){
+      localStorage.removeItem("uytibb_custom_lessons");
+      localStorage.setItem("uytibb_app_ver", CURRENT_VER);
+    }
     var raw = localStorage.getItem("uytibb_custom_lessons");
     if(raw){
       var parsed = JSON.parse(raw);
@@ -809,11 +815,11 @@ function renderLessonList(filter){
     if(filter && norm(L.title+" "+(L.desc||"")+" "+L.id).indexOf(norm(filter))<0) return;
     var p=s.lessons[L.id]||{};
     h+='<a class="lrow'+(p.read?" done":"")+'" href="#/lesson/'+L.id+'">'
-      +'<div class="lnum">'+(p.read?"✓":L.id)+'</div>'
+      +'<div class="lnum">'+L.id+'</div>'
       +'<div class="linfo"><b>'+L.id+'-دەرس: '+esc(L.title)+'</b><small>'+esc(L.desc||"")+'</small>'
       +'<div class="lmeta"><span class="badge">'+L.quiz.length+' سوئال</span>'
       +(p.best!=null?'<span class="badge '+(p.best>=60?"done":"")+'">%'+p.best+'</span>':"")
-      +(p.read?'<span class="badge done">ئوقۇلغان</span>':"")+'</div></div>'
+      +(p.read?'<span class="badge done">✓ ئوقۇلغان</span>':"")+'</div></div>'
       +'<span class="lgo">‹</span></a>';
   });
   $("llist").innerHTML = h||"<p style='text-align:center;color:var(--muted);padding:1.5rem'>ھېچقانداق دەرس تېپىلمىدى.</p>";
