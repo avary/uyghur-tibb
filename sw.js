@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v45-20260911_clean_11lessons_pdf_fix';
+const CACHE_NAME = 'uytibb-v46-20260911_lesson11_content_fix';
 const ASSETS = [
   './',
   './index.html',

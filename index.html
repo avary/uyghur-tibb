@@ -882,7 +882,9 @@ function renderTabBody(L){
   if(lessonTab==="content"){
     var h="";
     (L.sections||[]).forEach(function(s,i){
-      h+='<section class="sec" id="sec'+i+'"><h3>'+esc(s.h)+'<span class="hbtns"><button data-mark="s:'+L.id+':'+i+'" class="'+(isMarked('s',L.id,i)?'on':'')+'" title="بەلگە قويۇش">🔖</button></span></h3>'+(s.body||"");
+      var secTitle = s.h || s.title || ((i+1) + "-بۆلۈم");
+      var secBody = s.body || (s.content ? ("<p>" + esc(s.content) + "</p>") : "");
+      h+='<section class="sec" id="sec'+i+'"><h3>'+esc(secTitle)+'<span class="hbtns"><button data-mark="s:'+L.id+':'+i+'" class="'+(isMarked('s',L.id,i)?'on':'')+'" title="بەلگە قويۇش">🔖</button></span></h3>'+secBody;
       if(s.points&&s.points.length){ h+='<div class="keybox"><b class="t">📌 مۇھىم نۇقتىلار:</b><ul>'; s.points.forEach(function(p){h+='<li>'+p+'</li>';}); h+='</ul></div>'; }
       h+='</section>';
     });
