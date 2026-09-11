@@ -2707,48 +2707,48 @@ function deleteStudent(phone, name, idx){
   var pStr = String(phone||"").trim();
   var nStr = String(name||"").trim();
 
-  if(pStr && pStr !== "undefined") markPhoneDeleted(pStr);
-  if(nStr && nStr !== "undefined") markNameDeleted(nStr);
+  // Only mark by phone (safe), name-based deletion caused mass delete bug
+  if(pStr && pStr !== "undefined" && pStr.length > 2) markPhoneDeleted(pStr);
 
   var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
   var target = null;
-  if(pStr && pStr !== "undefined"){
+  if(pStr && pStr !== "undefined" && pStr.length > 2){
     target = allSt.find(function(u){ return String(u.phone||"").trim() === pStr; });
-  }
-  if(!target && nStr && nStr !== "undefined"){
-    target = allSt.find(function(u){ return String(u.name||"").trim() === nStr; });
   }
 
   var nameStr = target ? (target.name || target.phone || nStr || pStr) : (nStr || pStr || "ئوقۇغۇچى");
 
-  allSt = allSt.filter(function(u, i){
+  // SAFE: only remove by phone match (never by name to avoid mass deletion)
+  allSt = allSt.filter(function(u){
     if(target && u === target) return false;
     var up = String(u.phone||"").trim();
-    var un = String(u.name||"").trim();
-    if(pStr && pStr !== "undefined" && up && up === pStr) return false;
-    if(nStr && nStr !== "undefined" && un && un === nStr) return false;
+    if(pStr && pStr !== "undefined" && pStr.length > 2 && up === pStr) return false;
     return true;
   });
   localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
 
+  // Update server status to rejected
+  if(pStr && pStr !== "undefined" && pStr.length > 2){
+    fetch("/api/students", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({action: "update_status", phone: pStr, status: "rejected"})
+    }).catch(function(){});
+    if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+      try { Supabase.updateStudentStatus(pStr, "rejected"); } catch(e){}
+    }
+  }
+
   var prog = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
   if(prog.user){
     var pup = String(prog.user.phone||"").trim();
-    var pun = String(prog.user.name||"").trim();
-    if((pStr && pStr !== "undefined" && pup === pStr) || (nStr && nStr !== "undefined" && pun === nStr)){
+    if(pStr && pStr !== "undefined" && pStr.length > 2 && pup === pStr){
       delete prog.user;
       localStorage.setItem("uytibb_v1", JSON.stringify(prog));
     }
   }
-  if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-    var realPhone = (target && target.phone) || (pStr !== "undefined" ? pStr : "");
-    if(realPhone){
-      try { Supabase.deleteStudent(realPhone); } catch(e){}
-      try { Supabase.updateStudentStatus(realPhone, "rejected"); } catch(e){}
-    }
-  }
   renderStudentsTableOnly();
-  showToast("🗑️ «" + nameStr + "» نىڭ ئۇچۇرى رەت قىلىندى / ئۆچۈرۈلدى.");
+  showToast("🗑️ «" + nameStr + "» نىڭ ئۇچۇرى رەت قىلىندى.");
 }
 
 document.getElementById("exportStudentsBtn").onclick = function(){
