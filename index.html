@@ -1314,8 +1314,25 @@ function submitExam(auto){
   if(!examState||examState.submitted) return;
   examState.submitted=true; clearInterval(timerInt);
   var tot=0, got=0, nw=0, byLid={}, clearedCount=0;
+  var userResults=[];
   examState.pool.forEach(function(it,i){
+    var exBox=$("q_ex_"+i);
+    var uAns=null;
+    if(exBox){
+      if(it.q.type==="choice"||it.q.type==="tf"){
+        var sel=exBox.querySelector('input[name="r_ex_'+i+'"]:checked');
+        if(sel) uAns=parseInt(sel.value,10);
+      } else if(it.q.type==="blank"){
+        uAns=[].map.call(exBox.querySelectorAll(".blank-inp"),function(inp){ return inp.value; });
+      } else if(it.q.type==="match"){
+        uAns=[].map.call(exBox.querySelectorAll("select"),function(sel){ return sel.value; });
+      } else if(it.q.type==="essay"){
+        var ta=exBox.querySelector("textarea");
+        if(ta) uAns=ta.value;
+      }
+    }
     var r=checkQuestion(it.q, "ex_"+i);
+    userResults[i]={ans:uAns, r:r};
     tot+=r.max; got+=r.score;
     if(r.max>0){
       byLid[it.lid]=byLid[it.lid]||[0,0];
@@ -1380,20 +1397,57 @@ function submitExam(auto){
   examState.pool.forEach(function(it,i){
     var box=$("q_rv_"+i); if(!box) return;
     box.classList.add("checked");
+    var ur=userResults[i];
     var q=it.q;
+    var isPass = (ur.r.score >= ur.r.max && ur.r.max > 0);
+    box.classList.add(isPass ? "correct" : "wrong");
+
     if(q.type==="choice"||q.type==="tf"){
       var correct=q.type==="choice"?q.a:(q.a?1:0);
-      var lb=box.querySelector('label[data-i="'+correct+'"]'); if(lb) lb.classList.add("opt-ok");
+      if(ur.ans !== null && ur.ans !== undefined){
+        var selRadio=box.querySelector('input[name="r_rv_'+i+'"][value="'+ur.ans+'"]');
+        if(selRadio) selRadio.checked = true;
+      }
+      box.querySelectorAll("label").forEach(function(lb){
+        var lval=parseInt(lb.getAttribute("data-i"),10);
+        if(lval===correct) lb.classList.add("opt-ok");
+        if(ur.ans !== null && ur.ans !== undefined && lval===ur.ans && lval!==correct) lb.classList.add("opt-bad");
+      });
     } else if(q.type==="blank"){
+      var inps=box.querySelectorAll(".blank-inp");
+      if(Array.isArray(ur.ans)){
+        inps.forEach(function(inp, bi){
+          inp.value = ur.ans[bi] || "";
+          var acc = q.a[bi]; if(!Array.isArray(acc)) acc = [acc];
+          var good = false;
+          for(var k = 0; k < acc.length; k++){ if(norm(inp.value) === norm(acc[k]) && norm(inp.value) !== ""){ good = true; break; } }
+          inp.classList.add(good ? "ok" : "bad");
+        });
+      }
       var exp=box.querySelector(".exp");
       if(exp){ var ca=q.a.map(function(a){return Array.isArray(a)?a[0]:a;}).join("، "); exp.innerHTML="💡 <b>توغرا جاۋاب:</b> "+esc(ca)+(q.exp?("<br>📝 "+esc(q.exp)):""); }
     } else if(q.type==="match"){
-      box.querySelectorAll(".mrow").forEach(function(r){
-        var idx=parseInt(r.getAttribute("data-i"),10);
-        var sel=r.querySelector("select"); sel.value=String(idx);
-        r.classList.add("ok");
-      });
-    } else if(q.type==="essay"){ var md=box.querySelector(".model"); if(md) md.classList.add("show"); }
+      var rows=box.querySelectorAll(".mrow");
+      if(Array.isArray(ur.ans)){
+        rows.forEach(function(rRow, ri){
+          var sel=rRow.querySelector("select");
+          if(sel){
+            sel.value = ur.ans[ri] || "";
+            var correctIdx=parseInt(rRow.getAttribute("data-i"),10);
+            if(sel.value !== "" && parseInt(sel.value,10) === correctIdx){
+              rRow.classList.add("ok");
+            } else {
+              rRow.classList.add("bad");
+            }
+          }
+        });
+      }
+    } else if(q.type==="essay"){
+      var ta=box.querySelector("textarea");
+      if(ta && ur.ans !== null && ur.ans !== undefined) ta.value = ur.ans;
+      var md=box.querySelector(".model");
+      if(md) md.classList.add("show");
+    }
     box.querySelectorAll("input,select,textarea,button").forEach(function(el){ el.disabled=true; });
   });
   window.scrollTo(0,0);
@@ -2085,6 +2139,45 @@ function router(){
     if(_br) _br.onclick = function(){ var rndL = LESSONS[Math.floor(Math.random()*LESSONS.length)]; location.hash = "#/lesson/" + rndL.id + "/quiz"; };
     var brst = $("btnReset");
     if(brst) brst.onclick = function(){ if(confirm("بارلىق نەتىجىلەر ئۆچۈرۈلسۇنمۇ؟")){ saveProg({lessons:{},exams:[]}); router(); } };
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 7a. Wrong Questions List
+  if(hash === "#/wrong"){
+    main.innerHTML = vWrong();
+    bindWrong();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 7b. Wrong Questions Review Practice
+  if(hash === "#/wrong/review"){
+    main.innerHTML = vReview();
+    bindReview();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 7c. Saved Marks
+  if(hash === "#/marks"){
+    main.innerHTML = vMarks();
+    bindMarks();
+    renderNav();
+    window.scrollTo(0,0);
+    var tb = $("topbtn"); if(tb) tb.style.display = "none";
+    return;
+  }
+
+  // 7d. Learning Analysis (Tehlil)
+  if(hash === "#/tehlil"){
+    main.innerHTML = vTehlil();
     renderNav();
     window.scrollTo(0,0);
     var tb = $("topbtn"); if(tb) tb.style.display = "none";

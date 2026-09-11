@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v50-20260911_5exam_features_fix';
+const CACHE_NAME = 'uytibb-v51-20260911_wrong_routes_and_l11_terms';
 const ASSETS = [
   './',
   './index.html',
