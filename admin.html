@@ -537,12 +537,6 @@ table.data-table tr:hover { background: var(--teal-light); }
       <button type="button" onclick="directAdminInstall()" id="adminInstallBtn" class="btn btn-gold btn-sm" style="width:100%;justify-content:center;cursor:pointer;font-weight:bold;color:#2e2200;display:flex;align-items:center;gap:.4rem;padding:.6rem">
         <span>📲</span> باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)
       </button>
-      <button type="button" onclick="downloadAdminShortcut()" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.5rem">
-        <span>🖥️</span> كومپىيوتېر ئۈستەل يۈزى قىسقا يولى (.url)
-      </button>
-      <button type="button" onclick="downloadAdminOfflineHTML()" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.5rem">
-        <span>💾</span> تورسىز باشقۇرۇش ھۆججىتى (Offline HTML)
-      </button>
     </div>
   </div>
 </div>
@@ -607,15 +601,12 @@ table.data-table tr:hover { background: var(--teal-light); }
           <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">🚀 باشقۇرۇش ئەپىنى كۆپىيوتېر ۋە تېلېفونغا قاچىلاش</h3>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:.8rem">
             <button class="btn btn-gold" onclick="directAdminInstall()" style="font-weight:bold;color:#2e2200">📲 باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)</button>
-            <button class="btn btn-line" onclick="downloadAdminShortcut()" style="font-weight:bold">🖥️ كومپىيوتېر ئۈستەل يۈزى قىسقا يولى (.url)</button>
-            <button class="btn btn-line" onclick="downloadAdminOfflineHTML()" style="font-weight:bold">💾 تورسىز باشقۇرۇش ھۆججىتى (Offline HTML)</button>
           </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap">
             <button class="btn btn-teal" onclick="switchTab('lessons')">📄 بارلىق دەرسلەرنىڭ PDF سىنى باشقۇرۇش</button>
             <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
             <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
             <button class="btn btn-line" onclick="openAddQuestionModal()">➕ يېڭى سىناق سوئالى قوشۇش</button>
-            <button class="btn btn-teal" onclick="forceResetDefaultData()" style="font-weight:bold;background:#0a5c52">🔄 بارلىق دەرس ۋە سوئاللارنى ئەسلىگە قايتۇرۇش</button>
           </div>
         </div>
 
@@ -970,7 +961,6 @@ table.data-table tr:hover { background: var(--teal-light); }
               📂 JSON دىن ئەسلىگە كەلتۈرۈش
               <input type="file" id="restoreJsonInput" accept=".json" style="display:none">
             </label>
-            <button class="btn btn-red btn-sm" id="resetDefaultsBtn">⚠️ ئەسلى زاۋۇت ھالىتىگە قايتۇرۇش</button>
           </div>
         </div>
 
@@ -1389,9 +1379,7 @@ function doAdminLogin(){
     var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
 
     var matched = null;
-    if(passVal === "tibb2026"){
-      matched = { username: "admin", name: curSavedName, role: "super" };
-    } else if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
+    if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
       if(passVal === curSavedPass){
         matched = { username: "admin", name: curSavedName, role: "super" };
       }
@@ -3173,7 +3161,6 @@ function directAdminInstall(){
     });
   } else {
     _adminPendingInstall = true;
-    if(typeof showToast === "function") showToast("📲 قاچىلاش سىستېمىسى تەييارلىنىۋاتىدۇ، بىر پەس كۈتۈڭ...");
     var waited = 0;
     var timer = setInterval(function(){
       waited += 150;
@@ -3189,14 +3176,12 @@ function directAdminInstall(){
           }
           _adminDeferredPrompt = null;
         });
-      } else if(waited >= 3000){
+      } else if(waited >= 1200){
         clearInterval(timer);
         _adminPendingInstall = false;
         var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
         if(isIOS){
           if(typeof showToast === "function") showToast("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش»نى بېسىڭ");
-        } else {
-          if(typeof showToast === "function") showToast("📲 قاچىلاش كۆزنىكى تېلېفونىڭىزغا يوللاندى");
         }
       }
     }, 150);
@@ -3205,35 +3190,6 @@ function directAdminInstall(){
 if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
   var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
   var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
-}
-function downloadAdminShortcut(){
-  var url = location.href.split("#")[0];
-  var shortcutContent = "[InternetShortcut]\r\nURL=" + url + "\r\nIconIndex=0\r\n";
-  var blob = new Blob([shortcutContent], {type: "application/internet-shortcut"});
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ئۇيغۇر_تېبابىتى_باشقۇرۇش.url";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  if(typeof showToast === "function") showToast("🖥️ باشقۇرۇش ئۈستەل يۈزى قىسقا يولى كومپىيوتېرىڭىزغا چۈشۈرۈلدى!");
-}
-function downloadAdminOfflineHTML(){
-  if(typeof showToast === "function") showToast("💾 تورسىز باشقۇرۇش ھۆججىتى تەييارلىنىۋاتىدۇ...");
-  fetch("./admin.html")
-    .then(function(r){ return r.text(); })
-    .then(function(html){
-      var blob = new Blob([html], {type: "text/html;charset=utf-8"});
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "uyghur_tibb_admin_offline.html";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      if(typeof showToast === "function") showToast("✅ تورسىز باشقۇرۇش تولۇق ھۆججىتى چۈشۈرۈلدى!");
-    }).catch(function(){
-      if(typeof showToast === "function") showToast("⚠️ ھۆججەتنى چۈشۈرۈشتە كاشىلا كۆرۈلدى.");
-    });
 }
 var triggerAdminInstall = directAdminInstall;
 </script>

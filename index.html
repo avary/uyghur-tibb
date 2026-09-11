@@ -597,7 +597,6 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
     <button class="aicon" id="viewModeBtn" title="كۆرۈنۈش ھالىتى (كومپىيوتېر / تېلېفون)">💻</button>
     
     <button class="aicon" id="themeBtn" title="كېچە / كۈندۈز ھالى">🌙</button>
-    <button class="aicon" id="refreshBtn" onclick="forceAppUpdate()" title="ئەپنى يېڭىلاش (كېش تازىلاش)">🔄</button>
     <button class="aicon" id="regBtn" title="تىزىملىتىش">📝</button>
   </div>
 </header>
@@ -1769,7 +1768,6 @@ function vWaitingApproval(user, status){
     + '</div>'
     + '<div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">'
     + '  <a href="#/" class="btn btn-gold btn-block" style="max-width:220px">🏠 باش بەتكە قايتىش</a>'
-    + '  <a href="#/books" class="btn btn-teal btn-block" style="max-width:220px">📚 PDF كىتابخانىسى</a>'
     + '</div>'
     + '</div>';
   return h;
@@ -2165,8 +2163,8 @@ function aiBuildIdx(){
     });
     (L.terms||[]).forEach(function(t){ D.push({t:t.t, x:t.t+" — "+t.d, lid:L.id, kind:"term"}); });
     (L.quiz||[]).forEach(function(q){
-      if(q.exp) D.push({t:q.q, x:q.q+" "+q.exp, lid:L.id, kind:"exp"});
-      if(q.type==="essay"&&q.model) D.push({t:q.q, x:q.q+" "+stripHTML(q.model), lid:L.id, kind:"model"});
+      if(q.exp) D.push({t:q.q, x:stripHTML(q.exp), lid:L.id, kind:"exp"});
+      if(q.type==="essay"&&q.model) D.push({t:q.q, x:stripHTML(q.model), lid:L.id, kind:"model"});
     });
   });
   TEACHERS.forEach(function(t,i){
