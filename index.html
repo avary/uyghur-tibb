@@ -823,24 +823,28 @@ function vMe(){
   var s=getProg(), done=readCount(), sum=0, n=0;
   LESSONS.forEach(function(L){ var p=s.lessons[L.id]||{}; if(p.best!=null){sum+=p.best;n++;} });
   var avg=n?Math.round(sum/n):0;
-  var h='<h2 class="pagettl">👤 مېنىڭ ئۆگىنىشىم</h2>';
+  var h='<h2 class="pagettl">👤 مېنىڭ ئۆگىنىشىم (ھېساباتىم)</h2>';
   h+='<div class="me-hero"><div>ئومۇمىي ئىلگىرىلەش</div><div class="big">%'+Math.round(done/LESSONS.length*100)+'</div>'
     +'<div>'+done+'/'+LESSONS.length+' دەرس ئوقۇلغان • مەشىق ئوتتۇرىچە: %'+avg+' • سىناق: '+s.exams.length+'</div></div>';
-  if(s.user && s.user.name && s.user.name !== "ئاساسىي باشقۇرغۇچى" && s.user.phone !== "admin" && s.user.name.indexOf("باشقۇرغۇچى") === -1) h+='<div class="me-row"><span class="n">👤</span><div class="inf"><b>'+esc(s.user.name)+'</b><br><small>📞 '+esc(s.user.phone)+'</small></div></div>';
+
+  if(s.user && s.user.name && s.user.name !== "ئاساسىي باشقۇرغۇچى" && s.user.phone !== "admin" && s.user.name.indexOf("باشقۇرغۇچى") === -1){
+    h+='<div class="me-row"><span class="n">👤</span><div class="inf"><b>'+esc(s.user.name)+'</b><br><small>📞 '+esc(s.user.phone)+'</small></div><button class="btn btn-line btn-sm" onclick="showRegModal(\'edit\', true)">✏️ ئۇچۇر ئۆزگەرتىش</button></div>';
+  }
+
   h+='<div class="me-row"><span class="n">🔥</span><div class="inf"><b>داۋاملاشتۇرۇش: '+s.streak.n+' كۈن</b><br><small>ئەڭ ئۇزۇن: '+s.streak.best+' كۈن • ھەر كۈنى كىرىپ داۋاملاشتۇرۇڭ!</small></div></div>';
-  h+='<div class="me-row"><span class="n">📊</span><div class="inf"><b>ئۆگىنىش تەھلىلى</b><br><small>ئاجىز نۇقتىلىرىڭىز ۋە تەكلىپلەر</small></div><a class="btn btn-teal btn-sm" href="#/tehlil">كۆرۈش</a></div>';
+  h+='<div class="me-row"><span class="n">📊</span><div class="inf"><b>ئۆگىنىش تەھلىلى</b><br><small>ئاجىز نۇقتىلىرىڭىز ۋە تەكلىپلەر</small></div><a class="btn btn-teal btn-sm" href="#/tehlil">كۆرۈش ↗</a></div>';
   h+='<div class="secttl">🏆 مۇكاپاتلىرىم ('+s.badges.length+'/'+BADGES.length+')</div><div class="bgrid">';
   BADGES.forEach(function(b){ var has=s.badges.indexOf(b.id)>=0; h+='<div class="badge2'+(has?"":" locked")+'"><span>'+b.ic+'</span><b>'+esc(b.t)+'</b><small>'+esc(b.d)+'</small></div>'; });
   h+='</div>';
   h+='<div class="secttl">⭐ توپلاملىرىم</div>';
-  h+='<div class="me-row"><span class="n">⭐</span><div class="inf"><b>خاتا سوئاللار ('+s.wrong.length+')</b><br><small>خاتالىرىڭىزنى قايتا مەشىق قىلىڭ</small></div><a class="btn btn-line btn-sm" href="#/wrong">كۆرۈش</a></div>';
-  h+='<div class="me-row"><span class="n">🔖</span><div class="inf"><b>بەلگىلىرىم ('+s.marks.length+')</b><br><small>ساقلاپ قويغان مەزمۇنلار</small></div><a class="btn btn-line btn-sm" href="#/marks">كۆرۈش</a></div>';
-  h+='<div class="secttl">📊 ھەر دەرسنىڭ ئەھۋالى</div>';
+  h+='<div class="me-row"><span class="n">⭐</span><div class="inf"><b>خاتا سوئاللار ('+s.wrong.length+')</b><br><small>خاتالىرىڭىزنى قايتا مەشىق قىلىڭ</small></div><a class="btn btn-line btn-sm" href="#/wrong">كۆرۈش ↗</a></div>';
+  h+='<div class="me-row"><span class="n">🔖</span><div class="inf"><b>بەلگىلىرىم ('+s.marks.length+')</b><br><small>ساقلاپ قويغان مەزمۇنلار</small></div><a class="btn btn-line btn-sm" href="#/marks">كۆرۈش ↗</a></div>';
+  h+='<div class="secttl">📊 ھەر بىر دەرسنىڭ ئۆگىنىلىش ئىلگىرىلىشى</div>';
   LESSONS.forEach(function(L){
     var p=s.lessons[L.id]||{};
-    h+='<div class="me-row"><span class="n">'+L.id+'</span><div class="inf"><b>'+esc(L.short||L.title)+'</b><br><small>'
+    h+='<div class="me-row"><span class="n">'+L.id+'</span><div class="inf"><a href="#/lesson/'+L.id+'" style="color:var(--teal-dark);text-decoration:none;font-weight:bold"><b>'+esc(L.short||L.title)+'</b></a><br><small>'
       +(p.read?"✓ ئوقۇلغان":"○ ئوقۇلمىغان")+' • '+(p.best!=null?("ئەڭ يۇقىرى: %"+p.best):"مەشىق ئىشلەنمىگەن")+'</small></div>'
-      +'<a class="btn btn-line btn-sm" href="#/lesson/'+L.id+'/quiz">مەشىق</a></div>';
+      +'<div style="display:flex;gap:.3rem;flex-wrap:wrap"><a class="btn btn-teal btn-sm" href="#/lesson/'+L.id+'" style="padding:.25rem .55rem">📖 ئوقۇش</a><a class="btn btn-line btn-sm" href="#/lesson/'+L.id+'/quiz" style="padding:.25rem .55rem">✍️ مەشىق</a></div></div>';
   });
   if(s.exams.length){
     h+='<div class="secttl">📝 سىناق تارىخىم</div><div class="tblwrap"><table class="hist"><tr><th>ۋاقىت</th><th>دائىرە</th><th>سوئال</th><th>نەتىجە</th></tr>';
@@ -849,8 +853,8 @@ function vMe(){
     });
     h+='</table></div>';
   }
-  h+='<div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">'
-    +'<button class="btn btn-line" id="btnReset">🗑️ نەتىجىلەرنى تازىلاش</button></div>';
+  h+='<div style="margin-top:1.2rem;display:flex;gap:.5rem;flex-wrap:wrap">'
+    +'<button class="btn btn-line" id="btnReset">🗑️ بارلىق ئۆگىنىش نەتىجىلىرىنى تازىلاش</button></div>';
   return h;
 }
 
