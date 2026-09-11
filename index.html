@@ -1816,11 +1816,11 @@ function router(){
   var _isBooks = (hash === "#/books" || hash === "#/pdf");
 
   // If user is not registered at all → show register form for all protected routes
-  if(!_u && !_isHome && !_isTeachers && !_isInstall && !_isBooks){
+  if(!_u && !_isHome && !_isTeachers && !_isInstall){
     main.innerHTML = '<div style="padding:2rem 1rem;max-width:480px;margin:2rem auto;text-align:center">'
       + '<div style="font-size:3rem;margin-bottom:.8rem">📚</div>'
       + '<h3 style="color:var(--teal-dark);margin:0 0 .5rem">كىرىش تەلەپ قىلىنىدۇ</h3>'
-      + '<p style="color:var(--muted);line-height:1.8;margin:0 0 1.2rem">بۇ بەتنى كۆرۈش ئۈچۈن ئالدى بىلەن تىزىملىتىشىڭىز كېرەك.</p>'
+      + '<p style="color:var(--muted);line-height:1.8;margin:0 0 1.2rem">PDF كۇتۇپخانىسىنى كۆرۈش ئۈچۈن ئالدى بىلەن تىزىملىتىشىڭىز كېرەك.</p>'
       + '<button class="btn btn-gold btn-block" onclick="showRegModal(\'reg\',true)" style="max-width:280px;margin:0 auto">📝 تىزىملىتىش</button>'
       + '<div style="margin-top:.8rem"><a href="#/" style="color:var(--muted);font-size:.9rem">‹ باش بەتكە قايتىش</a></div>'
       + '</div>';
@@ -1829,7 +1829,7 @@ function router(){
   }
 
   // If user is registered but not approved → show waiting page for all protected routes
-  if(_u && _u.status !== "approved" && !_isHome && !_isTeachers && !_isInstall && !_isBooks){
+  if(_u && _u.status !== "approved" && !_isHome && !_isTeachers && !_isInstall){
     main.innerHTML = vWaitingApproval(_u, _u.status);
     renderNav();
     startApprovalPoll();
@@ -3009,16 +3009,28 @@ function vInstall(){
   h+='  </div>';
   h+='</div>';
 
-  // Card 3: Link sharing
+  // Card 3: PDF LIBRARY APP (Standalone Books PWA)
+  h+='<div class="card" style="background:var(--card);border:2px solid #3b82f6;border-radius:18px;padding:1.5rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.4rem;text-align:center">';
+  h+='  <div style="margin-bottom:.8rem;font-size:3.5rem">📖</div>';
+  h+='  <span class="badge" style="background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;font-size:.85rem;margin-bottom:.4rem;padding:.2rem .8rem">📚 3. PDF كۇتۇپخانىسى ئەپى (PWA)</span>';
+  h+='  <h3 style="margin:.4rem 0 .5rem;color:var(--teal-dark);font-size:1.3rem">PDF كۇتۇپخانىسى ئەپى</h3>';
+  h+='  <p style="color:var(--muted);font-size:.9rem;line-height:1.6;margin-bottom:1.1rem">11 دەرسلىك ئەسلى PDF كىتابلىرىنى ئايرىم مۇستەقىل ئەپ قىلىپ چۈشۈرۈش ۋە ئوقۇش مەركىزى.</p>';
+  h+='  <div style="display:flex;flex-direction:column;gap:.6rem">';
+  h+='    <a href="./books.html" class="btn btn-teal btn-block" style="font-size:1.02rem;font-weight:bold;padding:.8rem">📲 PDF كۇتۇپخانىسى ئەپىنى ئېچىش ۋە قاچىلاش (PWA)</a>';
+  h+='    <button class="btn btn-line btn-block" id="btnBooksShortcut" style="font-size:.9rem;padding:.65rem">🖥️ كۇتۇپخانا ئەپىنىڭ ئۈستەل يۈزى قىسقا يولى (.url)</button>';
+  h+='  </div>';
+  h+='</div>';
+
+  // Card 4: Link sharing
   h+='<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1.1rem;box-shadow:var(--shadow);margin-bottom:1.2rem;text-align:center">';
   h+='  <button class="btn btn-line btn-block" id="copyLink" style="font-size:.95rem;padding:.75rem">🔗 ئەپ ئۇلانمىسىنى كۆچۈرۈش</button>';
   h+='</div>';
 
-  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> يۇقىرىدىكى ئىككى ئەپ پۈتۈنلەي ئايرىم سىستېما بولۇپ، ئۆگىنىش ئەپى ۋە باشقۇرۇش مەركىزىنى ئايرىم-ئايرىم قاچىلىسىڭىز، تېلېفون ياكى كومپىيوتېرىڭىزنىڭ باش ئېكرانىدا ئۆز ئالدىغا ئايرىم سىنبەلگە بىلەن تۇرىدۇ.</div>';
+  h+='<div class="keybox"><b class="t">📌 ئەسكەرتىش:</b> يۇقىرىدىكى ئەپلەر ئايرىم سىستېما بولۇپ، ئۆگىنىش ئەپى، باشقۇرۇش مەركىزى ۋە PDF كۇتۇپخانىسىنى ئايرىم-ئايرىم قاچىلىسىڭىز، تېلېفون ياكى كومپىيوتېرىڭىزنىڭ باش ئېكرانىدا ئۆز ئالدىغا ئايرىم سىنبەلگە بىلەن تۇرىدۇ.</div>';
   return h;
 }
 function bindInstall(){
-  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline"), as=$("btnAdminShortcut"), ao=$("btnAdminOffline");
+  var b=$("btnPWA"), st=$("pwaState"), cp=$("copyLink"), ds=$("btnDesktopShortcut"), dof=$("btnDownloadOffline"), as=$("btnAdminShortcut"), ao=$("btnAdminOffline"), bs=$("btnBooksShortcut");
   if(st){
     if(pwaStandalone()){ st.style.display="block"; st.innerHTML="✅ بۇ ئەپ ئاللىقاچان قاچىلانغان — باش ئېكراندىكى سىنبەلگىدىن كىرىڭ!"; }
   }
@@ -3035,6 +3047,12 @@ function bindInstall(){
     as.onclick=function(){
       var base=location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
       downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_باشقۇرۇش", base + "admin.html");
+    };
+  }
+  if(bs){
+    bs.onclick=function(){
+      var base=location.origin + location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+      downloadDesktopShortcut("ئۇيغۇر_تېبابىتى_PDF_كۇتۇپخانىسى", base + "books.html");
     };
   }
   if(ao){

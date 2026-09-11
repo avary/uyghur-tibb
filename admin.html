@@ -570,6 +570,7 @@ table.data-table tr:hover { background: var(--teal-light); }
       </button>
       <button class="nav-item active" data-tab="dash"><span class="icon">📊</span> باش تاختا</button>
       <button class="nav-item" data-tab="lessons"><span class="icon">📚</span> دەرس ۋە PDF تەھرىرلىگۈچ</button>
+      <button class="nav-item" data-tab="pdfbooks"><span class="icon">📖</span> PDF كۇتۇپخانىسى</button>
       <button class="nav-item" data-tab="quiz"><span class="icon">✍️</span> سوئال ئامبىرى</button>
       <button class="nav-item" data-tab="teachers"><span class="icon">👨‍🏫</span> ئۇستازلار قامۇسى</button>
       <button class="nav-item" data-tab="students"><span class="icon">👥</span> ئوقۇغۇچىلار ۋە تەستىقلاش <span id="pendingBadgeSide" class="badge badge-gold" style="display:none;margin-right:.4rem">0</span></button>
@@ -973,6 +974,34 @@ table.data-table tr:hover { background: var(--teal-light); }
           </div>
         </div>
 
+        </section>
+
+        <!-- TAB: PDF BOOKS LIBRARY -->
+        <section class="panel" id="p-pdfbooks">
+          <div class="panel-title">
+            <span>📖 PDF كۇتۇپخانىسى باشقۇرۇش مەركىزى</span>
+            <a href="books.html" target="_blank" class="btn btn-gold btn-sm" style="font-weight:bold;text-decoration:none">🔗 PDF كۇتۇپخانىسىنى ئېچىش ↗</a>
+          </div>
+
+          <div class="card">
+            <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">📚 بارلىق دەرسلىك PDF كىتابلىرى (11 دەرس)</h3>
+            <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">بۇ يەردىن بارلىق دەرسلىكلەرنىڭ PDF كىتابلىرىنىڭ ھالىتىنى تەكشۈرەلەيسىز، ئالدىن كۆرەلەيسىز ياكى تەھرىرلەش بېتىگە ئۆتەلەيسىز.</p>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:60px">ID</th>
+                    <th>دەرس تېمىسى</th>
+                    <th>PDF كىتاب نامى</th>
+                    <th>PDF ئادرېسى / نۇسخىسى</th>
+                    <th>ھالىتى</th>
+                    <th style="width:220px">مەشغۇلات</th>
+                  </tr>
+                </thead>
+                <tbody id="adminPdfBooksTbody"></tbody>
+              </table>
+            </div>
+          </div>
         </section>
 
     </main>
@@ -1410,6 +1439,35 @@ document.getElementById("logoutBtn").onclick = function(){
 };
 
 /* 3. TAB SWITCHING */
+function renderAdminPdfBooksTable(){
+  var tbody = document.getElementById("adminPdfBooksTbody");
+  if(!tbody) return;
+  var lessons = LESSONS_DATA || [];
+  var h = "";
+  lessons.forEach(function(L){
+    var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
+    var hasPdf = !!(L.pdfData || L.pdfUrl);
+    h += '<tr>'
+      + '<td><b>' + L.id + '</b></td>'
+      + '<td>' + (L.title || "") + '</td>'
+      + '<td>' + (pTitle) + '</td>'
+      + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + (pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
+      + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 PDF تەييار</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
+      + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
+      + '  <a class="btn btn-teal btn-sm" href="' + pUrl + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
+      + '  <button class="btn btn-line btn-sm" onclick="editLessonPdfDirect(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = h;
+}
+function editLessonPdfDirect(lid){
+  switchTab("lessons");
+  var sel = document.getElementById("lessonSelect");
+  if(sel){ sel.value = lid; onLessonSelectChange(); }
+}
+
 function switchTab(tabId){
   document.querySelectorAll(".nav-item").forEach(function(b){
     b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
@@ -1420,6 +1478,7 @@ function switchTab(tabId){
   if(tabId === "feedback") renderFeedbackTable();
   if(tabId === "students") loadStudentData();
   if(tabId === "settings"){ renderAdminsTable(); initPasswordChangeUI(); }
+  if(tabId === "pdfbooks") renderAdminPdfBooksTable();
 }
 document.querySelectorAll(".nav-item[data-tab]").forEach(function(b){
   b.onclick = function(){ switchTab(this.getAttribute("data-tab")); };
@@ -1528,6 +1587,7 @@ function initAdmin(){
   try { loadStudentData(); } catch(e){ console.error("loadStudentData error:", e); }
   try { renderFeedbackTable(); } catch(e){ console.error("renderFeedbackTable error:", e); }
   try { renderAdminsTable(); } catch(e){ console.error("renderAdminsTable error:", e); }
+  try { renderAdminPdfBooksTable(); } catch(e){ console.error("renderAdminPdfBooksTable error:", e); }
   try { initPasswordChangeUI(); } catch(e){ console.error("initPasswordChangeUI error:", e); }
 }
 
@@ -1535,6 +1595,7 @@ function saveAllCustomData(){
   localStorage.setItem("uytibb_custom_lessons", JSON.stringify(LESSONS_DATA));
   localStorage.setItem("uytibb_custom_teachers", JSON.stringify(TEACHERS_DATA));
   updateDashboardStats();
+  try { renderAdminPdfBooksTable(); } catch(e){}
   showToast("✅ بارلىق ئۆزگىرىشلەر ساقلاندى!");
 }
 document.getElementById("quickSaveBtn").onclick = saveAllCustomData;

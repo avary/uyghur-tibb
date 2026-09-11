@@ -1,0 +1,30 @@
+{
+  "name": "ئۇيغۇر تېبابىتى — PDF كۇتۇپخانىسى",
+  "short_name": "PDF كۇتۇپخانىسى",
+  "description": "«ئۇيغۇر تېبابىتى» دەرسلىك ئەسلى PDF كىتابلىرى كۇتۇپخانىسى — 11 دەرسلىك كىتابلىرى",
+  "start_url": "./books.html",
+  "scope": "./",
+  "id": "/books.html",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#071916",
+  "theme_color": "#0a5c52",
+  "dir": "rtl",
+  "lang": "ug",
+  "categories": ["education", "books"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

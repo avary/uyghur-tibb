@@ -1,10 +1,12 @@
-const CACHE_NAME = 'uytibb-v40-20260911_admin_download_books_cleanup';
+const CACHE_NAME = 'uytibb-v41-20260911_pdf_books_pwa_admin';
 const ASSETS = [
   './',
   './index.html',
   './admin.html',
+  './books.html',
   './manifest.webmanifest',
   './admin.webmanifest',
+  './books.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-192.png',
@@ -47,7 +49,7 @@ self.addEventListener('fetch', (event) => {
 
   // 1. Navigation / Document: NETWORK-FIRST (revalidate with server)
   const isNav = event.request.mode === 'navigate' || event.request.destination === 'document'
-    || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html');
+    || url.pathname === '/' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/admin.html') || url.pathname.endsWith('/books.html');
   if (isNav) {
     event.respondWith(
       fetch(event.request, { cache: 'no-cache' })

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ug">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 «ئۇيغۇر تېبابىتى» — PDF كۇتۇپخانىسى ئەپى</title>
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="manifest" href="books.webmanifest">
+<meta name="theme-color" content="#0a5c52">
+<!-- iOS Web App Standalone Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PDF كۇتۇپخانىسى">
+<script>
+var _booksDeferredPrompt = null;
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  _booksDeferredPrompt = e;
+  var btn = document.getElementById("booksInstallBtn");
+  if(btn) btn.style.display = "inline-flex";
+});
+if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
+  navigator.serviceWorker.register("./sw.js").then(function(reg){
+    reg.update();
+  }).catch(function(){});
+}
+function directBooksInstall(){
+  if(_booksDeferredPrompt){
+    _booksDeferredPrompt.prompt();
+    _booksDeferredPrompt.userChoice.then(function(choice){
+      if(choice && choice.outcome === 'accepted'){
+        alert("🎉 PDF كۇتۇپخانىسى ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+        var btn = document.getElementById("booksInstallBtn");
+        if(btn) btn.style.display = "none";
+      }
+      _booksDeferredPrompt = null;
+    });
+  } else {
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if(isIOS){
+      alert("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش» (Add to Home Screen) نى بېسىپ قاچىلاڭ.");
+    } else {
+      alert("📲 باش ئېكرانغا قوشۇش ئۈچۈن تور كۆرگۈچ تىزىملىكىدىن «ئەپنى قاچىلاش» ياكى «ئۈستەل يۈزىگە قوشۇش»نى بېسىڭ.");
+    }
+  }
+}
+function downloadBooksShortcut(){
+  var url = location.href.split("#")[0];
+  var shortcutContent = "[InternetShortcut]\r\nURL=" + url + "\r\nIconIndex=0\r\n";
+  var blob = new Blob([shortcutContent], {type: "application/internet-shortcut"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ئۇيغۇر_تېبابىتى_PDF_كۇتۇپخانىسى.url";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+<style>
+@font-face {
+  font-family: 'UKIJEkran';
+  src: url('data:application/font-woff;charset=utf-8;base64,...');
+}
+:root {
+  --teal: #0e7c6f;
+  --teal-dark: #0a5c52;
+  --teal-light: #e3f2ef;
+  --gold: #c9a227;
+  --gold-light: #faf3dd;
+  --ink: #1f2d2a;
+  --muted: #5e706c;
+  --line: #d8e4e1;
+  --bg: #f4f7f6;
+  --card: #ffffff;
+  --shadow: 0 4px 20px rgba(10,92,82,.08);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  font-family: "UKIJEkran", "Microsoft Uighur", "UKIJ Tuz", "Segoe UI", Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+a { color: var(--teal-dark); text-decoration: none; }
+.header {
+  background: linear-gradient(-90deg, #072a25, #0a5c52 60%, #12876f);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { display: flex; align-items: center; gap: .8rem; }
+.brand h1 { margin: 0; font-size: 1.2rem; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .65rem 1.2rem;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: .92rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+  text-decoration: none;
+}
+.btn-teal { background: var(--teal); color: #fff; }
+.btn-gold { background: var(--gold); color: #2e2200; }
+.btn-line { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.container { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem; }
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+}
+.book-card {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.badge {
+  display: inline-block;
+  padding: .2rem .6rem;
+  border-radius: 99px;
+  font-size: .8rem;
+  font-weight: bold;
+}
+@media(max-width: 600px) {
+  .header { padding: .75rem 1rem; }
+  .brand h1 { font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <span style="font-size:1.8rem">📖</span>
+    <h1>ئۇيغۇر تېبابىتى — PDF كۇتۇپخانىسى</h1>
+  </div>
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <button id="booksInstallBtn" onclick="directBooksInstall()" class="btn btn-gold" style="font-size:.85rem;padding:.4rem .8rem">📲 ئەپنى قاچىلاش</button>
+    <a href="index.html#/" class="btn btn-line" style="color:#fff;border-color:rgba(255,255,255,.3);font-size:.85rem;padding:.4rem .8rem">🌐 ئالدى بەتگە قايتىش</a>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Auth Gate script check -->
+  <div id="authGateNotice" style="display:none;background:#fef3c7;border:1.5px solid var(--gold);padding:1.2rem;border-radius:16px;text-align:center;margin-bottom:1.2rem">
+    <h3 style="margin:0 0 .4rem;color:#92400e">⚠️ كىرىش تەستىقلىنىشى تەلەپ قىلىنىدۇ</h3>
+    <p style="margin:0 0 .8rem;color:#78350f">PDF كۇتۇپخانىسىنى ئىشلىتىش ئۈچۈن ئالدى بىلەن «ئۇيغۇر تېبابىتى» ئۆگىنىش ئەپىگە تىزىملىتىپ، باشقۇرغۇچىنىڭ تەستىقىدىن ئۆتۈشىڭىز كېرەك.</p>
+    <a href="index.html#/books" class="btn btn-gold" style="font-weight:bold">📝 تىزىملىتىش / تەستىقنى تەكشۈرۈش</a>
+  </div>
+
+  <div class="card" style="background:linear-gradient(135deg,rgba(18,135,111,.12),rgba(201,162,39,.15));border:1.5px solid var(--gold);border-radius:18px;padding:1.4rem;margin-bottom:1.5rem;box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+      <div>
+        <h2 style="margin:0;font-size:1.4rem;color:var(--teal-dark)">📚 11 دەرسلىك ئەسلى PDF كىتابلىرى</h2>
+        <p style="margin:.3rem 0 0;font-size:.92rem;color:var(--ink);opacity:.9">ئۇيغۇر تېبابىتى ئەسلى دەرسلىكلىرى — تولۇق نۇسخىدا ئېچىڭ ياكى يانفۇنىڭىزغا چۈشۈرۈۋېلىڭ</p>
+      </div>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button onclick="directBooksInstall()" class="btn btn-gold">📲 PDF كۇتۇپخانىسى ئەپىنى قاچىلاش (PWA)</button>
+        <button onclick="downloadBooksShortcut()" class="btn btn-line">🖥️ ئۈستەل يۈزى قىسقا يولى (.url)</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1rem">
+    <input type="text" id="bookSearchInp" oninput="filterBooks()" placeholder="🔍 كىتاب نامى ياكى دەرس نۇمۇرى بويىچە ئىزدەش..." style="width:100%;padding:.8rem 1rem;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:1rem;background:#fff;color:var(--ink)">
+  </div>
+
+  <div class="book-grid" id="booksGrid"></div>
+</div>
+
+<script>
+var BOOKS_LESSONS = [
+  { id: 1, title: "1-دەرسلىك: ئۇيغۇر تېبابىتى ئاساسىي نەزەرىيىسى", subtitle: "ئۇيغۇر تېبابىتى ئاساسى نەزەرىيەسى (ئىسسىق، سوغۇق، قۇرۇق، نەملىك)" },
+  { id: 2, title: "2-دەرسلىك: ئادەم ئەزاسى تاشقى كۆرۈنۈش ئىلمى", subtitle: "ئادەم ئەناتومىيەسى ۋە تەبىئىي ئەزالار" },
+  { id: 3, title: "3-دەرسلىك: ئادەم ئەزاسى فىزىئولوگىيىسى", subtitle: "فىزىئولوگىيە ۋە خىلىتلار تەڭپۇڭلۇقى" },
+  { id: 4, title: "4-دەرسلىك: كېسەللىكلەر پاتولوگىيىسى", subtitle: "پاتولوگىيە ۋە مىجاز ئۆزگىرىشلىرى" },
+  { id: 5, title: "5-دەرسلىك: كېسەللىكلەر تەشخىس ئىلمى (تامۇر تەشخىسى)", subtitle: "تامۇر ۋە سۈيدۈك ئارقىلىق تەشخىس قىلىش" },
+  { id: 6, title: "6-دەرسلىك: ئۇيغۇر تېبابىتى داۋالاش ئاساسلىرى", subtitle: "پەرقلىق داۋالاش ۋە ئوزۇقلۇق بىلەن داۋالاش" },
+  { id: 7, title: "7-دەرسلىك: پىششىق دورىلار ئىلمى (مۇرەككەپ دورىلار)", subtitle: "ئىترىپىل، مەجۈن، شەربەت ۋە مۇرەككەپ نۇسخىلار" },
+  { id: 8, title: "8-دەرسلىك: كېسەللىكلەرنىڭ ئالدىنى ئېلىش ئىلمى", subtitle: "ساغلاملىقنى ئاسراش ۋە ئالتە زۆرۈر ئامىل" },
+  { id: 9, title: "9-دەرسلىك: ساقلىقنى ساقلاش ئىلمى (ھىپپوكرات ئاساسلىرى)", subtitle: "ھىپپوكرات ۋە جالىنوستىن قالغان تېبابەت تەبىئىتى" },
+  { id: 10, title: "10-دەرسلىك: خام دورىلار ئىلمى (تېبابەت ئۆسۈملۈكلىرى)", subtitle: "تەبىئىي ئۆسۈملۈك، ھايۋانات ۋە مەنبەلەر" },
+  { id: 11, title: "11-دەرسلىك: يۈرەك ۋە قان تامۇر كېسەللىكلىرى داۋالىنىشى", subtitle: "يۈرەك ۋە قان تامۇر كېسەللىكلىرىنى ئۇيغۇر تېبابىتىدە داۋالاش" }
+];
+
+function checkAuthApproved(){
+  try {
+    var raw = localStorage.getItem("uytibb_progress_v2");
+    if(raw){
+      var prog = JSON.parse(raw);
+      if(prog && prog.user && prog.user.status === "approved"){
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
+}
+
+function renderBooks(filter){
+  var grid = document.getElementById("booksGrid");
+  if(!grid) return;
+  var term = (filter || "").toLowerCase().trim();
+  var h = "";
+  BOOKS_LESSONS.forEach(function(L){
+    if(term && L.title.toLowerCase().indexOf(term) < 0 && L.subtitle.toLowerCase().indexOf(term) < 0 && (L.id + "").indexOf(term) < 0) return;
+    var pdfUrl = "pdf/lesson-" + L.id + ".pdf?v=20260909_original";
+    h += '<div class="book-card">'
+      + '<div>'
+      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'
+      + '    <span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">📄 ' + L.id + '-دەرس كىتابى</span>'
+      + '    <span style="font-size:1.8rem">📕</span>'
+      + '  </div>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.15rem;color:var(--teal-dark)">' + L.title + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">' + L.subtitle + '</p>'
+      + '</div>'
+      + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem">'
+      + '  <a class="btn btn-gold" href="' + pdfUrl + '" target="_blank" style="flex:1;font-size:.9rem">🚀 كىتابنى ئېچىش (PDF) ↗</a>'
+      + '</div>'
+      + '</div>';
+  });
+  if(!h) h = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted)">دەرسلىك كىتابى تېپىلمىدى.</div>';
+  grid.innerHTML = h;
+}
+
+function filterBooks(){
+  var inp = document.getElementById("bookSearchInp");
+  renderBooks(inp ? inp.value : "");
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  var approved = checkAuthApproved();
+  if(!approved){
+    var notice = document.getElementById("authGateNotice");
+    if(notice) notice.style.display = "block";
+  }
+  renderBooks("");
+});
+</script>
+</body>
+</html>
