@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(k !== "uytibb-v36-20260911_force_11l_572q"){
+      if(k !== "uytibb-v37-20260911_fix_lessons_overwrite"){
         caches.delete(k);
       }
     });
@@ -641,8 +641,8 @@ a.node.nlink.d1{color:#0f766e}a.node.nlink.d2{color:#1d4ed8}a.node.nlink.d3{colo
   }
 })();
 /* ===== ئەپ پروگراممىسى (تېلېفون ئۇسلۇبى) ===== */
-var LESSONS = [];
-var TEACHERS = [];
+var LESSONS = (window.DEFAULT_LESSONS || window.LESSONS || []).map(function(l){ return Object.assign({}, l); });
+var TEACHERS = (window.DEFAULT_TEACHERS || window.TEACHERS || []).map(function(t){ return Object.assign({}, t); });
 
 /* --- ساقلىنىش --- */
 var store = {
@@ -1972,7 +1972,8 @@ function loadCustomData(){
     }
   }catch(e){}
 
-  LESSONS = (window.LESSONS || []).map(function(l){ return Object.assign({}, l); });
+  var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
+  LESSONS = (defaultL || []).map(function(l){ return Object.assign({}, l); });
   (LESSONS || []).forEach(function(L, idx){
     var lid = L.id || (idx+1);
     if(!L.pdfUrl && !L.pdfData) L.pdfUrl = "pdf/lesson-" + lid + ".pdf?v=20260909_original";
@@ -1981,7 +1982,6 @@ function loadCustomData(){
 
   try {
     var raw = localStorage.getItem("uytibb_custom_lessons");
-    var defaultL = window.DEFAULT_LESSONS || window.LESSONS || [];
     if(raw){
       try {
         var custom = JSON.parse(raw);
@@ -1989,20 +1989,8 @@ function loadCustomData(){
         if(Array.isArray(custom)){
           custom.forEach(function(l){ if(l && l.quiz) totalQ += l.quiz.length; });
         }
-        if(!Array.isArray(custom) || custom.length < defaultL.length || totalQ < 500){
-          if(!Array.isArray(custom) || custom.length === 0 || totalQ < 300){
-            custom = JSON.parse(JSON.stringify(defaultL));
-          } else {
-            defaultL.forEach(function(def){
-              var ex = custom.find(function(x){ return x.id === def.id; });
-              if(!ex){
-                custom.push(JSON.parse(JSON.stringify(def)));
-              } else if(def.quiz && (!ex.quiz || ex.quiz.length < def.quiz.length)){
-                ex.quiz = JSON.parse(JSON.stringify(def.quiz));
-              }
-            });
-            custom.sort(function(a,b){ return (a.id||0) - (b.id||0); });
-          }
+        if(!Array.isArray(custom) || custom.length < defaultL.length || totalQ < 572){
+          custom = JSON.parse(JSON.stringify(defaultL));
           try { localStorage.setItem("uytibb_custom_lessons", JSON.stringify(custom)); } catch(e){}
         }
         if(Array.isArray(custom) && custom.length){
