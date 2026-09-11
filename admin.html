@@ -1012,21 +1012,29 @@ table.data-table tr:hover { background: var(--teal-light); }
       <button class="close-btn" onclick="closePdfAddModal()">✕</button>
     </div>
     <div class="inp-group">
-      <label>PDF كىتاب نامى (Title):</label>
-      <input type="text" id="newPdfTitleInp" class="inp" placeholder="مەسىلەن: 12-دەرسلىك: ئۇيغۇر تېبابىتى تېراپىيەسى">
+      <label>كىتاب تۈرى (مۇستەقىل كۇتۇپخانا / دەرسلىك):</label>
+      <select id="newPdfTypeSelect" class="inp">
+        <option value="extra" selected>📖 پەقەت كۇتۇپخانىغا قوشۇش (مۇستەقىل PDF كىتاب - دەرسلىككە تەسىر كۆرسەتمەيدۇ)</option>
+        <option value="lesson">📘 11 دەرسلىككە بىرىكتۈرۈپ يېڭى دەرس قىلىپ قوشۇش</option>
+      </select>
     </div>
     <div class="inp-group">
-      <label>قىسقا تېما ئىزاھاتى (Description):</label>
+      <label>PDF كىتاب نامى (Title):</label>
+      <input type="text" id="newPdfTitleInp" class="inp" placeholder="مەسىلەن: ئۇيغۇر تېبابىتى تېراپىيەسى قوللانمىسى">
+    </div>
+    <div class="inp-group">
+      <label>قىسقا ئىزاھاتى (Description):</label>
       <input type="text" id="newPdfDescInp" class="inp" placeholder="مەسىلەن: تېبابەت تەتقىقاتى ئەسلى PDF كىتابى">
     </div>
     <div class="inp-group">
-      <label>PDF ھۆججىتى تاللاش (.pdf):</label>
-      <input type="file" id="newPdfFileInput" class="inp" accept="application/pdf">
-      <small style="color:var(--muted)">تېلېفون ياكى كومپىيوتېرىڭىزدىن ھەر قانداق .pdf ھۆججەتنى تاللىسىڭىز بولىدۇ.</small>
+      <label>PDF URL / ھۆججەت ئادرېسى (تەۋسىيە قىلىنىدۇ):</label>
+      <input type="text" id="newPdfUrlInp" class="inp" placeholder="مەسىلەن: pdf/mybook.pdf ياكى https://...">
+      <small style="color:var(--muted)">تۈردىكى pdf/ قىسقۇچىغا قويۇلغان ھۆججەت نامىنى (مەسىلەن pdf/mybook.pdf) ياكى تور URL نى كىرگۈزۈڭ.</small>
     </div>
     <div class="inp-group">
-      <label>ياكى PDF URL / نىسپىي ئادرېسى:</label>
-      <input type="text" id="newPdfUrlInp" class="inp" placeholder="مەسىلەن: pdf/lesson-12.pdf ياكى تور ئۇلانمىسى">
+      <label>ياكى يەرلىك PDF ھۆججەت تاللاش (.pdf):</label>
+      <input type="file" id="newPdfFileInput" class="inp" accept="application/pdf">
+      <small style="color:var(--muted)">💡 كۆلىمى 3MB دىن كىچىك PDF ھۆججەتلەرنى بىۋاسىتە تاللىسىڭىز بولىدۇ.</small>
     </div>
     <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem">
       <button class="btn btn-line" onclick="closePdfAddModal()">بىكار قىلىش</button>
@@ -1502,29 +1510,70 @@ document.getElementById("logoutBtn").onclick = function(){
 };
 
 /* 3. TAB SWITCHING & PDF LIBRARY MANAGER */
+function getCustomPdfBooks(){
+  try { return JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){ return []; }
+}
+function saveCustomPdfBooks(list){
+  try {
+    localStorage.setItem("uytibb_custom_pdf_books", JSON.stringify(list));
+  } catch(e){
+    alert("⚠️ PDF كۆلىمى بەك چوڭ بولغاچقا يەرلىك سىغىمغا تەشمىدى. كىتاب ھۆججىتىنى pdf/ قىسقۇچىغا قويۇپ، URL ئادرېسىنى كىرگۈزۈڭ.");
+  }
+}
+
 function renderAdminPdfBooksTable(){
   var tbody = document.getElementById("adminPdfBooksTbody");
   if(!tbody) return;
   var lessons = LESSONS_DATA || [];
+  var customBooks = getCustomPdfBooks();
   var h = "";
+
   lessons.forEach(function(L){
     var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
     var hasPdf = !!(L.pdfData || L.pdfUrl);
     h += '<tr>'
-      + '<td><b>' + L.id + '</b></td>'
-      + '<td>' + (L.title || "") + '</td>'
-      + '<td>' + (pTitle) + '</td>'
-      + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + (pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
-      + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 PDF تەييار</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
+      + '<td><span class="badge badge-gold">' + L.id + '-دەرس</span></td>'
+      + '<td>' + esc(L.title || "") + '</td>'
+      + '<td>' + esc(pTitle) + '</td>'
+      + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
+      + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 دەرسلىك PDF</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-teal btn-sm" href="' + pUrl + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
       + '  <button class="btn btn-gold btn-sm" onclick="openEditPdfBookModal(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
       + '</div></td>'
       + '</tr>';
   });
+
+  customBooks.forEach(function(b, idx){
+    var pUrl = b.pdfData || b.pdfUrl || "";
+    h += '<tr style="background:var(--gold-light)">'
+      + '<td><span class="badge badge-green">📖 كۇتۇپخانا</span></td>'
+      + '<td><b>' + esc(b.title) + '</b></td>'
+      + '<td>' + esc(b.pdfTitle || b.title) + '</td>'
+      + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
+      + '<td><span class="badge badge-gold">📖 قوشۇمچە كىتاب</span></td>'
+      + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
+      + '  <button class="btn btn-red btn-sm" onclick="deleteCustomPdfBook(' + idx + ')" style="padding:.25rem .6rem">🗑️ ئۆچۈرۈش</button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+
   tbody.innerHTML = h;
 }
+
+function deleteCustomPdfBook(idx){
+  var custom = getCustomPdfBooks();
+  var b = custom[idx];
+  if(!b) return;
+  if(!confirm("«" + (b.title || "بۇ كىتاب") + "» نى كۇتۇپخانىدىن ئۆچۈرەمسىز؟")) return;
+  custom.splice(idx, 1);
+  saveCustomPdfBooks(custom);
+  renderAdminPdfBooksTable();
+  showToast("🗑️ كىتاب كۇتۇپخانىدىن ئۆچۈرۈلدى.");
+}
+
 function editLessonPdfDirect(lid){
   openEditPdfBookModal(lid);
 }
@@ -1587,6 +1636,12 @@ function saveEditedPdfBook(){
   }
 
   if(file){
+    if(file.size > 3 * 1024 * 1024){
+      alert("⚠️ تاللانغان PDF ھۆججىتى كۆلىمى (" + (file.size/(1024*1024)).toFixed(1) + " MB) بەك چوڭ.\n\nتېخىمۇ چوڭ PDF كىتابلار ئۈچۈن، كىتابنى تۈردىكى pdf/ قىسقۇچىغا ئورۇنلاشتۇرۇپ، URL ئادرېسىغا «pdf/" + file.name + "» دەپ يېزىڭ.");
+      L.pdfUrl = "pdf/" + file.name;
+      commitEdit();
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(evt){
       L.pdfData = evt.target.result;
@@ -1629,11 +1684,53 @@ function saveNewPdfBook(){
   var title = (document.getElementById("newPdfTitleInp") ? document.getElementById("newPdfTitleInp").value.trim() : "");
   var desc = (document.getElementById("newPdfDescInp") ? document.getElementById("newPdfDescInp").value.trim() : "");
   var url = (document.getElementById("newPdfUrlInp") ? document.getElementById("newPdfUrlInp").value.trim() : "");
+  var bookTypeSelect = document.getElementById("newPdfTypeSelect");
+  var bookType = bookTypeSelect ? bookTypeSelect.value : "extra";
   var fileInp = document.getElementById("newPdfFileInput");
   var file = (fileInp && fileInp.files && fileInp.files[0]) ? fileInp.files[0] : null;
 
   if(!title){
     alert("⚠️ كىتاب نامىنى يېزىڭ!");
+    return;
+  }
+
+  if(bookType === "extra"){
+    var newBook = {
+      id: "extra-" + Date.now(),
+      title: title,
+      subtitle: desc || (title + " (PDF كىتاب)"),
+      pdfTitle: title,
+      pdfUrl: url || (file ? "pdf/" + file.name : "pdf/book.pdf"),
+      type: "extra",
+      when: new Date().toISOString().slice(0,10)
+    };
+
+    function commitExtraBook(){
+      var list = getCustomPdfBooks();
+      list.push(newBook);
+      saveCustomPdfBooks(list);
+      renderAdminPdfBooksTable();
+      closePdfAddModal();
+      showToast("🎉 «" + title + "» كۇتۇپخانىغا مۇستەقىل كىتاب قىلىپ قوشۇلدى!");
+    }
+
+    if(file){
+      if(file.size > 3 * 1024 * 1024){
+        alert("⚠️ تاللانغان PDF ھۆججىتى كۆلىمى (" + (file.size/(1024*1024)).toFixed(1) + " MB) بەك چوڭ.\n\nتېخىمۇ چوڭ PDF كىتابلار ئۈچۈن، كىتابنى تۈردىكى pdf/ قىسقۇچىغا ئورۇنلاشتۇرۇپ، URL ئادرېسىغا «pdf/" + file.name + "» دەپ يېزىڭ.");
+        newBook.pdfUrl = "pdf/" + file.name;
+        commitExtraBook();
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(evt){
+        newBook.pdfData = evt.target.result;
+        newBook.pdfUrl = "pdf/" + file.name;
+        commitExtraBook();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      commitExtraBook();
+    }
     return;
   }
 
@@ -1650,7 +1747,7 @@ function saveNewPdfBook(){
     goals: ["مەزكۇر PDF كىتابنىڭ مەزمۇنىنى تولۇق ئوقۇپ ئىگىلەش"],
     sections: [{
       h: "1. كىتاب مەزمۇنى",
-      body: "<p>بۇ PDF كىتاب كۇتۇپخانىغا كىرگۈزۈلدى. «📄 كىتاب (PDF)» خەتكۈچى ئارقىلىق تولۇق ئوقۇيالايسىز.</p>",
+      body: "<p>بۇ PDF كىتاب كۇتۇپخانىغا كىرگۈزۈلدى.</p>",
       points: ["مۇھىم تېبابەت بىلىملىرىنى ئۆگىنىش"]
     }],
     quiz: []
@@ -1662,10 +1759,16 @@ function saveNewPdfBook(){
     populateLessonSelector();
     renderAdminPdfBooksTable();
     closePdfAddModal();
-    showToast("🎉 يېڭى PDF كىتابى كۇتۇپخانىغا مۇۋەپپەقىيەتلىك قوشۇلدى!");
+    showToast("🎉 يېڭى PDF كىتابى دەرسلىككە مۇۋەپپەقىيەتلىك قوشۇلدى!");
   }
 
   if(file){
+    if(file.size > 3 * 1024 * 1024){
+      alert("⚠️ تاللانغان PDF ھۆججىتى كۆلىمى (" + (file.size/(1024*1024)).toFixed(1) + " MB) بەك چوڭ.\n\nURL ئادرېسىغا «pdf/" + file.name + "» دەپ يېزىڭ.");
+      newLesson.pdfUrl = "pdf/" + file.name;
+      commitNewLesson();
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(evt){
       newLesson.pdfData = evt.target.result;

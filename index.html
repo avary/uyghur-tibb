@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(!k.includes("v58")){
+      if(!k.includes("v59")){
         caches.delete(k);
       }
     });
@@ -1932,6 +1932,9 @@ function vBooks(){
     return item;
   });
 
+  var customBooks = [];
+  try { customBooks = JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){}
+
   var h = '<a class="backlink" href="#/lessons">› بارلىق دەرسلەرگە قايتىش</a>';
   h += '<div class="lhead" style="margin-bottom:1.2rem;background:linear-gradient(135deg,rgba(18,135,111,.15),rgba(201,162,39,.18));padding:1.2rem;border-radius:16px;border:1.5px solid var(--gold);box-shadow:var(--shadow)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">'
@@ -1965,6 +1968,26 @@ function vBooks(){
       + '</div>'
       + '</div>';
   });
+
+  customBooks.forEach(function(b){
+    var pUrl = b.pdfData || b.pdfUrl || "#";
+    h += '<div class="book-card" style="background:var(--card);border:1.5px solid var(--gold);border-radius:15px;padding:1.2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between">'
+      + '<div>'
+      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'
+      + '    <span class="badge" style="background:#e3f2ef;color:var(--teal-dark);border:1px solid #b2dfdb;font-weight:bold;font-size:.82rem">📖 قوشۇمچە كىتاب</span>'
+      + '    <span style="font-size:1.6rem">📘</span>'
+      + '  </div>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.1rem;color:var(--teal-dark)">' + esc(b.title) + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:.9rem">' + esc(b.subtitle || b.desc || "قوشۇمچە تېبابەت PDF كىتابى") + '</p>'
+      + '</div>'
+      + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#fff;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem">'
+      + '    <span>🚀</span> كىتابنى ئېچىش (PDF) ↗'
+      + '  </a>'
+      + '</div>'
+      + '</div>';
+  });
+
   h += '</div>';
   return h;
 }

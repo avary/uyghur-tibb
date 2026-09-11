@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v58-20260911_daily_10_questions_flow';
+const CACHE_NAME = 'uytibb-v59-20260911_standalone_pdf_library_support';
 const ASSETS = [
   './',
   './index.html',

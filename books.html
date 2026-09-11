@@ -214,11 +214,17 @@ function checkAuthApproved(){
   return false;
 }
 
+function getCustomPdfBooks(){
+  try { return JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){ return []; }
+}
+
 function renderBooks(filter){
   var grid = document.getElementById("booksGrid");
   if(!grid) return;
   var term = (filter || "").toLowerCase().trim();
   var lessons = getBooksLessons();
+  var customBooks = getCustomPdfBooks();
+
   var h = "";
   lessons.forEach(function(L){
     var title = L.title || (L.id + "-دەرسلىك");
@@ -241,6 +247,28 @@ function renderBooks(filter){
       + '</div>'
       + '</div>';
   });
+
+  customBooks.forEach(function(b){
+    var title = b.title || "تېبابەت كىتابى";
+    var subtitle = b.subtitle || b.desc || "قوشۇمچە تېبابەت كىتابى (PDF)";
+    if(term && title.toLowerCase().indexOf(term) < 0 && subtitle.toLowerCase().indexOf(term) < 0) return;
+    var pdfUrl = b.pdfData || b.pdfUrl || "#";
+
+    h += '<div class="book-card" style="border:1.5px solid var(--gold);background:linear-gradient(180deg,#fff,#faf7ed)">'
+      + '<div>'
+      + '  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'
+      + '    <span class="badge" style="background:#e3f2ef;color:var(--teal-dark);border:1px solid #b2dfdb">📖 قوشۇمچە كىتاب</span>'
+      + '    <span style="font-size:1.8rem">📘</span>'
+      + '  </div>'
+      + '  <h3 style="margin:.3rem 0;font-size:1.15rem;color:var(--teal-dark)">' + escHtml(title) + '</h3>'
+      + '  <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-bottom:1rem">' + escHtml(subtitle) + '</p>'
+      + '</div>'
+      + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem">'
+      + '  <a class="btn btn-teal" href="' + pdfUrl + '" target="_blank" style="flex:1;font-size:.9rem">🚀 كىتابنى ئېچىش (PDF) ↗</a>'
+      + '</div>'
+      + '</div>';
+  });
+
   if(!h) h = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted)">دەرسلىك كىتابى تېپىلمىدى.</div>';
   grid.innerHTML = h;
 }
