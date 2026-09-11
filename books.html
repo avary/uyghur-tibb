@@ -39,6 +39,8 @@ function directBooksInstall(){
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if(isIOS){
       alert("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش» (Add to Home Screen) نى بېسىپ قاچىلاڭ.");
+    } else {
+      alert("🖥️ توركۆرگۈچنىڭ ئادرېس بالدىقىدىكى قاچىلاش بەلگىسىنى (ياكى تىزىملىكتىن «ئەپنى قاچىلاش») نى بېسىپ ئەپنى قاچىلاڭ.");
     }
   }
 }
@@ -182,8 +184,14 @@ function getBooksLessons(){
     var customRaw = localStorage.getItem("uytibb_custom_lessons");
     if(customRaw){
       var parsed = JSON.parse(customRaw);
-      if(Array.isArray(parsed) && parsed.length >= defaultL.length){
-        lessons = parsed;
+      if(Array.isArray(parsed) && parsed.length > 0){
+        var ids = parsed.map(function(l){ return l.id; });
+        var hasDupes = (new Set(ids)).size !== ids.length;
+        if(!hasDupes && parsed.length >= 11){
+          lessons = parsed;
+        } else {
+          localStorage.removeItem("uytibb_custom_lessons");
+        }
       }
     }
   }catch(e){}

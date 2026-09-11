@@ -563,7 +563,7 @@ table.data-table tr:hover { background: var(--teal-light); }
         <span class="icon">🏠</span> 🌐 ئوقۇغۇچى بېتى (باش بەت)
       </button>
       <button class="nav-item active" data-tab="dash"><span class="icon">📊</span> باش تاختا</button>
-      <button class="nav-item" data-tab="lessons"><span class="icon">📚</span> دەرس ۋە PDF تەھرىرلىگۈچ</button>
+      <button class="nav-item" data-tab="lessons"><span class="icon">📚</span> دەرس تەھرىرلىگۈچى</button>
       <button class="nav-item" data-tab="pdfbooks"><span class="icon">📖</span> PDF كۇتۇپخانىسى</button>
       <button class="nav-item" data-tab="quiz"><span class="icon">✍️</span> سوئال ئامبىرى</button>
       <button class="nav-item" data-tab="teachers"><span class="icon">👨‍🏫</span> ئۇستازلار قامۇسى</button>
@@ -603,7 +603,7 @@ table.data-table tr:hover { background: var(--teal-light); }
             <button class="btn btn-gold" onclick="directAdminInstall()" style="font-weight:bold;color:#2e2200">📲 باشقۇرۇش ئەپىنى بىۋاستە قاچىلاش (PWA)</button>
           </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap">
-            <button class="btn btn-teal" onclick="switchTab('lessons')">📄 بارلىق دەرسلەرنىڭ PDF سىنى باشقۇرۇش</button>
+            <button class="btn btn-teal" onclick="switchTab('pdfbooks')">📖 PDF كۇتۇپخانىسىنى باشقۇرۇش</button>
             <button class="btn btn-gold" onclick="switchTab('students')">👥 كىرىش تەستىقلاش مەركىزى</button>
             <button class="btn btn-line" onclick="switchTab('feedback')">💬 سوئال-جاۋابقا جاۋاب قايتۇرۇش</button>
             <button class="btn btn-line" onclick="openAddQuestionModal()">➕ يېڭى سىناق سوئالى قوشۇش</button>
@@ -1214,10 +1214,13 @@ table.data-table tr:hover { background: var(--teal-light); }
     if(raw){
       var parsed = JSON.parse(raw);
       var qSum = 0;
+      var hasDupes = false;
       if(Array.isArray(parsed)){
+        var ids = parsed.map(function(l){ return l ? l.id : 0; });
+        hasDupes = (new Set(ids)).size !== ids.length;
         parsed.forEach(function(l){ if(l && l.quiz) qSum += l.quiz.length; });
       }
-      if(!Array.isArray(parsed) || parsed.length < 11 || qSum < 500){
+      if(!Array.isArray(parsed) || parsed.length < 11 || hasDupes || qSum < 500){
         localStorage.removeItem("uytibb_custom_lessons");
       }
     }
@@ -3271,7 +3274,7 @@ initPasswordChangeUI();
 /* ===== ADMIN PWA DIRECT INSTALLATION ===== */
 function directAdminInstall(){
   if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
-    if(typeof showToast === "function") showToast("✅ باشقۇرۇش ئەپى ئاللىقاچان تېلېفونىڭىزغا قاچىلانغان!");
+    if(typeof showToast === "function") showToast("✅ باشقۇرۇش ئەپى ئاللىقاچان قاچىلانغان!");
     var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
     var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
     return;
@@ -3280,7 +3283,7 @@ function directAdminInstall(){
     _adminDeferredPrompt.prompt();
     _adminDeferredPrompt.userChoice.then(function(choice){
       if(choice && choice.outcome === 'accepted'){
-        if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+        if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى باش ئېكرانغا قاچىلاندى!");
         var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
         var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
       }
@@ -3297,7 +3300,7 @@ function directAdminInstall(){
         _adminDeferredPrompt.prompt();
         _adminDeferredPrompt.userChoice.then(function(choice){
           if(choice && choice.outcome === 'accepted'){
-            if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى تېلېفونىڭىزغا قاچىلاندى!");
+            if(typeof showToast === "function") showToast("🎉 باشقۇرۇش ئەپى باش ئېكرانغا قاچىلاندى!");
             var b1 = document.getElementById("adminInstallBtn"); if(b1) b1.style.display = "none";
             var b2 = document.getElementById("directDownloadBtnTop"); if(b2) b2.style.display = "none";
           }
@@ -3309,6 +3312,8 @@ function directAdminInstall(){
         var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent||"") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
         if(isIOS){
           if(typeof showToast === "function") showToast("🍎 Safari تىزىملىكىدىن «باش ئېكرانغا قوشۇش»نى بېسىڭ");
+        } else {
+          if(typeof showToast === "function") showToast("🖥️ توركۆرگۈچنىڭ ئادرېس بالدىقىدىكى قاچىلاش بەلگىسىنى (ياكى تىزىملىكتىن «ئەپنى قاچىلاش») نى بېسىڭ");
         }
       }
     }, 150);
