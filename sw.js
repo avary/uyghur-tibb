@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v41-20260911_pdf_books_pwa_admin';
+const CACHE_NAME = 'uytibb-v42-20260911_add_pdf_books_admin';
 const ASSETS = [
   './',
   './index.html',

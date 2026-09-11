@@ -980,12 +980,18 @@ table.data-table tr:hover { background: var(--teal-light); }
         <section class="panel" id="p-pdfbooks">
           <div class="panel-title">
             <span>📖 PDF كۇتۇپخانىسى باشقۇرۇش مەركىزى</span>
-            <a href="books.html" target="_blank" class="btn btn-gold btn-sm" style="font-weight:bold;text-decoration:none">🔗 PDF كۇتۇپخانىسىنى ئېچىش ↗</a>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-teal btn-sm" onclick="openPdfAddModal()">➕ يېڭى PDF كىتاب كىرگۈزۈش</button>
+              <a href="books.html" target="_blank" class="btn btn-gold btn-sm" style="font-weight:bold;text-decoration:none">🔗 PDF كۇتۇپخانىسىنى ئېچىش ↗</a>
+            </div>
           </div>
 
           <div class="card">
-            <h3 style="margin:0 0 .8rem;color:var(--teal-dark)">📚 بارلىق دەرسلىك PDF كىتابلىرى (11 دەرس)</h3>
-            <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">بۇ يەردىن بارلىق دەرسلىكلەرنىڭ PDF كىتابلىرىنىڭ ھالىتىنى تەكشۈرەلەيسىز، ئالدىن كۆرەلەيسىز ياكى تەھرىرلەش بېتىگە ئۆتەلەيسىز.</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.6rem">
+              <h3 style="margin:0;color:var(--teal-dark)">📚 بارلىق دەرسلىك PDF كىتابلىرى</h3>
+              <button class="btn btn-teal btn-sm" onclick="openPdfAddModal()">➕ يېڭى PDF كىتاب كىرگۈزۈش (قوشۇش)</button>
+            </div>
+            <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">بۇ يەردىن بارلىق دەرسلىكلەرنىڭ PDF كىتابلىرىنىڭ ھالىتىنى تەكشۈرەلەيسىز، يېڭى PDF كىتابلىرىنى كىرگۈزەلەيسىز ياكى تەھرىرلىيەلەيسىز.</p>
             <div class="table-wrap">
               <table class="data-table">
                 <thead>
@@ -1005,6 +1011,37 @@ table.data-table tr:hover { background: var(--teal-light); }
         </section>
 
     </main>
+  </div>
+</div>
+
+<!-- MODAL: ADD NEW PDF BOOK -->
+<div class="modal-overlay" id="pdfAddModal">
+  <div class="modal-box" style="max-width:600px">
+    <div class="modal-head">
+      <h3>➕ يېڭى PDF كىتاب كىرگۈزۈش (قوشۇش)</h3>
+      <button class="close-btn" onclick="closePdfAddModal()">✕</button>
+    </div>
+    <div class="inp-group">
+      <label>PDF كىتاب نامى (Title):</label>
+      <input type="text" id="newPdfTitleInp" class="inp" placeholder="مەسىلەن: 12-دەرسلىك: ئۇيغۇر تېبابىتى تېراپىيەسى">
+    </div>
+    <div class="inp-group">
+      <label>قىسقا تېما ئىزاھاتى (Description):</label>
+      <input type="text" id="newPdfDescInp" class="inp" placeholder="مەسىلەن: تېبابەت تەتقىقاتى ئەسلى PDF كىتابى">
+    </div>
+    <div class="inp-group">
+      <label>PDF ھۆججىتى تاللاش (.pdf):</label>
+      <input type="file" id="newPdfFileInput" class="inp" accept="application/pdf">
+      <small style="color:var(--muted)">تېلېفون ياكى كومپىيوتېرىڭىزدىن ھەر قانداق .pdf ھۆججەتنى تاللىسىڭىز بولىدۇ.</small>
+    </div>
+    <div class="inp-group">
+      <label>ياكى PDF URL / نىسپىي ئادرېسى:</label>
+      <input type="text" id="newPdfUrlInp" class="inp" placeholder="مەسىلەن: pdf/lesson-12.pdf ياكى تور ئۇلانمىسى">
+    </div>
+    <div style="display:flex;gap:.8rem;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-line" onclick="closePdfAddModal()">بىكار قىلىش</button>
+      <button class="btn btn-teal" onclick="saveNewPdfBook()">💾 كۇتۇپخانىغا قوشۇش</button>
+    </div>
   </div>
 </div>
 
@@ -1466,6 +1503,68 @@ function editLessonPdfDirect(lid){
   switchTab("lessons");
   var sel = document.getElementById("lessonSelect");
   if(sel){ sel.value = lid; onLessonSelectChange(); }
+}
+
+function openPdfAddModal(){
+  var t = document.getElementById("newPdfTitleInp"); if(t) t.value = "";
+  var d = document.getElementById("newPdfDescInp"); if(d) d.value = "";
+  var u = document.getElementById("newPdfUrlInp"); if(u) u.value = "";
+  var f = document.getElementById("newPdfFileInput"); if(f) f.value = "";
+  var m = document.getElementById("pdfAddModal"); if(m) m.style.display = "flex";
+}
+function closePdfAddModal(){
+  var m = document.getElementById("pdfAddModal"); if(m) m.style.display = "none";
+}
+function saveNewPdfBook(){
+  var title = (document.getElementById("newPdfTitleInp") ? document.getElementById("newPdfTitleInp").value.trim() : "");
+  var desc = (document.getElementById("newPdfDescInp") ? document.getElementById("newPdfDescInp").value.trim() : "");
+  var url = (document.getElementById("newPdfUrlInp") ? document.getElementById("newPdfUrlInp").value.trim() : "");
+  var fileInp = document.getElementById("newPdfFileInput");
+  var file = (fileInp && fileInp.files && fileInp.files[0]) ? fileInp.files[0] : null;
+
+  if(!title){
+    alert("⚠️ كىتاب نامىنى يېزىڭ!");
+    return;
+  }
+
+  var newId = LESSONS_DATA.length ? (Math.max.apply(null, LESSONS_DATA.map(function(l){ return (l && l.id) || 0; })) + 1) : 1;
+
+  var newLesson = {
+    id: newId,
+    title: title,
+    subtitle: desc || (title + " كىتابى"),
+    short: newId + "-دەرس",
+    desc: desc || "مەزكۇر PDF كىتاب كۇتۇپخانىغا يېڭىدىن كىرگۈزۈلدى.",
+    pdfTitle: title + " (PDF)",
+    pdfUrl: url || ("pdf/lesson-" + newId + ".pdf"),
+    goals: ["مەزكۇر PDF كىتابنىڭ مەزمۇنىنى تولۇق ئوقۇپ ئىگىلەش"],
+    sections: [{
+      h: "1. كىتاب مەزمۇنى",
+      body: "<p>بۇ PDF كىتاب كۇتۇپخانىغا كىرگۈزۈلدى. «📄 كىتاب (PDF)» خەتكۈچى ئارقىلىق تولۇق ئوقۇيالايسىز.</p>",
+      points: ["مۇھىم تېبابەت بىلىملىرىنى ئۆگىنىش"]
+    }],
+    quiz: []
+  };
+
+  function commitNewLesson(){
+    LESSONS_DATA.push(newLesson);
+    saveAllCustomData();
+    populateLessonSelector();
+    renderAdminPdfBooksTable();
+    closePdfAddModal();
+    showToast("🎉 يېڭى PDF كىتابى كۇتۇپخانىغا مۇۋەپپەقىيەتلىك قوشۇلدى!");
+  }
+
+  if(file){
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      newLesson.pdfData = evt.target.result;
+      commitNewLesson();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    commitNewLesson();
+  }
 }
 
 function switchTab(tabId){
