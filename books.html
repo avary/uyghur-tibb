@@ -152,9 +152,9 @@ a { color: var(--teal-dark); text-decoration: none; }
 <div class="container">
   <!-- Auth Gate script check -->
   <div id="authGateNotice" style="display:none;background:#fef3c7;border:1.5px solid var(--gold);padding:1.2rem;border-radius:16px;text-align:center;margin-bottom:1.2rem">
-    <h3 style="margin:0 0 .4rem;color:#92400e">⚠️ كىرىش تەستىقلىنىشى تەلەپ قىلىنىدۇ</h3>
-    <p style="margin:0 0 .8rem;color:#78350f">PDF كۇتۇپخانىسىنى ئىشلىتىش ئۈچۈن ئالدى بىلەن «ئۇيغۇر تېبابىتى» ئۆگىنىش ئەپىگە تىزىملىتىپ، باشقۇرغۇچىنىڭ تەستىقىدىن ئۆتۈشىڭىز كېرەك.</p>
-    <a href="index.html#/books" class="btn btn-gold" style="font-weight:bold">📝 تىزىملىتىش / تەستىقنى تەكشۈرۈش</a>
+    <h3 style="margin:0 0 .4rem;color:#92400e">⚠️ تىزىملىتىپ كىرىش تەلەپ قىلىنىدۇ</h3>
+    <p style="margin:0 0 .8rem;color:#78350f">PDF كۇتۇپخانىسىنى تولۇق كۆرۈش ئۈچۈن «ئۇيغۇر تېبابىتى» ئەپىگە ئىسمىڭىز ۋە تېلېفونىڭىز بىلەن كىرىڭ (رۇخسەت تەلەپ قىلىنمايدۇ، دەرھال ئېچىلىدۇ).</p>
+    <a href="index.html#/books" class="btn btn-gold" style="font-weight:bold">📝 تىزىملىتىپ كىرىش</a>
   </div>
 
   <div class="card" style="background:linear-gradient(135deg,rgba(18,135,111,.12),rgba(201,162,39,.15));border:1.5px solid var(--gold);border-radius:18px;padding:1.4rem;margin-bottom:1.5rem;box-shadow:var(--shadow)">
@@ -203,12 +203,12 @@ function checkAuthApproved(){
     var raw1 = localStorage.getItem("uytibb_v1");
     if(raw1){
       var p1 = JSON.parse(raw1);
-      if(p1 && p1.user && p1.user.status === "approved") return true;
+      if(p1 && p1.user && (p1.user.name || p1.user.phone) && p1.user.status !== "blocked") return true;
     }
     var raw2 = localStorage.getItem("uytibb_progress_v2");
     if(raw2){
       var p2 = JSON.parse(raw2);
-      if(p2 && p2.user && p2.user.status === "approved") return true;
+      if(p2 && p2.user && (p2.user.name || p2.user.phone) && p2.user.status !== "blocked") return true;
     }
   }catch(e){}
   return false;

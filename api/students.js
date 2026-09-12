@@ -40,6 +40,9 @@ function sbFetch(path, options = {}) {
   });
 }
 
+const EXCLUDED_TEST_PHONES = ['5551234567', '99900011122', '5516862398', '5016862393', '5516862393', '5559880508', '5315942989', '13800000000', 'admin'];
+const LAUNCH_CUTOFF = '2026-09-12T11:00:00.000Z';
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -58,26 +61,33 @@ module.exports = async (req, res) => {
     try {
       const data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       
-      // 1. Register student (Supabase upsert)
+      // 1. Register student (auto-approved by default, no gatekeeper)
       if (data.action === 'register' && data.user) {
+        const studentStatus = data.user.status || 'approved';
         await sbFetch('/rest/v1/students', {
           method: 'POST',
           prefer: 'resolution=merge-duplicates',
           body: {
             name: data.user.name,
             phone: data.user.phone,
-            status: data.user.status || 'pending',
+            status: studentStatus,
             last_active: new Date().toISOString()
           }
         });
         const existing = inMemoryStudents.find(s => s.phone === data.user.phone);
         if (existing) {
           existing.name = data.user.name;
-          if (data.user.status) existing.status = data.user.status;
+          existing.status = studentStatus;
         } else {
-          inMemoryStudents.unshift(data.user);
+          inMemoryStudents.unshift({
+            name: data.user.name,
+            phone: data.user.phone,
+            status: studentStatus,
+            registered_at: new Date().toISOString(),
+            when: new Date().toISOString()
+          });
         }
-        return res.status(200).json({ status: 'ok', message: 'Student registered' });
+        return res.status(200).json({ status: 'ok', message: 'Student registered and approved' });
       }
 
       // 2. Approve or update student status
@@ -93,6 +103,13 @@ module.exports = async (req, res) => {
           inMemoryStudents.unshift({ phone: data.phone, status: data.status, when: new Date().toISOString() });
         }
         return res.status(200).json({ status: 'ok', message: 'Status updated' });
+      }
+
+      // 2b. Reset / Clear all students (Admin reset)
+      if (data.action === 'clear_all_students') {
+        inMemoryStudents = [];
+        inMemoryExams = [];
+        return res.status(200).json({ status: 'ok', message: 'Students memory reset' });
       }
 
       // 3. Log exam
@@ -136,7 +153,12 @@ module.exports = async (req, res) => {
     let list = Array.isArray(sbStudents) && sbStudents.length ? sbStudents : inMemoryStudents;
     list = (list || []).filter(s => {
       const nm = (s.name || '').trim();
-      return nm !== 'سىناق ئوقۇغۇچى' && nm !== 'سىناق' && !nm.startsWith('سىناق') && s.phone !== '13800000000' && s.phone !== 'admin';
+      if (nm === 'سىناق ئوقۇغۇچى' || nm === 'سىناق' || nm.startsWith('سىناق')) return false;
+      const ph = String(s.phone || '').trim();
+      if (EXCLUDED_TEST_PHONES.includes(ph)) return false;
+      const reg = s.registered_at || s.when || '';
+      if (reg && reg < LAUNCH_CUTOFF) return false;
+      return true;
     });
     return res.status(200).json({
       status: 'ok',

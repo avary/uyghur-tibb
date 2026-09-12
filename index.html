@@ -48,12 +48,31 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(!k.includes("v63")){
+      if(!k.includes("v64")){
         caches.delete(k);
       }
     });
   });
 }
+try {
+  var _lrk = "uytibb_launch_reset_v64";
+  if (!localStorage.getItem(_lrk)) {
+    localStorage.removeItem("uytibb_all_students");
+    localStorage.removeItem("uytibb_deleted_phones");
+    localStorage.removeItem("uytibb_deleted_names");
+    var _cp = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
+    if (_cp && _cp.user) {
+      if (['99900011122', '5516862398', '5016862393', '5516862393', '5559880508', '5315942989', '13800000000'].includes(_cp.user.phone)) {
+        delete _cp.user;
+      } else {
+        _cp.user.status = "approved";
+        _cp.user.approvalNotified = true;
+      }
+      localStorage.setItem("uytibb_v1", JSON.stringify(_cp));
+    }
+    localStorage.setItem(_lrk, "1");
+  }
+} catch(e){}
 try{var __t=JSON.parse(localStorage.getItem("uytibb_v1")||"{}").theme;if(!__t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)__t="dark";if(__t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
 <style>
 @font-face {
@@ -2334,8 +2353,13 @@ function router(){
   var _isInstall = (hash === "#/install");
   var _isBooks = (hash === "#/books" || hash === "#/pdf");
 
-  if(_u && _u.status === "approved") {
-    checkShowApprovalCelebration(_u);
+  // If user is registered, ensure status is approved (no gatekeeping, immediate learning access)
+  if(_u && _u.status !== "blocked") {
+    if(_u.status !== "approved") {
+      _u.status = "approved";
+      _u.approvalNotified = true;
+      saveProg(_s);
+    }
   }
 
   // If user is not registered at all → show register form for all protected routes
@@ -2343,19 +2367,18 @@ function router(){
     main.innerHTML = '<div style="padding:2rem 1rem;max-width:480px;margin:2rem auto;text-align:center">'
       + '<div style="font-size:3rem;margin-bottom:.8rem">📚</div>'
       + '<h3 style="color:var(--teal-dark);margin:0 0 .5rem">كىرىش تەلەپ قىلىنىدۇ</h3>'
-      + '<p style="color:var(--muted);line-height:1.8;margin:0 0 1.2rem">PDF كۇتۇپخانىسىنى كۆرۈش ئۈچۈن ئالدى بىلەن تىزىملىتىشىڭىز كېرەك.</p>'
-      + '<button class="btn btn-gold btn-block" onclick="showRegModal(\'reg\',true)" style="max-width:280px;margin:0 auto">📝 تىزىملىتىش</button>'
+      + '<p style="color:var(--muted);line-height:1.8;margin:0 0 1.2rem">دەرسلەر ۋە PDF كۇتۇپخانىسىنى كۆرۈش ئۈچۈن ئىسمىڭىز ۋە تېلېفونىڭىز بىلەن كىرىڭ (رۇخسەت تەلەپ قىلىنمايدۇ، دەرھال ئېچىلىدۇ).</p>'
+      + '<button class="btn btn-gold btn-block" onclick="showRegModal(\'reg\',true)" style="max-width:280px;margin:0 auto">📝 تىزىملىتىپ كىرىش</button>'
       + '<div style="margin-top:.8rem"><a href="#/" style="color:var(--muted);font-size:.9rem">‹ باش بەتكە قايتىش</a></div>'
       + '</div>';
     renderNav();
     return;
   }
 
-  // If user is registered but not approved → show waiting page for all protected routes
-  if(_u && _u.status !== "approved" && !_isHome && !_isTeachers && !_isInstall){
-    main.innerHTML = vWaitingApproval(_u, _u.status);
+  // Only if user is specifically blocked by admin
+  if(_u && _u.status === "blocked" && !_isHome && !_isTeachers && !_isInstall){
+    main.innerHTML = vWaitingApproval(_u, "blocked");
     renderNav();
-    startApprovalPoll();
     return;
   }
   // ===== END AUTH GATE =====
@@ -3480,27 +3503,27 @@ function showRegModal(mode, closable){
     h += '<h3>👤 مېنىڭ ھېساباتىم</h3><div class="rinfo">'
       + '<div><span>ئىسىم:</span><b>' + esc(u.name) + '</b></div>'
       + '<div><span>تېلېفون نومۇرى:</span><b dir="ltr">' + esc(u.phone) + '</b></div>'
-      + '<div><span>ھالىتى:</span><b>' + (u.status === "approved" ? "✅ تەستىقلانغان (دەرسلەر ئوچۇق)" : "⏳ تەستىق كۈتۈۋاتىدۇ") + '</b></div>'
+      + '<div><span>ھالىتى:</span><b>' + (u.status === "blocked" ? "⛔ توختىتىلغان" : "✅ ئوچۇق (دەرسلەر تولۇق ئوچۇق)") + '</b></div>'
       + '<div><span>تىزىملانغان:</span><b>' + esc(u.when || "") + '</b></div></div>'
       + '<button class="btn btn-line btn-block" id="rgLogout" style="color:var(--red);border-color:rgba(192,57,43,.3);margin-bottom:.5rem">🚪 ھېساباتتىن چىقىش</button>'
       + '<button class="btn btn-line btn-block" id="rgX">يېپىش</button>';
   } else if(mode === "reg"){
     h += '<h3>📝 يېڭى ھېسابات تىزىملىتىش</h3>'
-      + '<p class="rsub">ئۇيغۇر تېبابىتى دەرسلىرىنى ئۆگىنىش ئۈچۈن ئىسمىڭىز ۋە تېلېفون نومۇرىڭىزنى كىرگۈزۈڭ.<br>باشقۇرغۇچى تەستىقلىغاندىن كېيىن بارلىق دەرسلەر ئاچىلىدۇ. ✅</p>'
+      + '<p class="rsub">ئۇيغۇر تېبابىتى دەرسلىرىنى ئۆگىنىش ئۈچۈن ئىسمىڭىز ۋە تېلېفون نومۇرىڭىزنى كىرگۈزۈڭ.<br>تىزىملىتىپلا بارلىق دەرس ۋە كىتابلارنى بىۋاسىتە ئۆگىنىشنى باشلايسىز. ✅</p>'
       + '<label>ئىسمىڭىز:</label><input id="rgName" class="inp" placeholder="مەسىلەن: ئابدۇللا" autofocus>'
       + '<label>تېلېفون نومۇرى:</label><input id="rgPhone" class="inp" inputmode="tel" dir="ltr" placeholder="مەسىلەن: 13812345678">'
       + '<div class="rerr" id="rgErr"></div>'
-      + '<button class="btn btn-gold btn-block" id="rgGo" style="margin-top:.4rem">📝 تىزىملىتىش</button>'
+      + '<button class="btn btn-gold btn-block" id="rgGo" style="margin-top:.4rem">📝 تىزىملىتىپ كىرىش</button>'
       + '<div style="margin-top:.8rem;border-top:1px solid var(--line);padding-top:.8rem;text-align:center">'
-      + '  <a href="javascript:void(0)" id="toLoginLink" style="color:var(--teal-dark);font-weight:bold;font-size:.92rem">ئاللىقاچان تىزىملاتقانمۇ؟ 🔓 كىرىش</a>'
+      + '  <a href="javascript:void(0)" id="toLoginLink" style="color:var(--teal-dark);font-weight:bold;font-size:.92rem">ئاللىقاچان كىرگەن بولسىڭىز: 🔓 كىرىش</a>'
       + '</div>'
       + (closable ? '<button class="btn btn-line btn-block" id="rgX" style="margin-top:.6rem">يېپىش</button>' : "");
   } else {
     // LOGIN MODE
     h += '<h3>🔓 سىستېمىغا كىرىش</h3>'
-      + '<p class="rsub">ئىسمىڭىز ۋە تىزىملاتقان تېلېفون نومۇرىڭىز بىلەن كىرىڭ.</p>'
+      + '<p class="rsub">ئىسمىڭىز ۋە تېلېفون نومۇرىڭىز بىلەن بىۋاسىتە كىرىڭ.</p>'
       + '<label>ئىسمىڭىز:</label><input id="lgName" class="inp" placeholder="مەسىلەن: ئابدۇللا" autofocus>'
-      + '<label>تېلېفون نومۇرى:</label><input id="lgPhone" class="inp" inputmode="tel" dir="ltr" placeholder="تىزىملاتقان تېلېفون نومۇرى">'
+      + '<label>تېلېفون نومۇرى:</label><input id="lgPhone" class="inp" inputmode="tel" dir="ltr" placeholder="تېلېفون نومۇرى">'
       + '<div class="rerr" id="rgErr"></div>'
       + '<button class="btn btn-gold btn-block" id="lgGo" style="margin-top:.4rem">🔓 كىرىش</button>'
       + '<div style="margin-top:.8rem;border-top:1px solid var(--line);padding-top:.8rem;text-align:center">'
@@ -3523,7 +3546,7 @@ function showRegModal(mode, closable){
     toast("🚪 ھېساباتتىن چىقتىڭىز");
   };
 
-  // Login handler - name + phone only
+  // Login handler - name + phone (auto-register if new, instant approval)
   var lgGo = $("lgGo");
   if(lgGo) lgGo.onclick = function(){
     var nm = $("lgName").value.trim();
@@ -3533,20 +3556,36 @@ function showRegModal(mode, closable){
 
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var existing = allSt.find(function(u){ return u.phone === ph; });
+    var d = new Date();
+    var dateStr = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+
     if(!existing){
-      $("rgErr").textContent = "⚠️ بۇ تېلېفون نومۇرى تىزىملاتمىغان! ئالدى بىلەن تىزىملىتىڭ.";
-      return;
+      existing = { name: nm, phone: ph, status: "approved", when: dateStr };
+      allSt.unshift(existing);
+      localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
+      fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register", user: existing })
+      }).catch(function(){});
+      if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
+        Supabase.registerStudent(existing);
+      }
+    } else {
+      existing.name = nm;
+      existing.status = "approved";
+      localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
     }
 
     var s5 = getProg();
-    s5.user = { name: existing.name || nm, phone: ph, status: existing.status, when: existing.when };
+    s5.user = { name: nm, phone: ph, status: "approved", when: existing.when || dateStr, approvalNotified: true };
     saveProg(s5);
     closeRegModal();
-    toast("✅ خۇش كەپسىز، " + (existing.name||nm) + "!");
+    toast("✅ خۇش كەپسىز، " + nm + "!");
     router();
   };
 
-  // Register handler - name + phone only
+  // Register handler - instant approval
   var go = $("rgGo");
   if(go) go.onclick = function(){
     var nm = $("rgName").value.trim(), ph = $("rgPhone").value.replace(/[\s\-]/g,"");
@@ -3560,15 +3599,15 @@ function showRegModal(mode, closable){
 
     var allSt = JSON.parse(localStorage.getItem("uytibb_all_students")||"[]");
     var existing = allSt.find(function(u){ return u.phone === ph; });
-    var status = existing ? existing.status : "pending";
 
-    s4.user = { name: nm, phone: ph, when: dateStr, status: status };
+    s4.user = { name: nm, phone: ph, when: dateStr, status: "approved", approvalNotified: true };
     saveProg(s4);
 
     if(!existing){
-      allSt.unshift({ name: nm, phone: ph, when: dateStr, status: "pending" });
+      allSt.unshift({ name: nm, phone: ph, when: dateStr, status: "approved" });
     } else {
       existing.name = nm;
+      existing.status = "approved";
     }
     localStorage.setItem("uytibb_all_students", JSON.stringify(allSt));
 
@@ -3576,16 +3615,16 @@ function showRegModal(mode, closable){
     fetch("/api/students", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "register", user: { name: nm, phone: ph, status: "pending" } })
+      body: JSON.stringify({ action: "register", user: { name: nm, phone: ph, status: "approved" } })
     }).catch(function(){});
 
     // Also register via Supabase direct (fallback)
     if(typeof Supabase !== "undefined" && Supabase.getConfig().connected){
-      Supabase.registerStudent({ name: nm, phone: ph, status: "pending" });
+      Supabase.registerStudent({ name: nm, phone: ph, status: "approved" });
     }
 
     closeRegModal();
-    toast("🎉 تىزىملىتىش مۇۋەپپەقىيەتلىك بولدى! باشقۇرغۇچى تەستىقلىغاندىن كېيىن كىرەلەيسىز.");
+    toast("🎉 تىزىملىتىش مۇۋەپپەقىيەتلىك بولدى! خۇش كەپسىز!");
     router();
   };
 }

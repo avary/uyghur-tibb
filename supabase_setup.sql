@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.students (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     phone TEXT NOT NULL UNIQUE,
-    status TEXT NOT NULL DEFAULT 'pending', -- 'pending' (كۈتۈۋاتىدۇ), 'approved' (تەستىقلاندى), 'blocked' (چەكلەندى)
+    status TEXT NOT NULL DEFAULT 'approved', -- 'approved' (ئوچۇق/تەستىقلاندى), 'blocked' (چەكلەندى)
     registered_at TIMESTAMPTZ DEFAULT NOW(),
     last_active TIMESTAMPTZ DEFAULT NOW(),
     notes TEXT
@@ -78,6 +78,8 @@ CREATE POLICY "Public Read Approved Feedback" ON public.feedback FOR SELECT USIN
 CREATE POLICY "Public Insert Feedback" ON public.feedback FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Insert Student" ON public.students FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Read Students Status" ON public.students FOR SELECT USING (true);
+CREATE POLICY "Public Update Student" ON public.students FOR UPDATE USING (true);
+CREATE POLICY "Public Delete Student" ON public.students FOR DELETE USING (true);
 
 COMMENT ON TABLE public.students IS 'ئۇيغۇر تېبابىتى تىزىملاتقان ئوقۇغۇچىلار ۋە تەستىقلاش ھالىتى';
 COMMENT ON TABLE public.feedback IS 'ئوقۇغۇچىلارنىڭ سوئال-جاۋاب ۋە پىكىرلىرى';

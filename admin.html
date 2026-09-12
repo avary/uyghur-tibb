@@ -788,31 +788,30 @@ table.data-table tr:hover { background: var(--teal-light); }
           <button class="btn btn-line btn-sm" id="exportStudentsBtn">📋 تىزىملىكنى CSV قىلىپ چۈشۈرۈش</button>
         </div>
 
-        <div class="card" style="border-right:5px solid var(--gold)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap">
-            <h4 style="margin:0;color:var(--teal-dark)">⏳ كىرىش ئىجازىتى كۈتۈۋاتقان يېڭى ئوقۇغۇچىلار (Pending Approval)</h4>
-            <small style="color:var(--muted)">ئوقۇغۇچىلار تىزىملاتقاندىن كېيىن، سىز «تەستىقلاش»نى باسسىڭىزلا دەرسلەر ئېچىلىدۇ.</small>
+        <div class="card" style="border-right:5px solid var(--teal);background:rgba(14,124,111,.05)">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+            <div>
+              <h4 style="margin:0 0 .3rem;color:var(--teal-dark)">🔓 كىرىش ھالىتى: ئەركىن تىزىملىتىش قوزغىتىلدى (تەستىق كۈتۈش تەلەپ قىلىنمايدۇ)</h4>
+              <small style="color:var(--muted)">ئوقۇغۇچىلار تىزىملىتىپلا باشقۇرغۇچى رۇخسىتىنى كۈتمەي، بىۋاسىتە بارلىق دەرس ۋە كىتابلارنى ئۆگىنەلەيدۇ.</small>
+            </div>
+            <div>
+              <button onclick="clearAllStudentsData()" class="btn btn-red btn-sm" style="font-size:.84rem">🗑️ بارلىق ئوقۇغۇچىلارنى نۆللەش (پاكىزلاش)</button>
+            </div>
           </div>
-          <div class="table-wrap" style="margin-bottom:.5rem">
+          <div id="pendingContainer" style="display:none;margin-top:.8rem">
             <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ئوقۇغۇچى ئىسمى</th>
-                  <th>تېلېفون نومۇرى</th>
-                  <th>تىزىملاتقان ۋاقتى</th>
-                  <th>ھالىتى</th>
-                  <th style="text-align:center">مەشغۇلات (تەستىقلاش)</th>
-                </tr>
-              </thead>
               <tbody id="pendingStudentsTableBody">
-                <tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>
+                <tr><td colspan="5" style="text-align:center;color:var(--muted)">تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <div class="card">
-          <h4 style="margin:0 0 .8rem;color:var(--teal-dark)">✅ ئىجازەت بېرىلگەن ئوقۇغۇچىلار (Approved)</h4>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-wrap:wrap;gap:.6rem">
+            <h4 style="margin:0;color:var(--teal-dark)">👥 تىزىملاتقان بارلىق ئوقۇغۇچىلار (دەرسلەر ئوچۇق)</h4>
+            <span class="badge badge-green">ئاكتىپ ئۆگىنىش ھالىتىدە</span>
+          </div>
           <div class="table-wrap" style="margin-bottom:1.5rem">
             <table class="data-table">
               <thead>
@@ -1216,6 +1215,15 @@ table.data-table tr:hover { background: var(--teal-light); }
 <script src="data.js"></script>
 <script src="supabase.js"></script>
 <script>
+try {
+  var _lrk = "uytibb_launch_reset_v64";
+  if (!localStorage.getItem(_lrk)) {
+    localStorage.removeItem("uytibb_all_students");
+    localStorage.removeItem("uytibb_deleted_phones");
+    localStorage.removeItem("uytibb_deleted_names");
+    localStorage.setItem(_lrk, "1");
+  }
+} catch(e){}
 (function autoRepairAdminLessonsCache(){
   try {
     var raw = localStorage.getItem("uytibb_custom_lessons");
@@ -3076,6 +3084,28 @@ function unmarkNameDeleted(name){
   localStorage.setItem("uytibb_deleted_names", JSON.stringify(del));
 }
 
+var EXCLUDED_TEST_PHONES = ['5551234567', '99900011122', '5516862398', '5016862393', '5516862393', '5559880508', '5315942989', '13800000000', 'admin'];
+
+function clearAllStudentsData(){
+  if(!confirm("⚠️ راستلا بارلىق ئوقۇغۇچىلار ئۇچۇرىنى نۆللەپ پاكىزلامسىز؟ سىستېما تامامەن يېڭىدىن باشلىنىدۇ.")) return;
+  localStorage.removeItem("uytibb_all_students");
+  localStorage.removeItem("uytibb_deleted_phones");
+  localStorage.removeItem("uytibb_deleted_names");
+  fetch("/api/students", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "clear_all_students" })
+  }).catch(function(){});
+  var pendingTbody = document.getElementById("pendingStudentsTableBody");
+  var approvedTbody = document.getElementById("approvedStudentsTableBody");
+  if(pendingTbody) pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
+  if(approvedTbody) approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تىزىملاتقان ئوقۇغۇچى يوق (0 ئوقۇغۇچى).</td></tr>';
+  var pBox = document.getElementById("pendingContainer");
+  if(pBox) pBox.style.display = "none";
+  updateDashboardStats();
+  toast("✅ بارلىق ئوقۇغۇچىلار تىزىملىكى تولۇق پاكىزلاندى (0 ئوقۇغۇچى)!");
+}
+
 function renderStudentsTableOnly(){
   try {
     var deletedP = getDeletedPhones();
@@ -3085,7 +3115,7 @@ function renderStudentsTableOnly(){
       var nm = (st.name || "").trim();
       var p = String(st.phone||"").trim();
       if(nm === "سىناق ئوقۇغۇچى" || nm === "سىناق" || nm.startsWith("سىناق")) return false;
-      if(p === "13800000000" || p === "admin") return false;
+      if(EXCLUDED_TEST_PHONES.includes(p)) return false;
       if(p && p !== "undefined" && deletedP.includes(p)) return false;
       if(nm && nm !== "undefined" && deletedN.includes(nm)) return false;
       return true;
@@ -3094,32 +3124,39 @@ function renderStudentsTableOnly(){
 
     var pendingTbody = document.getElementById("pendingStudentsTableBody");
     var approvedTbody = document.getElementById("approvedStudentsTableBody");
-    if(!pendingTbody || !approvedTbody) return;
+    var pendingBox = document.getElementById("pendingContainer");
+    if(!approvedTbody) return;
     var pendingList = allSt.filter(function(s){ return s.status === "pending"; });
     var approvedList = allSt.filter(function(s){ return s.status !== "pending"; });
 
-    if(!pendingList.length){
-      pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
-    } else {
-      pendingTbody.innerHTML = "";
-      pendingList.forEach(function(st, idx){
-        var tr = document.createElement("tr");
-        var pPhone = String(st.phone||"").trim();
-        var pName = String(st.name||"ئوقۇغۇچى").trim();
-        tr.innerHTML = '<td><b>' + esc(pName) + '</b></td>'
-          + '<td style="direction:ltr;text-align:right"><b>' + esc(pPhone) + '</b></td>'
-          + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
-          + '<td><span class="badge badge-gold">⏳ تەستىق كۈتۈۋاتىدۇ</span></td>'
-          + '<td style="text-align:center;white-space:nowrap">'
-          + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">✅ تەستىقلاش (ئىجازەت)</button> '
-          + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">❌ رەت قىلىش</button>'
-          + '</td>';
-        pendingTbody.appendChild(tr);
-      });
+    if(pendingBox){
+      pendingBox.style.display = pendingList.length ? "block" : "none";
+    }
+
+    if(pendingTbody){
+      if(!pendingList.length){
+        pendingTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">ھازىرچە تەستىق كۈتۈۋاتقان يېڭى ئوقۇغۇچى يوق.</td></tr>';
+      } else {
+        pendingTbody.innerHTML = "";
+        pendingList.forEach(function(st, idx){
+          var tr = document.createElement("tr");
+          var pPhone = String(st.phone||"").trim();
+          var pName = String(st.name||"ئوقۇغۇچى").trim();
+          tr.innerHTML = '<td><b>' + esc(pName) + '</b></td>'
+            + '<td style="direction:ltr;text-align:right"><b>' + esc(pPhone) + '</b></td>'
+            + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
+            + '<td><span class="badge badge-gold">⏳ كۈتۈۋاتىدۇ</span></td>'
+            + '<td style="text-align:center;white-space:nowrap">'
+            + '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">✅ ئىجازەت</button> '
+            + '  <button class="btn btn-red btn-sm" onclick="deleteStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">❌ ئۆچۈرۈش</button>'
+            + '</td>';
+          pendingTbody.appendChild(tr);
+        });
+      }
     }
 
     if(!approvedList.length){
-      approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تەستىقلانغان ئوقۇغۇچى يوق.</td></tr>';
+      approvedTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">تېخى تىزىملاتقان ئوقۇغۇچى يوق (0 ئوقۇغۇچى). يېڭى ئوقۇغۇچى تىزىملاتقاندا بۇ يەردە كۆرۈنىدۇ.</td></tr>';
     } else {
       approvedTbody.innerHTML = "";
       approvedList.forEach(function(st, idx){
@@ -3130,7 +3167,7 @@ function renderStudentsTableOnly(){
         tr.innerHTML = '<td><b>' + esc(pName) + '</b></td>'
           + '<td style="direction:ltr;text-align:right">' + esc(pPhone) + '</td>'
           + '<td>' + esc(st.when||"بۈگۈن") + '</td>'
-          + '<td><span class="badge ' + (isBlocked ? 'badge-red' : 'badge-green') + '">' + (isBlocked ? '⛔ چەكلەنگەن' : '✅ ئىجازەت بېرىلدى') + '</span></td>'
+          + '<td><span class="badge ' + (isBlocked ? 'badge-red' : 'badge-green') + '">' + (isBlocked ? '⛔ چەكلەنگەن' : '✅ دەرسلەر ئوچۇق') + '</span></td>'
           + '<td style="text-align:center;white-space:nowrap">'
           + (isBlocked ? 
               '  <button class="btn btn-teal btn-sm" onclick="approveStudent(\'' + esc(pPhone) + '\', \'' + esc(pName) + '\', ' + idx + ')">🔓 قايتا ئېچىش</button> ' : 
@@ -3163,11 +3200,12 @@ function loadStudentData(){
           d.students.forEach(function(s){
             var sPhone = String(s.phone||"").trim();
             var sName = String(s.name||"").trim();
+            if(EXCLUDED_TEST_PHONES.includes(sPhone)) return;
             if(sPhone && curDelP.includes(sPhone)) return;
             if(sName && curDelN.includes(sName)) return;
             var ex = curSt.find(function(x){ return (sPhone && String(x.phone||"").trim() === sPhone); });
             if(!ex){
-              curSt.unshift({ name: s.name, phone: s.phone, status: s.status||"pending", when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
+              curSt.unshift({ name: s.name, phone: s.phone, status: s.status||"approved", when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
               changed = true;
             } else if(s.status && ex.status !== s.status){
               ex.status = s.status; changed = true;
@@ -3191,11 +3229,12 @@ function loadStudentData(){
           sbStudents.forEach(function(s){
             var sPhone = String(s.phone||"").trim();
             var sName = String(s.name||"").trim();
+            if(EXCLUDED_TEST_PHONES.includes(sPhone)) return;
             if(sPhone && curDelP.includes(sPhone)) return;
             if(sName && curDelN.includes(sName)) return;
             var ex = curSt.find(function(x){ return (sPhone && String(x.phone||"").trim() === sPhone) || (sName && String(x.name||"").trim() === sName); });
             if(!ex){
-              curSt.unshift({ name: s.name, phone: s.phone, status: s.status, when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
+              curSt.unshift({ name: s.name, phone: s.phone, status: s.status||"approved", when: s.registered_at ? s.registered_at.slice(0,10) : "بۈگۈن" });
               changed = true;
             } else if(s.status && ex.status !== s.status){
               ex.status = s.status; changed = true;
@@ -3209,8 +3248,8 @@ function loadStudentData(){
       }).catch(function(){});
     }
 
-    // Ensure student from uytibb_v1 is listed
-    if(prog.user && (prog.user.phone || prog.user.name)){
+    // Only ensure non-test student from uytibb_v1 is listed
+    if(prog.user && prog.user.phone && !EXCLUDED_TEST_PHONES.includes(String(prog.user.phone).trim())){
       var pPhone = String(prog.user.phone||"").trim();
       var pName = String(prog.user.name||"").trim();
       if(!deletedP.includes(pPhone) && !deletedN.includes(pName) && !allSt.some(function(u){ return (pPhone && String(u.phone||"").trim() === pPhone) || (pName && String(u.name||"").trim() === pName); })){
