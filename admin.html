@@ -40,6 +40,21 @@ if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
     reg.update();
   }).catch(function(){});
 }
+if ("caches" in window) {
+  caches.keys().then(function(keys){
+    keys.forEach(function(k){
+      if(!k.includes("v66")){
+        caches.delete(k);
+      }
+    });
+  });
+}
+try {
+  if (localStorage.getItem("uytibb_admin_pass_customized") !== "true") {
+    localStorage.setItem("uytibb_admin_user", "admin");
+    localStorage.setItem("uytibb_admin_pass", "tibb2026");
+  }
+} catch(e){}
 </script>
 <style>
 @font-face {
@@ -575,6 +590,14 @@ table.data-table tr:hover { background: var(--teal-light); }
 
       <!-- TAB 1: DASHBOARD -->
       <section class="panel active" id="p-dash">
+        <div id="initialPassWarningBanner" style="display:none;background:#fff3cd;border:1.5px solid #ffeeba;color:#856404;padding:.9rem 1.2rem;border-radius:10px;margin-bottom:1.2rem;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
+          <div style="line-height:1.7">
+            <strong style="color:#b45309">⚠️ بىخەتەرلىك ئەسكەرتىشى:</strong> سىز ھازىر دەسلەپكى ۋاقىتلىق مەخپىي نومۇر (<code style="background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #e2ba39;font-weight:bold" dir="ltr">tibb2026</code>) بىلەن كىردىڭىز.<br>
+            سىستېما بىخەتەرلىكى ئۈچۈن، «باشقۇرغۇچى تەڭشىكى» گە ئۆتۈپ ئۆزىڭىزگە مەخسۇس يېڭى پارول بېكىتىۋېلىڭ. <b>يېڭى پارول ساقلانغاندىن كېيىن، بۇ ۋاقىتلىق پارول قايتا ئىشلىتىلمەيدۇ!</b>
+          </div>
+          <button onclick="goToSettingsTab()" class="btn btn-gold btn-sm" style="font-weight:bold;cursor:pointer;color:#2e2200;padding:.5rem 1rem">⚙️ ھازىرلا پارولنى ئۆزگەرتىش</button>
+        </div>
+
         <div class="panel-title">
           <span>📊 سىستېما باش تاختىسى</span>
           <span style="font-size:.9rem;color:var(--muted)">ئەڭ يېڭى سانلىق مەلۇماتلار</span>
@@ -1355,6 +1378,11 @@ function checkAuth(){
   if(authed){
     document.getElementById("loginWrap").style.display = "none";
     document.getElementById("adminApp").style.display = "flex";
+    var warnBanner = document.getElementById("initialPassWarningBanner");
+    if(warnBanner){
+      var isCustomized = localStorage.getItem("uytibb_admin_pass_customized") === "true";
+      warnBanner.style.display = isCustomized ? "none" : "flex";
+    }
     var curName = localStorage.getItem("uytibb_admin_name") || sessionStorage.getItem("uytibb_admin_user_name") || "باشقۇرغۇچى";
     initAdmin();
   } else {
@@ -1366,6 +1394,15 @@ function checkAuth(){
       setTimeout(function(){ passInp.focus(); }, 80);
     }
   }
+}
+
+function goToSettingsTab(){
+  var tabBtn = document.querySelector('.sidebar .nav-item[data-tab="settings"]');
+  if(tabBtn) tabBtn.click();
+  setTimeout(function(){
+    var inp = document.getElementById("newMasterPassInp");
+    if(inp){ inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }, 100);
 }
 
 function normInputText(str){
@@ -1404,11 +1441,23 @@ function doAdminLogin(){
     return;
   }
 
-  // Explicitly reject insecure testing credentials
-  if(passVal === "123456" || passVal === "admin" || (userVal === "admin" && passVal === "123456") || (userVal === "admin" && passVal === "admin")){
-    showErr("⛔ بىخەتەرلىك تەلەپلىرى بويىچە، «admin» ياكى «123456» دېگەن سىناق مەخپىي نومۇر بىلەن كىرىش مەڭگۈلۈك تاقالدى! مەخسۇس باشقۇرغۇچى مەخپىي نومۇرىڭىزنى كىرگۈزۈڭ.");
+  // Explicitly reject old insecure testing passwords
+  if(passVal === "123456" || (userVal === "admin" && passVal === "admin")){
+    showErr("⛔ بىخەتەرلىك تەلەپلىرى بويىچە، «123456» دېگەن سىناق مەخپىي نومۇر بىلەن كىرىش مەڭگۈلۈك تاقالدى! مەخسۇس باشقۇرغۇچى مەخپىي نومۇرىڭىزنى كىرگۈزۈڭ.");
     return;
   }
+
+  var isCustomized = localStorage.getItem("uytibb_admin_pass_customized") === "true";
+
+  // If already customized, the initial temporary pass "tibb2026" is EXPIRED forever!
+  if(isCustomized && (rawPass === "tibb2026" || passVal === "tibb2026")){
+    showErr("⛔ دەسلەپكى ۋاقىتلىق پارول («tibb2026») ئاللىقاچان بىكار قىلىنغان! ئۆزىڭىز بېكىتكەن يېڭى پارول بىلەن كىرىڭ.");
+    return;
+  }
+
+  var curSavedPass = (localStorage.getItem("uytibb_admin_pass") || (!isCustomized ? DEFAULT_PASS : "")).trim();
+  var curSavedUser = normInputText(localStorage.getItem("uytibb_admin_user") || "admin");
+  var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
 
   // Helper for successful login
   var handleSuccess = function(name, role) {
@@ -1425,54 +1474,52 @@ function doAdminLogin(){
     checkAuth();
   };
 
-  // 1. If Firebase Auth is available and email contains @ or looks like an email/username
-  if(fbAuth && rawPass && (rawUser.includes("@") || rawUser === "admin" || userVal === "admin")) {
-    var emailToUse = rawUser.includes("@") ? rawUser : (rawUser + "@tibabet-cb963.firebaseapp.com");
-    fbAuth.signInWithEmailAndPassword(emailToUse, rawPass)
+  var matched = null;
+
+  // 1. Primary admin account match (instant, local)
+  var isUserMatch = !userVal || userVal === "admin" || userVal === "uytibb" || userVal === curSavedUser || userVal === normInputText(curSavedName);
+  var isPassMatch = curSavedPass && (rawPass === curSavedPass || passVal === normInputText(curSavedPass));
+  if(!isCustomized && (rawPass === "tibb2026" || passVal === "tibb2026")){
+    isPassMatch = true;
+  }
+
+  if(isUserMatch && isPassMatch){
+    matched = { username: curSavedUser || "admin", name: curSavedName, role: "super" };
+  }
+
+  // 2. Multi-admins list match
+  if(!matched){
+    var admins = getAdmins();
+    matched = admins.find(function(a){
+      if(!a) return false;
+      var aU = normInputText(a.username);
+      var aP = (a.pass || "").trim();
+      var aN = normInputText(a.name);
+      var uOk = !userVal || aU === userVal || aN === userVal || (aU === "admin" && (userVal === "admin" || userVal === "uytibb"));
+      var pOk = aP && (rawPass === aP || passVal === normInputText(aP));
+      return uOk && pOk;
+    });
+  }
+
+  if(matched){
+    handleSuccess(matched.name, matched.role);
+    return;
+  }
+
+  // 3. Optional Firebase Auth fallback (only if entered username is an email)
+  if(fbAuth && rawPass && rawUser.includes("@")) {
+    fbAuth.signInWithEmailAndPassword(rawUser, rawPass)
       .then(function(cred){
         var user = cred.user;
         handleSuccess(user.displayName || user.email || "باشقۇرغۇچى", "super");
       })
       .catch(function(error){
-        // Fallback to local authentication check
-        fallbackLocalLogin();
+        showErr();
       });
     return;
   }
 
-  fallbackLocalLogin();
-
-  function fallbackLocalLogin() {
-    var curSavedPass = normInputText(localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS);
-    var curSavedName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
-
-    var matched = null;
-    if(!userVal || userVal === "admin" || userVal === normInputText(curSavedName)){
-      if(passVal === curSavedPass){
-        matched = { username: "admin", name: curSavedName, role: "super" };
-      }
-    }
-
-    if(!matched){
-      var admins = getAdmins();
-      matched = admins.find(function(a){
-        var aU = normInputText(a.username);
-        var aP = normInputText(a.pass);
-        var aN = normInputText(a.name);
-        if(!userVal){
-          return aP === passVal;
-        } else {
-          return (aU === userVal || aN === userVal) && aP === passVal;
-        }
-      });
-    }
-
-    if(matched){
-      handleSuccess(matched.name, matched.role);
-    } else {
-      showErr();
-    }
-  }
+  showErr();
 }
 
 function resetAdminPassPrompt(){
@@ -2858,8 +2905,8 @@ function initPasswordChangeUI(){
     }
 
     if(p1){
-      if(p1 === "123456" || p1.toLowerCase() === "admin"){
-        showToast("⛔ بىخەتەرلىك تەلىپى بويىچە «123456» ياكى «admin» نى پارول قىلىشقا بولمايدۇ! بىخەتەر پارول بەلگىلەڭ.");
+      if(p1 === "123456" || p1.toLowerCase() === "admin" || p1.toLowerCase() === "tibb2026"){
+        showToast("⛔ بىخەتەرلىك تەلىپى بويىچە سىناق ياكى دەسلەپكى پارولنى («123456»، «tibb2026») قايتا بېكىتىشكە بولمايدۇ! ئۆزىڭىزگە مەخسۇس يېڭى پارول بەلگىلەڭ.");
         return;
       }
       if(p1.length < 4){
@@ -2871,7 +2918,10 @@ function initPasswordChangeUI(){
         return;
       }
       localStorage.setItem("uytibb_admin_pass", p1);
+      localStorage.setItem("uytibb_admin_pass_customized", "true");
       didChangePass = true;
+      var warnBanner = document.getElementById("initialPassWarningBanner");
+      if(warnBanner) warnBanner.style.display = "none";
     }
 
     // Synchronize to multi-admins list
@@ -2916,7 +2966,7 @@ function initPasswordChangeUI(){
 
       var statusText = "✅ تەڭشەك مۇۋەپپەقىيەتلىك ساقلاندى!";
       if(didChangeName) statusText += " باشقۇرغۇچى نامى: «" + nameVal + "».";
-      if(didChangePass) statusText += " يېڭى كىرىش پارولى: «" + p1 + "» (كېيىنكى قېتىم بۇ پارول بىلەن كىرىسىز).";
+      if(didChangePass) statusText += " يېڭى كىرىش پارولى: «" + p1 + "» (كېيىنكى قېتىم بۇ يېڭى پارول بىلەن كىرىسىز، دەسلەپكى ۋاقىتلىق پارول ئەمەلدىن قالدۇرۇلدى).";
       msg.textContent = statusText;
     }
 

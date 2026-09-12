@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v65-20260912_secure_admin_and_reset_streak';
+const CACHE_NAME = 'uytibb-v66-20260912_instant_admin_login_and_auto_revoke';
 const ASSETS = [
   './',
   './index.html',
