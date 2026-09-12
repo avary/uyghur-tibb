@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v64-20260912_open_registration_no_gatekeeper_clean_slate';
+const CACHE_NAME = 'uytibb-v65-20260912_secure_admin_and_reset_streak';
 const ASSETS = [
   './',
   './index.html',

@@ -519,7 +519,7 @@ table.data-table tr:hover { background: var(--teal-light); }
     <p>«ئۇيغۇر تېبابىتى» دەرس، سوئال ۋە ئوقۇغۇچىلارنى باشقۇرۇش</p>
     <div class="inp-group">
       <label for="adminUserInp">باشقۇرغۇچى كىرىش نامى:</label>
-      <input type="text" id="adminUserInp" class="inp" placeholder="admin" value="admin" style="margin-bottom:.6rem" dir="ltr">
+      <input type="text" id="adminUserInp" class="inp" placeholder="باشقۇرغۇچى نامىنى كىرگۈزۈڭ" value="" style="margin-bottom:.6rem" dir="ltr" autocomplete="username">
       <label for="adminPass">مەخپىي نومۇر (پارول):</label>
       <div style="position:relative;display:flex;align-items:center">
         <input type="password" id="adminPass" class="inp" placeholder="مەخپىي نومۇرنى كىرگۈزۈڭ" value="" autofocus dir="ltr" style="padding-left:42px" autocomplete="current-password">
@@ -528,10 +528,7 @@ table.data-table tr:hover { background: var(--teal-light); }
     </div>
     <button class="btn btn-teal btn-block" id="loginBtn" style="margin-top:.6rem">🔓 كىرىش</button>
 
-    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center;line-height:1.6">
-      ⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br>
-      <a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>
-    </p>
+    <p id="loginErr" style="color:var(--red);font-size:.85rem;margin:.8rem 0 0;display:none;background:#ffebee;padding:.6rem;border-radius:8px;text-align:center;line-height:1.6"></p>
     <div style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem;display:flex;flex-direction:column;gap:.6rem">
       <button type="button" onclick="goToStudentPage('#/')" class="btn btn-line btn-sm" style="width:100%;justify-content:center;cursor:pointer">🌐 ئوقۇغۇچى بېتىگە كىرىش</button>
       <button type="button" onclick="directAdminInstall()" id="adminInstallBtn" class="btn btn-gold btn-sm" style="width:100%;justify-content:center;cursor:pointer;font-weight:bold;color:#2e2200;display:flex;align-items:center;gap:.4rem;padding:.6rem">
@@ -893,7 +890,7 @@ table.data-table tr:hover { background: var(--teal-light); }
             </div>
             <div class="inp-group" style="margin:0">
               <label>يېڭى مەخپىي نومۇر (پارول ئۆزگەرمىسە بوش قالسۇن):</label>
-              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: 123456" dir="ltr">
+              <input type="text" id="newMasterPassInp" class="inp" placeholder="مەسىلەن: tibb2026" dir="ltr">
             </div>
             <div class="inp-group" style="margin:0">
               <label>پارولنى قايتا يېزىڭ:</label>
@@ -1284,7 +1281,7 @@ function applyAdminTheme(t){
 }
 
 /* 2. AUTHENTICATION & MULTI-ADMIN ACCOUNTS */
-var DEFAULT_PASS = "123456";
+var DEFAULT_PASS = "tibb2026";
 function getAdmins(){
   var raw = localStorage.getItem("uytibb_admins");
   var list = [];
@@ -1294,8 +1291,18 @@ function getAdmins(){
       if(Array.isArray(parsed) && parsed.length > 0) list = parsed;
     } catch(e){}
   }
-  var singlePass = localStorage.getItem("uytibb_admin_pass") || DEFAULT_PASS;
+  var singlePass = localStorage.getItem("uytibb_admin_pass");
+  if(!singlePass || singlePass === "123456" || singlePass === "admin"){
+    singlePass = DEFAULT_PASS;
+    localStorage.setItem("uytibb_admin_pass", DEFAULT_PASS);
+  }
   var singleName = localStorage.getItem("uytibb_admin_name") || "باشقۇرغۇچى";
+
+  list.forEach(function(a){
+    if(a && (a.pass === "123456" || a.pass === "admin")){
+      a.pass = DEFAULT_PASS;
+    }
+  });
 
   var root = list.find(function(a){ return a && (a.username === "admin" || a.role === "super"); });
   if(!root){
@@ -1378,23 +1385,30 @@ function doAdminLogin(){
   var userVal = normInputText(rawUser);
   var passVal = normInputText(rawPass);
 
-  // If password was entered into username box and pass box is empty, swap
-  if(userVal && !passVal){
-    passVal = userVal;
-    rawPass = rawUser;
-    userVal = "";
-    rawUser = "";
-  }
-
   var errEl = document.getElementById("loginErr");
   var showErr = function(msg) {
     if(errEl) {
       errEl.style.display = "block";
       errEl.style.background = "#ffebee";
       errEl.style.color = "var(--red)";
-      errEl.innerHTML = msg || '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!<br><a href="javascript:void(0)" onclick="resetAdminPassPrompt()" style="color:var(--teal-dark);font-weight:bold;text-decoration:underline;margin-top:4px;display:inline-block">پارولنى ئۇنتۇپ قالدىڭىزمۇ؟ 123456 گە ئەسلىگە قايتۇرۇش</a>';
+      errEl.innerHTML = msg || '⚠️ مەخپىي نومۇر ياكى كىرىش نامى خاتا بولدى!';
     }
   };
+
+  if(!rawUser && !rawPass){
+    showErr("⚠️ باشقۇرغۇچى كىرىش نامى ۋە مەخپىي نومۇرنى كىرگۈزۈڭ!");
+    return;
+  }
+  if(!rawPass){
+    showErr("⚠️ مەخپىي نومۇرنى كىرگۈزۈڭ!");
+    return;
+  }
+
+  // Explicitly reject insecure testing credentials
+  if(passVal === "123456" || passVal === "admin" || (userVal === "admin" && passVal === "123456") || (userVal === "admin" && passVal === "admin")){
+    showErr("⛔ بىخەتەرلىك تەلەپلىرى بويىچە، «admin» ياكى «123456» دېگەن سىناق مەخپىي نومۇر بىلەن كىرىش مەڭگۈلۈك تاقالدى! مەخسۇس باشقۇرغۇچى مەخپىي نومۇرىڭىزنى كىرگۈزۈڭ.");
+    return;
+  }
 
   // Helper for successful login
   var handleSuccess = function(name, role) {
@@ -1462,23 +1476,7 @@ function doAdminLogin(){
 }
 
 function resetAdminPassPrompt(){
-  if(confirm("باشقۇرغۇچىنىڭ كىرىش پارولىنى ئەسلىدىكى «123456» گە قايتۇرامسىز؟")){
-    localStorage.setItem("uytibb_admin_pass", "123456");
-    var admins = getAdmins();
-    var root = admins.find(function(a){ return a.username === "admin" || a.role === "super"; });
-    if(root) root.pass = "123456";
-    saveAdmins(admins);
-    var passInp = document.getElementById("adminPass");
-    if(passInp) passInp.value = "123456";
-    var errEl = document.getElementById("loginErr");
-    if(errEl) {
-      errEl.style.display = "block";
-      errEl.style.background = "#e6f7f2";
-      errEl.style.color = "var(--teal-dark)";
-      errEl.innerHTML = '✅ پارول ئەسلىدىكى <b dir="ltr">123456</b> گە قايتۇرۇلدى! ئەمدى كىرىشنى بېسىڭ.';
-    }
-    showToast("✅ پارول 123456 گە ئەسلىگە كەلتۈرۈلدى!");
-  }
+  alert("⛔ بىخەتەرلىك تەلىپى سەۋەبىدىن سىناق پارول (123456) مەڭگۈلۈك ئەمەلدىن قالدۇرۇلدى. باشقۇرغۇچى مەخپىي نومۇرىڭىز بىلەن كىرىڭ.");
 }
 
 document.getElementById("loginBtn").onclick = doAdminLogin;
@@ -2860,6 +2858,10 @@ function initPasswordChangeUI(){
     }
 
     if(p1){
+      if(p1 === "123456" || p1.toLowerCase() === "admin"){
+        showToast("⛔ بىخەتەرلىك تەلىپى بويىچە «123456» ياكى «admin» نى پارول قىلىشقا بولمايدۇ! بىخەتەر پارول بەلگىلەڭ.");
+        return;
+      }
       if(p1.length < 4){
         showToast("⚠️ مەخپىي نومۇر كەم دېگەندە 4 ھەرپ ياكى رەقەم بولسۇن!");
         return;
@@ -3560,6 +3562,10 @@ document.getElementById("addNewAdminBtn").onclick = function(){
 
   if(!name || !username || !pass){
     alert("بارلىق سۆزنەكلەرنى (ئىسمى، كىرىش نامى ۋە مەخپىي نومۇر) تولدۇرۇڭ!");
+    return;
+  }
+  if(pass === "123456" || pass.toLowerCase() === "admin"){
+    alert("⛔ بىخەتەرلىك تەلىپى بويىچە «123456» ياكى «admin» نى پارول قىلىشقا بولمايدۇ!");
     return;
   }
   if(pass.length < 4){

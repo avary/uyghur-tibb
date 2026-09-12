@@ -48,25 +48,33 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(!k.includes("v64")){
+      if(!k.includes("v65")){
         caches.delete(k);
       }
     });
   });
 }
 try {
-  var _lrk = "uytibb_launch_reset_v64";
+  var _lrk = "uytibb_launch_reset_v65";
   if (!localStorage.getItem(_lrk)) {
     localStorage.removeItem("uytibb_all_students");
     localStorage.removeItem("uytibb_deleted_phones");
     localStorage.removeItem("uytibb_deleted_names");
     var _cp = JSON.parse(localStorage.getItem("uytibb_v1")||"{}");
-    if (_cp && _cp.user) {
-      if (['99900011122', '5516862398', '5016862393', '5516862393', '5559880508', '5315942989', '13800000000'].includes(_cp.user.phone)) {
-        delete _cp.user;
-      } else {
-        _cp.user.status = "approved";
-        _cp.user.approvalNotified = true;
+    if (_cp) {
+      if (_cp.user) {
+        if (['99900011122', '5516862398', '5016862393', '5516862393', '5559880508', '5315942989', '13800000000'].includes(_cp.user.phone)) {
+          delete _cp.user;
+        } else {
+          _cp.user.status = "approved";
+          _cp.user.approvalNotified = true;
+        }
+      }
+      // Reset streak back to beginning (Day 1) and remove 3+ day streak badges
+      var _d = (new Date().getFullYear()*372 + new Date().getMonth()*31 + new Date().getDate());
+      _cp.streak = { d: _d, n: 1, best: 1 };
+      if (Array.isArray(_cp.badges)) {
+        _cp.badges = _cp.badges.filter(function(b){ return b !== "streak3" && b !== "streak7" && b !== "streak30"; });
       }
       localStorage.setItem("uytibb_v1", JSON.stringify(_cp));
     }
