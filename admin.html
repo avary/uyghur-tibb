@@ -1521,6 +1521,136 @@ function saveCustomPdfBooks(list){
   }
 }
 
+var PdfStore = {
+  dbName: "uytibb_pdf_db",
+  storeName: "pdf_files",
+  getDB: function(){
+    return new Promise(function(resolve, reject){
+      if(!("indexedDB" in window)) return reject(new Error("IndexedDB not supported"));
+      var req = indexedDB.open(PdfStore.dbName, 1);
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if(!db.objectStoreNames.contains(PdfStore.storeName)){
+          db.createObjectStore(PdfStore.storeName, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = function(e){ resolve(e.target.result); };
+      req.onerror = function(e){ reject(e.target.error); };
+    });
+  },
+  savePdf: function(id, blob, fileName){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readwrite");
+        var store = tx.objectStore(PdfStore.storeName);
+        store.put({ id: id, blob: blob, fileName: fileName, updated: Date.now() });
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  },
+  getPdf: function(id){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readonly");
+        var store = tx.objectStore(PdfStore.storeName);
+        var req = store.get(id);
+        req.onsuccess = function(){ resolve(req.result ? req.result.blob : null); };
+        req.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  },
+  deletePdf: function(id){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readwrite");
+        var store = tx.objectStore(PdfStore.storeName);
+        store.delete(id);
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  }
+};
+
+function dataUrlToBlobUrl(dataUrl){
+  try {
+    var arr = dataUrl.split(',');
+    var mimeMatch = arr[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+    var bstr = atob(arr[1]);
+    var n = bstr.length;
+    var u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    var blob = new Blob([u8arr], {type: mime});
+    return URL.createObjectURL(blob);
+  } catch(e){
+    return dataUrl;
+  }
+}
+
+function showPdfViewerModal(url, title){
+  if(!url){ alert("⚠️ PDF ھۆججىتى تېپىلمىدى."); return; }
+  if(url.indexOf("drive.google.com") >= 0 && url.indexOf("/view") >= 0){
+    url = url.replace(/\/view.*$/, "/preview");
+  }
+  var m = document.getElementById("adminPdfViewerModal");
+  var t = document.getElementById("adminPdfViewerTitle");
+  var f = document.getElementById("adminPdfViewerFrame");
+  var b = document.getElementById("adminPdfViewerExternalBtn");
+  if(t) t.textContent = title || "PDF كىتاب ئوقۇغۇچ";
+  if(b) b.href = url;
+  if(f) f.src = url;
+  if(m) m.style.display = "flex";
+}
+
+function closeAdminPdfViewerModal(){
+  var m = document.getElementById("adminPdfViewerModal");
+  var f = document.getElementById("adminPdfViewerFrame");
+  if(f) f.src = "about:blank";
+  if(m) m.style.display = "none";
+}
+
+function openPdfBookById(id){
+  // Check IndexedDB first
+  PdfStore.getPdf(id).then(function(blob){
+    if(blob){
+      var blobUrl = URL.createObjectURL(blob);
+      var custom = getCustomPdfBooks();
+      var b = custom.find(function(x){ return x.id === id; });
+      showPdfViewerModal(blobUrl, (b && b.title) ? b.title : "PDF كىتابى");
+      return;
+    }
+    openAdminFallbackBook(id);
+  }).catch(function(){
+    openAdminFallbackBook(id);
+  });
+}
+
+function openAdminFallbackBook(id){
+  var custom = getCustomPdfBooks();
+  var b = custom.find(function(x){ return x.id === id; });
+  if(b){
+    if(b.pdfData && b.pdfData.indexOf("data:") === 0){
+      var blobUrl = dataUrlToBlobUrl(b.pdfData);
+      showPdfViewerModal(blobUrl, b.title);
+    } else if(b.pdfUrl && b.pdfUrl !== "#"){
+      showPdfViewerModal(b.pdfUrl, b.title);
+    } else {
+      alert("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+    }
+    return;
+  }
+  var lessons = LESSONS_DATA || [];
+  var L = lessons.find(function(x){ return (x.id + "") === (id + ""); });
+  if(L){
+    var url = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    showPdfViewerModal(url, L.title || (L.id + "-دەرس"));
+    return;
+  }
+  alert("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+}
+
 function renderAdminPdfBooksTable(){
   var tbody = document.getElementById("adminPdfBooksTbody");
   if(!tbody) return;
@@ -1539,14 +1669,14 @@ function renderAdminPdfBooksTable(){
       + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
       + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 دەرسلىك PDF</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
+      + '  <button class="btn btn-teal btn-sm" onclick="openPdfBookById(\'' + esc(L.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
       + '  <button class="btn btn-gold btn-sm" onclick="openEditPdfBookModal(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
       + '</div></td>'
       + '</tr>';
   });
 
   customBooks.forEach(function(b, idx){
-    var pUrl = b.pdfData || b.pdfUrl || "";
+    var pUrl = b.pdfUrl || (b.hasBlob ? "(يەرلىك PDF ھۆججەت)" : "");
     h += '<tr style="background:var(--gold-light)">'
       + '<td><span class="badge badge-green">📖 كۇتۇپخانا</span></td>'
       + '<td><b>' + esc(b.title) + '</b></td>'
@@ -1554,7 +1684,7 @@ function renderAdminPdfBooksTable(){
       + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
       + '<td><span class="badge badge-gold">📖 قوشۇمچە كىتاب</span></td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem">👁️ كۆرۈش</a>'
+      + '  <button class="btn btn-teal btn-sm" onclick="openPdfBookById(\'' + esc(b.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
       + '  <button class="btn btn-red btn-sm" onclick="deleteCustomPdfBook(' + idx + ')" style="padding:.25rem .6rem">🗑️ ئۆچۈرۈش</button>'
       + '</div></td>'
       + '</tr>';
@@ -1568,6 +1698,7 @@ function deleteCustomPdfBook(idx){
   var b = custom[idx];
   if(!b) return;
   if(!confirm("«" + (b.title || "بۇ كىتاب") + "» نى كۇتۇپخانىدىن ئۆچۈرەمسىز؟")) return;
+  if(b.id) PdfStore.deletePdf(b.id);
   custom.splice(idx, 1);
   saveCustomPdfBooks(custom);
   renderAdminPdfBooksTable();
@@ -1715,19 +1846,26 @@ function saveNewPdfBook(){
     }
 
     if(file){
-      if(file.size > 3 * 1024 * 1024){
-        alert("⚠️ تاللانغان PDF ھۆججىتى كۆلىمى (" + (file.size/(1024*1024)).toFixed(1) + " MB) بەك چوڭ.\n\nتېخىمۇ چوڭ PDF كىتابلار ئۈچۈن، كىتابنى تۈردىكى pdf/ قىسقۇچىغا ئورۇنلاشتۇرۇپ، URL ئادرېسىغا «pdf/" + file.name + "» دەپ يېزىڭ.");
-        newBook.pdfUrl = "pdf/" + file.name;
+      PdfStore.savePdf(newBook.id, file, file.name).then(function(){
+        newBook.hasBlob = true;
+        newBook.fileName = file.name;
+        newBook.pdfUrl = url || ("pdf/" + file.name);
         commitExtraBook();
-        return;
-      }
-      var reader = new FileReader();
-      reader.onload = function(evt){
-        newBook.pdfData = evt.target.result;
-        newBook.pdfUrl = "pdf/" + file.name;
-        commitExtraBook();
-      };
-      reader.readAsDataURL(file);
+      }).catch(function(err){
+        console.warn("PdfStore save error:", err);
+        if(file.size <= 2 * 1024 * 1024){
+          var reader = new FileReader();
+          reader.onload = function(evt){
+            newBook.pdfData = evt.target.result;
+            newBook.pdfUrl = url || ("pdf/" + file.name);
+            commitExtraBook();
+          };
+          reader.readAsDataURL(file);
+        } else {
+          newBook.pdfUrl = url || ("pdf/" + file.name);
+          commitExtraBook();
+        }
+      });
     } else {
       commitExtraBook();
     }
@@ -3463,5 +3601,22 @@ if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.s
 }
 var triggerAdminInstall = directAdminInstall;
 </script>
+
+<!-- Built-in Fullscreen PDF Viewer Modal for Admin -->
+<div id="adminPdfViewerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,.85);flex-direction:column">
+  <div style="background:var(--teal-dark);color:#fff;padding:.7rem 1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <span style="font-size:1.4rem">📖</span>
+      <h3 id="adminPdfViewerTitle" style="margin:0;font-size:1.1rem;color:#fff">PDF كىتاب ئوقۇغۇچ</h3>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <a id="adminPdfViewerExternalBtn" href="#" target="_blank" class="btn btn-gold btn-sm" style="color:#2e2200;text-decoration:none">↗ يېڭى كۆزنەكتە ئېچىش</a>
+      <button onclick="closeAdminPdfViewerModal()" class="btn btn-line btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4)">✕ تاقاش</button>
+    </div>
+  </div>
+  <div style="flex:1;width:100%;height:calc(100% - 55px);position:relative;background:#525659">
+    <iframe id="adminPdfViewerFrame" src="" style="width:100%;height:100%;border:none"></iframe>
+  </div>
+</div>
 </body>
 </html>

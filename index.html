@@ -48,7 +48,7 @@ if ("serviceWorker" in navigator && /^https?:/.test(location.protocol)) {
 if ("caches" in window) {
   caches.keys().then(function(keys){
     keys.forEach(function(k){
-      if(!k.includes("v60")){
+      if(!k.includes("v61")){
         caches.delete(k);
       }
     });
@@ -879,7 +879,8 @@ function vLesson(id, tab){
   var nextL = lessonById(L.id + 1);
   var h='<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">';
   h+='<a class="backlink" href="#/lessons" style="margin:0">› دەرسلەرگە قايتىش</a>';
-  h+='<div style="display:flex;gap:.4rem">';
+  h+='<div style="display:flex;gap:.4rem;align-items:center">';
+  h+='<button class="btn btn-gold btn-sm" onclick="openPdfBookById(\''+L.id+'\')" style="font-size:.82rem;padding:.3rem .6rem;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;font-weight:bold" title="ئەسلى دەرسلىك كىتابىنى ئوقۇش">📖 ئەسلى PDF</button>';
   if(prevL) h+='<a class="btn btn-line btn-sm" href="#/lesson/'+prevL.id+'">‹ '+prevL.id+'-دەرس</a>';
   if(nextL) h+='<a class="btn btn-line btn-sm" href="#/lesson/'+nextL.id+'">'+nextL.id+'-دەرس ›</a>';
   h+='</div></div>';
@@ -1962,9 +1963,9 @@ function vBooks(){
       + '  <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:.9rem">' + esc(L.desc || L.subtitle || (L.title + " ھەققىدىكى ئەسلى تېبابەت دەرسلىك كىتابى")) + '</p>'
       + '</div>'
       + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-gold btn-sm" href="' + esc(pUrl) + '" target="_blank" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#2e2200;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem">'
+      + '  <button class="btn btn-gold btn-sm" onclick="openPdfBookById(\'' + esc(L.id) + '\')" style="flex:1;text-align:center;justify-content:center;font-weight:bold;color:#2e2200;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;border:none">'
       + '    <span>🚀</span> كىتابنى ئېچىش (PDF) ↗'
-      + '  </a>'
+      + '  </button>'
       + '</div>'
       + '</div>';
   });
@@ -1981,9 +1982,9 @@ function vBooks(){
       + '  <p style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:.9rem">' + esc(b.subtitle || b.desc || "قوشۇمچە تېبابەت PDF كىتابى") + '</p>'
       + '</div>'
       + '<div style="border-top:1px solid var(--line);padding-top:.85rem;display:flex;gap:.5rem;flex-wrap:wrap">'
-      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="flex:1;text-align:center;justify-content:center;text-decoration:none;font-weight:bold;color:#fff;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem">'
+      + '  <button class="btn btn-teal btn-sm" onclick="openPdfBookById(\'' + esc(b.id) + '\')" style="flex:1;text-align:center;justify-content:center;font-weight:bold;color:#fff;border-radius:10px;padding:.6rem;font-size:.92rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;border:none">'
       + '    <span>🚀</span> كىتابنى ئېچىش (PDF) ↗'
-      + '  </a>'
+      + '  </button>'
       + '</div>'
       + '</div>';
   });
@@ -2011,6 +2012,142 @@ function vWaitingApproval(user, status){
   return h;
 }
 
+var PdfStore = {
+  dbName: "uytibb_pdf_db",
+  storeName: "pdf_files",
+  getDB: function(){
+    return new Promise(function(resolve, reject){
+      if(!("indexedDB" in window)) return reject(new Error("IndexedDB not supported"));
+      var req = indexedDB.open(PdfStore.dbName, 1);
+      req.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if(!db.objectStoreNames.contains(PdfStore.storeName)){
+          db.createObjectStore(PdfStore.storeName, { keyPath: "id" });
+        }
+      };
+      req.onsuccess = function(e){ resolve(e.target.result); };
+      req.onerror = function(e){ reject(e.target.error); };
+    });
+  },
+  savePdf: function(id, blob, fileName){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readwrite");
+        var store = tx.objectStore(PdfStore.storeName);
+        store.put({ id: id, blob: blob, fileName: fileName, updated: Date.now() });
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  },
+  getPdf: function(id){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readonly");
+        var store = tx.objectStore(PdfStore.storeName);
+        var req = store.get(id);
+        req.onsuccess = function(){ resolve(req.result ? req.result.blob : null); };
+        req.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  },
+  deletePdf: function(id){
+    return PdfStore.getDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(PdfStore.storeName, "readwrite");
+        var store = tx.objectStore(PdfStore.storeName);
+        store.delete(id);
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(e){ reject(e.target.error); };
+      });
+    });
+  }
+};
+
+function dataUrlToBlobUrl(dataUrl){
+  try {
+    var arr = dataUrl.split(',');
+    var mimeMatch = arr[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+    var bstr = atob(arr[1]);
+    var n = bstr.length;
+    var u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    var blob = new Blob([u8arr], {type: mime});
+    return URL.createObjectURL(blob);
+  } catch(e){
+    return dataUrl;
+  }
+}
+
+function showPdfViewerModal(url, title){
+  if(!url){
+    if(typeof toast === "function") toast("⚠️ PDF ھۆججىتى تېپىلمىدى.");
+    else alert("⚠️ PDF ھۆججىتى تېپىلمىدى.");
+    return;
+  }
+  if(url.indexOf("drive.google.com") >= 0 && url.indexOf("/view") >= 0){
+    url = url.replace(/\/view.*$/, "/preview");
+  }
+  var m = document.getElementById("pdfViewerModal");
+  var t = document.getElementById("pdfViewerTitle");
+  var f = document.getElementById("pdfViewerFrame");
+  var b = document.getElementById("pdfViewerExternalBtn");
+  if(t) t.textContent = title || "PDF كىتاب ئوقۇغۇچ";
+  if(b) b.href = url;
+  if(f) f.src = url;
+  if(m) m.style.display = "flex";
+}
+
+function closePdfViewerModal(){
+  var m = document.getElementById("pdfViewerModal");
+  var f = document.getElementById("pdfViewerFrame");
+  if(f) f.src = "about:blank";
+  if(m) m.style.display = "none";
+}
+
+function openPdfBookById(id){
+  PdfStore.getPdf(id).then(function(blob){
+    if(blob){
+      var blobUrl = URL.createObjectURL(blob);
+      var custom = [];
+      try { custom = JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){}
+      var b = custom.find(function(x){ return x.id === id; });
+      showPdfViewerModal(blobUrl, (b && b.title) ? b.title : "PDF كىتابى");
+      return;
+    }
+    openFallbackBook(id);
+  }).catch(function(){
+    openFallbackBook(id);
+  });
+}
+
+function openFallbackBook(id){
+  var custom = [];
+  try { custom = JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){}
+  var b = custom.find(function(x){ return x.id === id; });
+  if(b){
+    if(b.pdfData && b.pdfData.indexOf("data:") === 0){
+      var blobUrl = dataUrlToBlobUrl(b.pdfData);
+      showPdfViewerModal(blobUrl, b.title);
+    } else if(b.pdfUrl && b.pdfUrl !== "#"){
+      showPdfViewerModal(b.pdfUrl, b.title);
+    } else {
+      if(typeof toast === "function") toast("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+      else alert("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+    }
+    return;
+  }
+  var L = (LESSONS || []).find(function(x){ return (x.id + "") === (id + ""); });
+  if(L){
+    var url = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    showPdfViewerModal(url, L.title || (L.id + "-دەرس"));
+    return;
+  }
+  if(typeof toast === "function") toast("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+  else alert("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
+}
+
 function openPdfBookDirect(pdfUrl, pdfData){
   var targetUrl = pdfData || pdfUrl;
   if(!targetUrl || targetUrl === "#"){
@@ -2019,23 +2156,11 @@ function openPdfBookDirect(pdfUrl, pdfData){
     return;
   }
   if(targetUrl.indexOf("data:") === 0){
-    try {
-      var arr = targetUrl.split(',');
-      var mimeMatch = arr[0].match(/:(.*?);/);
-      var mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
-      var bstr = atob(arr[1]);
-      var n = bstr.length;
-      var u8arr = new Uint8Array(n);
-      while(n--){ u8arr[n] = bstr.charCodeAt(n); }
-      var blob = new Blob([u8arr], {type: mime});
-      var blobUrl = URL.createObjectURL(blob);
-      var w = window.open(blobUrl, "_blank");
-      if(!w) location.href = blobUrl;
-      return;
-    } catch(e){ console.error("Blob error:", e); }
+    var blobUrl = dataUrlToBlobUrl(targetUrl);
+    showPdfViewerModal(blobUrl, "PDF كىتابى");
+    return;
   }
-  var win = window.open(targetUrl, "_blank");
-  if(!win) location.href = targetUrl;
+  showPdfViewerModal(targetUrl, "PDF كىتابى");
 }
 
 function checkShowApprovalCelebration(_u){
@@ -2164,8 +2289,7 @@ function router(){
   var mPdfDirect = hash.match(/^#\/lesson\/(\d+)\/pdf$/);
   if(mPdfDirect){
     var idPdf = parseInt(mPdfDirect[1], 10);
-    var pdfUrl = "pdf/lesson-" + idPdf + ".pdf?v=20260909_original";
-    window.open(pdfUrl, "_blank");
+    openPdfBookById(idPdf);
     location.hash = "#/books";
     return;
   }
@@ -5065,5 +5189,22 @@ quiz: [
 });
 
 </script>
+
+<!-- Built-in Fullscreen PDF Viewer Modal -->
+<div id="pdfViewerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:rgba(0,0,0,.85);flex-direction:column">
+  <div style="background:var(--teal-dark);color:#fff;padding:.7rem 1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <span style="font-size:1.4rem">📖</span>
+      <h3 id="pdfViewerTitle" style="margin:0;font-size:1.1rem;color:#fff">PDF كىتاب ئوقۇغۇچ</h3>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <a id="pdfViewerExternalBtn" href="#" target="_blank" class="btn btn-gold btn-sm" style="color:#2e2200;text-decoration:none">↗ يېڭى كۆزنەكتە ئېچىش</a>
+      <button onclick="closePdfViewerModal()" class="btn btn-line btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4);cursor:pointer">✕ تاقاش</button>
+    </div>
+  </div>
+  <div style="flex:1;width:100%;height:calc(100% - 55px);position:relative;background:#525659">
+    <iframe id="pdfViewerFrame" src="" style="width:100%;height:100%;border:none"></iframe>
+  </div>
+</div>
 </body>
 </html>

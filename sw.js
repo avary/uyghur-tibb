@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v60-20260911_blob_pdf_opener_and_student_approval_notices';
+const CACHE_NAME = 'uytibb-v61-20260912_indexeddb_pdf_store_and_embedded_viewer';
 const ASSETS = [
   './',
   './index.html',
