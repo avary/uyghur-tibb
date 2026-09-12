@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v62-20260912_kham_dorilar_1_2_integrated_and_viewer_direct_open';
+const CACHE_NAME = 'uytibb-v63-20260912_clean_titles_no_mb_labels';
 const ASSETS = [
   './',
   './index.html',

@@ -218,8 +218,8 @@ var DEFAULT_CUSTOM_PDF_BOOKS = [
   {
     id: "kham-dorilar-1",
     title: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (1-قىسىم)",
-    subtitle: "ئۆسۈملۈك دورىلىرى، مەنبەسى، تەبىئىتى ۋە خۇسۇسىيىتى (32.5MB ئەسلى PDF نۇسخا)",
-    pdfTitle: "خام دورىلار ئىلمى (1-قىسىم)",
+    subtitle: "ئۆسۈملۈك دورىلىرى، مەنبەسى، يىغىپ ساقلاش، تەبىئىتى ۋە خۇسۇسىيەتلىرى",
+    pdfTitle: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (1-قىسىم)",
     pdfUrl: "pdf/kham-dorilar-1.pdf",
     type: "extra",
     when: "2026-09-12"
@@ -227,8 +227,8 @@ var DEFAULT_CUSTOM_PDF_BOOKS = [
   {
     id: "kham-dorilar-2",
     title: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (2-قىسىم)",
-    subtitle: "مەدەن ۋە ھايۋانات دورىلىرى، خۇسۇسىيەتلىرى، ئىشلىتىلىشى (32.6MB ئەسلى PDF نۇسخا)",
-    pdfTitle: "خام دورىلار ئىلمى (2-قىسىم)",
+    subtitle: "مەدەن ۋە ھايۋانات دورىلىرى، تەبىئىتى، داۋالاش خۇسۇسىيەتلىرى ۋە تۈزەتكۈچىلىرى",
+    pdfTitle: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (2-قىسىم)",
     pdfUrl: "pdf/kham-dorilar-2.pdf",
     type: "extra",
     when: "2026-09-12"
@@ -266,13 +266,21 @@ function getCustomPdfBooks(){
       return false;
     });
     if(idx >= 0){
+      list[idx].title = def.title;
+      list[idx].subtitle = def.subtitle;
+      list[idx].pdfTitle = def.pdfTitle;
       list[idx].pdfUrl = def.pdfUrl;
       list[idx].id = list[idx].id || def.id;
     } else {
       list.push(Object.assign({}, def));
     }
   });
-  list.forEach(function(b){ b.pdfUrl = resolvePdfUrl(b); });
+  list.forEach(function(b){
+    b.pdfUrl = resolvePdfUrl(b);
+    if(b.subtitle && (b.subtitle.indexOf("MB") >= 0 || b.subtitle.indexOf("نۇسخا") >= 0)){
+      b.subtitle = b.subtitle.replace(/\s*\([^)]*(MB|نۇسخا)[^)]*\)/g, "").trim();
+    }
+  });
   return list;
 }
 
