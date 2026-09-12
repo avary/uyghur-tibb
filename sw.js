@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uytibb-v61-20260912_indexeddb_pdf_store_and_embedded_viewer';
+const CACHE_NAME = 'uytibb-v62-20260912_kham_dorilar_1_2_integrated_and_viewer_direct_open';
 const ASSETS = [
   './',
   './index.html',

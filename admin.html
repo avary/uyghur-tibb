@@ -1510,8 +1510,66 @@ document.getElementById("logoutBtn").onclick = function(){
 };
 
 /* 3. TAB SWITCHING & PDF LIBRARY MANAGER */
+var DEFAULT_CUSTOM_PDF_BOOKS = [
+  {
+    id: "kham-dorilar-1",
+    title: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (1-قىسىم)",
+    subtitle: "ئۆسۈملۈك دورىلىرى، مەنبەسى، تەبىئىتى ۋە خۇسۇسىيىتى (32.5MB ئەسلى PDF نۇسخا)",
+    pdfTitle: "خام دورىلار ئىلمى (1-قىسىم)",
+    pdfUrl: "pdf/kham-dorilar-1.pdf",
+    type: "extra",
+    when: "2026-09-12"
+  },
+  {
+    id: "kham-dorilar-2",
+    title: "ئۇيغۇر تېبابىتى خام دورىلار ئىلمى (2-قىسىم)",
+    subtitle: "مەدەن ۋە ھايۋانات دورىلىرى، خۇسۇسىيەتلىرى، ئىشلىتىلىشى (32.6MB ئەسلى PDF نۇسخا)",
+    pdfTitle: "خام دورىلار ئىلمى (2-قىسىم)",
+    pdfUrl: "pdf/kham-dorilar-2.pdf",
+    type: "extra",
+    when: "2026-09-12"
+  }
+];
+
+function resolvePdfUrl(item){
+  if(!item) return "";
+  if(item.pdfData && item.pdfData.indexOf("data:") === 0) return item.pdfData;
+  var u = item.pdfUrl || "";
+  var t = ((item.title || "") + " " + (item.subtitle || "") + " " + (item.desc || "") + " " + u).toLowerCase();
+  if(u.indexOf("kham-dorilar-1") >= 0 || (t.indexOf("خام دورىلار") >= 0 && (t.indexOf("1") >= 0 || t.indexOf("بىرىنچى") >= 0))){
+    return "pdf/kham-dorilar-1.pdf";
+  }
+  if(u.indexOf("kham-dorilar-2") >= 0 || (t.indexOf("خام دورىلار") >= 0 && (t.indexOf("2") >= 0 || t.indexOf("ئىككىنچى") >= 0))){
+    return "pdf/kham-dorilar-2.pdf";
+  }
+  var idNum = parseInt(item.id, 10);
+  if(!isNaN(idNum) && idNum >= 1 && idNum <= 11){
+    return "pdf/lesson-" + idNum + ".pdf?v=20260909_original";
+  }
+  return u || "#";
+}
+
 function getCustomPdfBooks(){
-  try { return JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){ return []; }
+  var list = [];
+  try { list = JSON.parse(localStorage.getItem("uytibb_custom_pdf_books")||"[]"); } catch(e){ list = []; }
+  DEFAULT_CUSTOM_PDF_BOOKS.forEach(function(def){
+    var idx = list.findIndex(function(x){
+      if(!x) return false;
+      if(x.id === def.id) return true;
+      var xt = ((x.title||"") + " " + (x.pdfUrl||"")).toLowerCase();
+      if(def.id === "kham-dorilar-1" && xt.indexOf("خام دورىلار") >= 0 && (xt.indexOf("1") >= 0 || xt.indexOf("بىرىنچى") >= 0)) return true;
+      if(def.id === "kham-dorilar-2" && xt.indexOf("خام دورىلار") >= 0 && (xt.indexOf("2") >= 0 || xt.indexOf("ئىككىنچى") >= 0)) return true;
+      return false;
+    });
+    if(idx >= 0){
+      list[idx].pdfUrl = def.pdfUrl;
+      list[idx].id = list[idx].id || def.id;
+    } else {
+      list.push(Object.assign({}, def));
+    }
+  });
+  list.forEach(function(b){ b.pdfUrl = resolvePdfUrl(b); });
+  return list;
 }
 function saveCustomPdfBooks(list){
   try {
@@ -1631,11 +1689,12 @@ function openAdminFallbackBook(id){
   var custom = getCustomPdfBooks();
   var b = custom.find(function(x){ return x.id === id; });
   if(b){
+    var u = resolvePdfUrl(b);
     if(b.pdfData && b.pdfData.indexOf("data:") === 0){
       var blobUrl = dataUrlToBlobUrl(b.pdfData);
       showPdfViewerModal(blobUrl, b.title);
-    } else if(b.pdfUrl && b.pdfUrl !== "#"){
-      showPdfViewerModal(b.pdfUrl, b.title);
+    } else if(u && u !== "#"){
+      showPdfViewerModal(u, b.title);
     } else {
       alert("⚠️ كىتاب ھۆججىتى تېپىلمىدى.");
     }
@@ -1644,7 +1703,7 @@ function openAdminFallbackBook(id){
   var lessons = LESSONS_DATA || [];
   var L = lessons.find(function(x){ return (x.id + "") === (id + ""); });
   if(L){
-    var url = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    var url = resolvePdfUrl(L);
     showPdfViewerModal(url, L.title || (L.id + "-دەرس"));
     return;
   }
@@ -1659,7 +1718,7 @@ function renderAdminPdfBooksTable(){
   var h = "";
 
   lessons.forEach(function(L){
-    var pUrl = L.pdfData || L.pdfUrl || ("pdf/lesson-" + L.id + ".pdf?v=20260909_original");
+    var pUrl = resolvePdfUrl(L);
     var pTitle = L.pdfTitle || (L.id + "-دەرسلىك ئەسلى كىتابى (PDF)");
     var hasPdf = !!(L.pdfData || L.pdfUrl);
     h += '<tr>'
@@ -1669,14 +1728,15 @@ function renderAdminPdfBooksTable(){
       + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
       + '<td>' + (hasPdf ? '<span class="badge badge-green">📄 دەرسلىك PDF</span>' : '<span class="badge badge-red">⚠️ PDF يوق</span>') + '</td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-      + '  <button class="btn btn-teal btn-sm" onclick="openPdfBookById(\'' + esc(L.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem;text-decoration:none;color:#fff">↗ ئېچىش</a>'
+      + '  <button class="btn btn-line btn-sm" onclick="openPdfBookById(\'' + esc(L.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
       + '  <button class="btn btn-gold btn-sm" onclick="openEditPdfBookModal(' + L.id + ')" style="padding:.25rem .6rem">✏️ تەھرىرلەش</button>'
       + '</div></td>'
       + '</tr>';
   });
 
   customBooks.forEach(function(b, idx){
-    var pUrl = b.pdfUrl || (b.hasBlob ? "(يەرلىك PDF ھۆججەت)" : "");
+    var pUrl = resolvePdfUrl(b);
     h += '<tr style="background:var(--gold-light)">'
       + '<td><span class="badge badge-green">📖 كۇتۇپخانا</span></td>'
       + '<td><b>' + esc(b.title) + '</b></td>'
@@ -1684,7 +1744,8 @@ function renderAdminPdfBooksTable(){
       + '<td dir="ltr" style="font-size:.85rem;color:var(--muted)">' + esc(pUrl.length > 35 ? pUrl.substring(0,35)+"…" : pUrl) + '</td>'
       + '<td><span class="badge badge-gold">📖 قوشۇمچە كىتاب</span></td>'
       + '<td><div style="display:flex;gap:.4rem;flex-wrap:wrap">'
-      + '  <button class="btn btn-teal btn-sm" onclick="openPdfBookById(\'' + esc(b.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
+      + '  <a class="btn btn-teal btn-sm" href="' + esc(pUrl) + '" target="_blank" style="padding:.25rem .6rem;text-decoration:none;color:#fff">↗ ئېچىش</a>'
+      + '  <button class="btn btn-line btn-sm" onclick="openPdfBookById(\'' + esc(b.id) + '\')" style="padding:.25rem .6rem">👁️ كۆرۈش</button>'
       + '  <button class="btn btn-red btn-sm" onclick="deleteCustomPdfBook(' + idx + ')" style="padding:.25rem .6rem">🗑️ ئۆچۈرۈش</button>'
       + '</div></td>'
       + '</tr>';
@@ -3610,11 +3671,15 @@ var triggerAdminInstall = directAdminInstall;
       <h3 id="adminPdfViewerTitle" style="margin:0;font-size:1.1rem;color:#fff">PDF كىتاب ئوقۇغۇچ</h3>
     </div>
     <div style="display:flex;align-items:center;gap:.5rem">
-      <a id="adminPdfViewerExternalBtn" href="#" target="_blank" class="btn btn-gold btn-sm" style="color:#2e2200;text-decoration:none">↗ يېڭى كۆزنەكتە ئېچىش</a>
-      <button onclick="closeAdminPdfViewerModal()" class="btn btn-line btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4)">✕ تاقاش</button>
+      <a id="adminPdfViewerExternalBtn" href="#" target="_blank" class="btn btn-gold btn-sm" style="color:#2e2200;text-decoration:none;font-weight:bold">↗ يېڭى كۆزنەكتە ئېچىش</a>
+      <button onclick="closeAdminPdfViewerModal()" class="btn btn-line btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4);cursor:pointer">✕ تاقاش</button>
     </div>
   </div>
-  <div style="flex:1;width:100%;height:calc(100% - 55px);position:relative;background:#525659">
+  <div style="background:#1e293b;color:#fef08a;font-size:.84rem;padding:.4rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.1)">
+    <span>💡 تېلېفوندا ئوقۇغاندا: يۇقىرىدىكى «يېڭى كۆزنەكتە ئېچىش» نى بېسىپ پۈتۈن ئېكراندا چوڭايتىپ، راۋان كۆرەلەيسىز.</span>
+    <a id="adminPdfViewerMobileTipBtn" href="#" target="_blank" class="btn btn-gold btn-sm" style="font-weight:bold;color:#2e2200;text-decoration:none;padding:.2rem .6rem;font-size:.8rem">🚀 بىۋاسىتە ئېچىش ↗</a>
+  </div>
+  <div style="flex:1;width:100%;height:calc(100% - 95px);position:relative;background:#525659">
     <iframe id="adminPdfViewerFrame" src="" style="width:100%;height:100%;border:none"></iframe>
   </div>
 </div>
