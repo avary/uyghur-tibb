@@ -10,7 +10,7 @@ function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, ch => ({ '
 function printCertificate(path) {
   const name = progress.user?.name || 'ئۆگەنگۈچى'
   const date = new Date().toLocaleDateString()
-  const w = window.open('', '_blank', 'width=720,height=540')
+  const w = window.open('', '_blank', 'width=720,height=540,noopener,noreferrer')
   if (!w) return
   w.document.write(`<html dir="rtl"><head><title>ئۆگىنىش گۇۋاھنامىسى</title><style>body{font-family:serif;text-align:center;padding:70px;color:#173b36}h1{font-size:32px}h2{font-size:25px;color:#187b70}p{font-size:18px;line-height:1.8}.seal{font-size:50px;margin:25px}</style></head><body><div class="seal">🏅</div><h1>ئۆگىنىش گۇۋاھنامىسى</h1><p>بۇ گۇۋاھنامە</p><h2>${escapeHtml(name)}</h2><p>«${escapeHtml(path.title)}» ئۆگىنىش يولىنى تولۇق تاماملىغانلىقىنى خاتىرىلەيدۇ.</p><p>${escapeHtml(date)}</p><small>ئۆگىنىش مەقسىتىدىكى يەرلىك گۇۋاھنامە — كەسپىي ئىجازەت ياكى داۋالاش سالاھىيىتى ئەمەس.</small><script>window.onload=()=>window.print()<\/script></body></html>`)
   w.document.close()
