@@ -17,7 +17,42 @@ through `/api/students`, and the browser clients don't know (or care) which back
 - **DB**: remote MySQL (schema in `mysql_setup.sql`) **or** Supabase (schema in `supabase_setup.sql`)
 - **Hosting**: Vercel (static + Node functions)
 
-efault passwords (the previous reset-to-default password backdoors were removed).
+The project does not use default passwords or client-side password backdoors. Configure
+`ADMIN_PASSWORD` through the environment before enabling admin access.
+
+## Product capabilities
+
+- **1,000-recipe traditional medicine book integrated** — the OCR source is transformed into a source-linked recipe library and utilized throughout the learner app for browsing, category/search discovery, recipe details, study questions, quizzes, spaced repetition, and expert-gated publishing.
+- Source-linked traditional recipe library with OCR text, page provenance, categories, search, and study quizzes.
+- Review-gated publishing: content approval and safety approval are separate, with reviewer history and notes.
+- Raw-herb encyclopedia prepared for multiple JSON books, including structured names, Latin names, uses, warnings, and source pages.
+- Admin moderation for recipes and herbs, with MySQL/Supabase persistence and protected APIs.
+- Learner progress, spaced repetition, accessibility controls, RTL UI, PWA installation, and offline caching for approved content.
+- Source-grounded learning assistant that avoids diagnosis and personalized treatment advice.
+
+The roadmap and remaining content work are tracked in [ROADMAP.md](ROADMAP.md).
+
+### Roadmap delivery status
+
+The current release includes the implemented foundations for the full learning platform:
+
+1. **Recipe knowledge base** — OCR normalization, 1,004 locally validated recipe records,
+   disease/category/ingredient search, source-page links, original text, quizzes, bookmarks,
+   spaced repetition, and progress tracking.
+2. **Raw-herb encyclopedia** — separate `herb_books` and `herbs` models, support for multiple
+   JSON books, structured herb fields, recipe/herb relationships, source provenance, learner
+   detail pages, and database-backed approved content.
+3. **Expert publishing workflow** — authenticated admin moderation, independent recipe content
+   and safety approvals, herb approval, review notes, reviewer/timestamp history, and public
+   approved-only API feeds.
+4. **Learning assistant** — source-grounded answers with book/page context and explicit refusal
+   to diagnose or prescribe personal treatment.
+5. **PWA and accessibility** — RTL responsive UI, installable PWA, adjustable text size,
+   keyboard/focus support, offline caching for approved recipe/herb feeds, and local study data.
+
+The next release is content-driven rather than architecture-driven: import the two raw-herb
+recognition books, verify copyright, complete expert review, and add licensed herb images,
+pronunciation audio, instructor videos, and anatomy diagrams.
 
 ## Setup
 
@@ -249,11 +284,3 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
    return `401` without a token. Admin login uses `ADMIN_PASSWORD`.
 6. Switching databases later is just a matter of changing `DB_DRIVER` + env vars and re-applying
    §3 to move the data — no code or frontend changes needed.
-
-
-
-## Model: upstream collaboration
-The upstream project (`github.com/avary/uyghur-tibb`) keeps evolving. When new features land
-upstream, fetch and integrate them **in our hardened way**: keep diffs minimal and targeted in
-the HTML files, and route any new data features through `/api/students` with server-side auth —
-never add client-side DB/API keys or password bypasses.
