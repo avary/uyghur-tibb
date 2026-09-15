@@ -32,6 +32,25 @@ function exportProgress() {
   URL.revokeObjectURL(url)
 }
 
+function importProgress(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(String(reader.result || ''))
+      if (!imported || typeof imported !== 'object' || !imported.lessons || !Array.isArray(imported.exams)) throw new Error('invalid')
+      if (!confirm('بۇ زاپاس ھۆججەت بىلەن ئۈسكۈنىدىكى ئىلگىرىلەشنى ئالماشتۇرامسىز؟')) return
+      localStorage.setItem('uytibb_v1', JSON.stringify(imported))
+      progress._sync()
+    } catch (e) {
+      alert('زاپاس ھۆججەتنى ئوقۇغىلى بولمىدى.')
+    }
+  }
+  reader.readAsText(file)
+}
+
 function resetProgress() {
   if (!confirm('بارلىق ئۈگىنىش ئىلگىرىلىشىڭىزنى بۇ ئۈسكۈنىدىن ئۆچۈرەمسىز؟')) return
   localStorage.removeItem('uytibb_v1')
@@ -129,6 +148,7 @@ function resetProgress() {
       <p class="muted">ئىلگىرىلەش ئۈسكۈنىڭىزدە ساقلىنىدۇ. زاپاسلاڭ ياكى خالىسىڭىز ئۆچۈرۈڭ.</p>
       <div class="tp-row">
         <button class="btn btn-teal btn-sm" @click="exportProgress">⬇️ زاپاسلاش</button>
+        <label class="btn btn-ghost btn-sm">⬆️ قايتا ئەكىرىش<input type="file" accept="application/json,.json" hidden @change="importProgress"></label>
         <button class="btn btn-danger btn-sm" @click="resetProgress">🗑️ ئىلگىرىلەشنى ئۆچۈرۈش</button>
       </div>
     </div>
