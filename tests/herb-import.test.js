@@ -15,7 +15,7 @@ test('raw herb importer creates an isolated validated book', () => {
   assert.match(report, /Records: 1 · errors: 0/)
   const generated = fs.readFileSync(output, 'utf8')
   assert.match(generated, /test-book/)
-  assert.match(generated, /safetyStatus: "unreviewed"/)
+  assert.match(generated, /"safetyStatus": "unreviewed"/)
 })
 
 test('herb validator rejects unsupported book language', () => {
