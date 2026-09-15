@@ -1,7 +1,7 @@
 // uyghur-tibb Vue app service worker.
 // Cache-on-demand with network-first navigation so the hashed Vite build
 // always refreshes, while assets stay available offline.
-const CACHE_NAME = 'uytibb-vue-v5';
+const CACHE_NAME = 'uytibb-vue-v6';
 const SHELL = [
   './',
   './index.html',
@@ -41,8 +41,9 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/') && !isPublicRecipes && !isPublicHerbs) return;
 
   const isNav = event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/';
-  // Private/local book uploads must not become an accidental offline data leak.
-  const isPdf = url.pathname.includes('/pdf/') && !url.pathname.endsWith('/100-keselge-1000-retsip.pdf');
+  // Only bundled lesson PDFs are safe to cache. User-uploaded/local books and
+  // the private OCR recipe book must never become an offline data leak.
+  const isPdf = /^\/pdf\/lesson-\d+\.pdf$/.test(url.pathname);
 
   // Navigation & PDFs: network-first, cached fallback for offline.
   if (isNav || isPdf) {
