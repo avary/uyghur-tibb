@@ -20,6 +20,25 @@ const bestAvg = computed(() => {
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
 })
 const recentAttempts = computed(() => progress.quizAttempts.slice(0, 8).map(a => ({ ...a, lesson: LESSONS.find(L => Number(L.id) === Number(a.lessonId)) })))
+
+function exportProgress() {
+  const raw = localStorage.getItem('uytibb_v1') || '{}'
+  const blob = new Blob([raw], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'uyghur-tibb-progress.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function resetProgress() {
+  if (!confirm('بارلىق ئۈگىنىش ئىلگىرىلىشىڭىزنى بۇ ئۈسكۈنىدىن ئۆچۈرەمسىز؟')) return
+  localStorage.removeItem('uytibb_v1')
+  localStorage.removeItem('uytibb_recipe_progress')
+  Object.assign(progress.data, { lessons: {}, exams: [], streak: { d: 0, n: 0, best: 0 }, badges: [], wrong: [], marks: [], quizAttempts: [] })
+  progress._sync()
+}
 </script>
 
 <template>
@@ -104,6 +123,15 @@ const recentAttempts = computed(() => progress.quizAttempts.slice(0, 8).map(a =>
         <button class="topt" :class="{ on: view.view.value === 'desktop' }" @click="view.setView('desktop')">💻 كەڭ ئېكران (1040px)</button>
       </div>
     </div>
+
+    <div class="secttl">🔐 مەلۇماتلىرىڭىز</div>
+    <div class="card data-tools">
+      <p class="muted">ئىلگىرىلەش ئۈسكۈنىڭىزدە ساقلىنىدۇ. زاپاسلاڭ ياكى خالىسىڭىز ئۆچۈرۈڭ.</p>
+      <div class="tp-row">
+        <button class="btn btn-teal btn-sm" @click="exportProgress">⬇️ زاپاسلاش</button>
+        <button class="btn btn-danger btn-sm" @click="resetProgress">🗑️ ئىلگىرىلەشنى ئۆچۈرۈش</button>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -157,4 +185,6 @@ const recentAttempts = computed(() => progress.quizAttempts.slice(0, 8).map(a =>
 [data-theme="dark"] .topt.on { color: var(--teal); }
 .t-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
 .wbtn { margin-inline-start: auto; }
+.data-tools { margin-bottom: 1rem; }
+.data-tools p { font-size: .82rem; margin-bottom: .7rem; }
 </style>
