@@ -124,6 +124,18 @@ const stats = computed(() => {
   }
 })
 
+const quality = computed(() => content.lessons.map(L => {
+  const quiz = L.quiz || []
+  const issues = []
+  if (!L.title?.trim()) issues.push('ماۋزۇ يوق')
+  if (!(L.sections || []).length) issues.push('بۆلەك يوق')
+  if (!quiz.length) issues.push('مەشىق سوئالى يوق')
+  if (quiz.some(q => !q.q?.trim())) issues.push('سوئال تېكىستى تولۇق ئەمەس')
+  if (quiz.some(q => q.type !== 'essay' && q.a == null)) issues.push('توغرا جاۋاب يوق')
+  if (quiz.some(q => !q.exp?.trim() && !q.model?.trim())) issues.push('چۈشەندۈرۈش يوق')
+  return { lesson: L, issues }
+}).filter(item => item.issues.length))
+
 async function setStatus(st, status, okMsg) {
   const d = await api.updateStudentStatus(st.phone, status)
   if (d && d.status === 'ok') {
@@ -218,6 +230,7 @@ const tabs = [
   { id: 'recipes', ic: '🌿', label: 'رېتسېپ تەكشۈرۈش' },
   { id: 'herbs', ic: '🌱', label: 'خام دورا تەكشۈرۈش' },
   { id: 'questions', ic: '☑', label: 'سوئاللار' },
+  { id: 'quality', ic: '🩺', label: 'مەزمۇن سۈپىتى' },
   { id: 'teachers', ic: '👨‍🏫', label: 'ئۇستازلار' },
   { id: 'manage', ic: '🛠', label: 'تەڭشەك / زاپاس' }
 ]
@@ -351,6 +364,18 @@ const tabs = [
       <!-- QUESTION BANK -->
       <section v-show="tab === 'questions'"><QuestionsBank /></section>
 
+      <!-- CONTENT QUALITY -->
+      <section v-show="tab === 'quality'">
+        <div class="card">
+          <div class="card-head"><h3>🩺 مەزمۇن سۈپىتى ({{ quality.length }} دەرس)</h3><span class="muted">تەكشۈرۈشكە تېگىشلىك مەزمۇنلار</span></div>
+          <div v-if="!quality.length" class="empty">بارلىق دەرسلەرنىڭ ئاساسىي مەزمۇنلىرى تولۇق ✓</div>
+          <div v-for="item in quality" :key="item.lesson.id" class="quality-row">
+            <div class="row-main"><b>{{ item.lesson.id }}. {{ item.lesson.title || 'ماۋزۇسىز دەرس' }}</b><small>{{ item.issues.join(' · ') }}</small></div>
+            <button class="btn btn-ghost btn-sm" @click="tab = 'lessons'">تەھرىرلەش</button>
+          </div>
+        </div>
+      </section>
+
       <!-- TEACHERS EDITOR -->
       <section v-show="tab === 'teachers'"><TeachersEditor /></section>
 
@@ -378,6 +403,8 @@ const tabs = [
 
 <style scoped>
 .admin { min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
+.quality-row { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.75rem 0; border-top:1px solid var(--line); }
+.quality-row small { display:block; color:var(--red); margin-top:.2rem; }
 .ahead { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--line); }
 .ahead-in { max-width: 860px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: .7rem 1rem; }
 .abrand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); }
