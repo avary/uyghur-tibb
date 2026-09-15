@@ -10,6 +10,7 @@ const routes = [
   { path: '/herbs', name: 'herbs', component: () => import('../views/HerbsView.vue') },
   { path: '/herb/:name', name: 'herb', component: () => import('../views/HerbView.vue'), props: true },
   { path: '/study', name: 'study', component: () => import('../views/StudyView.vue') },
+  { path: '/paths', name: 'paths', component: () => import('../views/PathsView.vue') },
   { path: '/recipe/:id', name: 'recipe', component: () => import('../views/RecipeView.vue'), props: true },
   { path: '/exam', name: 'exam', component: () => import('../views/ExamView.vue') },
   { path: '/teachers', name: 'teachers', component: () => import('../views/TeachersView.vue') },

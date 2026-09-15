@@ -96,6 +96,7 @@ loadFb()
       <RouterLink class="menu-tile pdf" to="/books"><span class="mi">📄</span><b>PDF كىتابلار</b><small>{{ pdfLessons.length }} كىتاب (تولۇق)</small></RouterLink>
       <RouterLink class="menu-tile" to="/exam"><span class="mi">📝</span><b>سىناق</b><small>ۋاقىتلىق سىناق</small></RouterLink>
       <RouterLink class="menu-tile" to="/teachers"><span class="mi">👨‍🏫</span><b>ئۇستازلار</b><small>{{ TEACHERS.length }} تەرجىمىھال</small></RouterLink>
+      <RouterLink class="menu-tile" to="/paths"><span class="mi">🧭</span><b>ئۆگىنىش يولى</b><small>يېتەكلەنگەن دەرسلەر</small></RouterLink>
     </div>
 
     <div v-if="daily.q" class="dq card">
