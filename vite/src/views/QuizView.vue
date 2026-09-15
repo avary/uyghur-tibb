@@ -48,7 +48,7 @@ const matchRights = computed(() => {
 <template>
   <section v-if="questions.length && step === 'run'">
     <!-- progress -->
-    <div class="quiz-prog">
+    <div class="quiz-prog" role="status" aria-live="polite" aria-atomic="true">
       <div class="qp-track"><i :style="{ width: ((idx + (checked[idx] ? 1 : 0)) / questions.length) * 100 + '%' }"></i></div>
       <div class="qp-meta">
         <span>{{ idx + 1 }} / {{ questions.length }}</span>
@@ -118,7 +118,7 @@ const matchRights = computed(() => {
       </div>
 
       <!-- explanation -->
-      <div v-if="checked[idx]" class="exp" :class="{ bad: !(q().type === 'essay' ? selfGood[idx] : isCorrect(q(), answers[idx])) }">
+      <div v-if="checked[idx]" class="exp" role="status" aria-live="polite" :class="{ bad: !(q().type === 'essay' ? selfGood[idx] : isCorrect(q(), answers[idx])) }">
         <b>{{ q().type === 'essay' ? (selfGood[idx] ? 'مۇۋەپپەقىيەتلىك!' : 'ئۈلگىلىك جاۋاب') : (isCorrect(q(), answers[idx]) ? 'توغرا!' : 'توغرا ئەمەس') }}</b>
         <span v-if="q().exp" v-html="sanitizeHtml(q().exp)"></span>
       </div>
