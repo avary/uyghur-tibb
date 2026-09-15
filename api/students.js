@@ -193,6 +193,7 @@ module.exports = async (req, res) => {
         return res.status(200).json({ status: 'ok', herbs });
       }
       if(q.herbs === 'all'){
+        if(rateLimited(ip)) return fail(429, 'Too many requests');
         const user = getReqUser(req, res); if(!user) return;
         const herbs = db.listHerbs ? await db.listHerbs(null, null) : [];
         return res.status(200).json({ status: 'ok', herbs });
