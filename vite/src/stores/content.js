@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { loadData, syncLessonsCache } from '../data/loader'
+import { loadData, syncLessonsCache } from '../data/loader.js'
 
 // Source of truth for the admin content editors (lessons + teachers).
 // Mirrors the vanilla admin.html model:
@@ -20,7 +20,7 @@ const QUIZ_TYPES = ['choice', 'tf', 'blank', 'match', 'essay']
 function asStr(v) { return v == null ? '' : String(v) }
 function asStrArray(v) { return Array.isArray(v) ? v.map(asStr) : [] }
 
-function normalizeLesson(L) {
+export function normalizeLesson(L) {
   if (!L || typeof L !== 'object') return null
   const id = Number(L.id)
   if (!Number.isInteger(id) || id <= 0) return null
@@ -87,7 +87,7 @@ function normalizeTeacher(T) {
   return n
 }
 
-function validateLessons(arr) {
+export function validateLessons(arr) {
   if (!Array.isArray(arr)) return null
   const seen = new Set()
   const out = []
