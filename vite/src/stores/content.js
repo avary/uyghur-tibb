@@ -28,6 +28,7 @@ function normalizeLesson(L) {
 
   const n = {
     id,
+    status: L.status === 'draft' ? 'draft' : 'published',
     title: asStr(L.title),
     short: asStr(L.short),
     subtitle: asStr(L.subtitle),

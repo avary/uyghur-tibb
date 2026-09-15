@@ -229,6 +229,10 @@ function save() {
         <label>دەرس باش تېمىسى</label>
         <input v-model="lesson.title" class="input" type="text" placeholder="دەرسلىكنىڭ تولۇق تېمىسى">
       </div>
+      <div class="fld">
+        <label>كۆرسىتىش ھالىتى</label>
+        <select v-model="lesson.status" class="input"><option value="draft">قoralama — پەقەت تەھرىرلىگۈچىگە</option><option value="published">ئېلان قىلىنغان — ئوقۇغۇچىلارغا كۆرۈنسۇن</option></select>
+      </div>
       <div class="row2">
         <div class="fld">
           <label>قىسقا نامى</label>

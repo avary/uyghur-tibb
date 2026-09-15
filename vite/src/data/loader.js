@@ -69,7 +69,8 @@ function customTeachers() {
 }
 
 export function getLessons() {
-  return customLessons() || window.DEFAULT_LESSONS || []
+  const lessons = customLessons() || window.DEFAULT_LESSONS || []
+  return lessons.filter(l => l.status !== 'draft')
 }
 
 export function getTeachers() {
