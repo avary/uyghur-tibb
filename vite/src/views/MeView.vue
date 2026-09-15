@@ -5,6 +5,7 @@ import { useTheme } from '../composables/theme'
 import { useView } from '../composables/view'
 import { getLessons, countQuestions } from '../data/loader'
 import { sanitizeHtml } from '../utils/sanitize'
+import { reminderEnabled, toggleReminder } from '../composables/reminder'
 
 const progress = useProgress()
 const theme = useTheme()
@@ -12,6 +13,7 @@ const view = useView()
 const LESSONS = getLessons()
 const totalQ = countQuestions()
 const autoQ = countQuestions(q => q.type !== 'essay')
+const reminder = ref(reminderEnabled())
 
 const wrongCount = computed(() => progress.wrong.length)
 const bestAvg = computed(() => {
@@ -57,6 +59,11 @@ function resetProgress() {
   localStorage.removeItem('uytibb_recipe_progress')
   Object.assign(progress.data, { lessons: {}, exams: [], streak: { d: 0, n: 0, best: 0 }, badges: [], wrong: [], marks: [], quizAttempts: [] })
   progress._sync()
+}
+
+async function setReminder(value) {
+  const enabled = await toggleReminder(value)
+  reminder.value = enabled
 }
 </script>
 
@@ -151,6 +158,12 @@ function resetProgress() {
         <label class="btn btn-ghost btn-sm">⬆️ قايتا ئەكىرىش<input type="file" accept="application/json,.json" hidden @change="importProgress"></label>
         <button class="btn btn-danger btn-sm" @click="resetProgress">🗑️ ئىلگىرىلەشنى ئۆچۈرۈش</button>
       </div>
+    </div>
+
+    <div class="secttl">🔔 ئۆگىنىش ئەسكەرتمىسى</div>
+    <div class="card data-tools">
+      <p class="muted">ئەپنى ئاچقاندا كۈندە بىر قېتىم ئۆگىنىش ئەسكەرتمىسى كۆرۈنسۇن.</p>
+      <button class="btn btn-ghost btn-sm" @click="setReminder(!reminder)">{{ reminder ? '🔕 ئەسكەرتمىنى توختىتىش' : '🔔 ئەسكەرتمىنى قوزغىتىش' }}</button>
     </div>
   </section>
 </template>

@@ -7,6 +7,7 @@ import { useView } from './composables/view'
 import { useToastRender } from './composables/toast'
 import PdfViewerModal from './views/PdfViewerModal.vue'
 import { useAccessibility } from './composables/accessibility'
+import { notifyStudyReminder } from './composables/reminder'
 
 const route = useRoute()
 const progress = useProgress()
@@ -20,6 +21,7 @@ onMounted(() => {
   view.init()
   accessibility.init()
   progress.updateStreak()
+  notifyStudyReminder()
 })
 
 const tabs = [
