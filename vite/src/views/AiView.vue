@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { getLessons } from '../data/loader'
 import { publishedRecipes } from '../data/recipes'
+import { isSafetyQuestion, SAFETY_RESPONSE } from '../data/aiSafety'
 
 const LESSONS = getLessons()
 const q = ref('')
@@ -25,6 +26,9 @@ const kws = [
 function answer(kw) {
   const norms = Object.fromEntries(kws.map(x => [x.t, x]))
   const low = norm(q.value).toLowerCase()
+  if (isSafetyQuestion(low)) {
+    return { text: SAFETY_RESPONSE, source: 'بىخەتەرلىك چەكلىمىسى' }
+  }
   const hit = kws.find(x => x.k.some(k => low.includes(k)))
   if (hit) return { text: hit.r, source: 'دەرسلىك مەنبەسى' }
   const lowRecipe = norm(kw).toLowerCase()
