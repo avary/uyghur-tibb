@@ -23,6 +23,12 @@ function goQuiz() {
   if (lesson.value) progress.saveLast(lesson.value.id)
   toast('مەشىق باشلاندى!')
 }
+
+function mediaUrl(value) {
+  const url = String(value || '').trim()
+  if (!url || /^(javascript|data|vbscript):/i.test(url)) return ''
+  return url
+}
 </script>
 
 <template>
@@ -53,6 +59,15 @@ function goQuiz() {
       </ul>
     </div>
 
+    <div v-if="lesson.media && lesson.media.length" class="media-grid">
+      <figure v-for="(item, i) in lesson.media" :key="i" class="media-card card">
+        <img v-if="item.type === 'image' && mediaUrl(item.url)" :src="mediaUrl(item.url)" :alt="item.alt || lesson.title">
+        <audio v-else-if="item.type === 'audio' && mediaUrl(item.url)" controls :src="mediaUrl(item.url)"></audio>
+        <video v-else-if="item.type === 'video' && mediaUrl(item.url)" controls preload="metadata" :src="mediaUrl(item.url)"></video>
+        <figcaption v-if="item.caption">{{ item.caption }}</figcaption>
+      </figure>
+    </div>
+
     <button class="mind-toggle" @click="showMind = !showMind">🧠 زېھىن خەرىتىسى {{ showMind ? '— يېپىش' : '— ئېچىش' }}</button>
     <div v-if="showMind && lesson.mindmap" class="mind card">
       <TreeItem :node="lesson.mindmap" />
@@ -61,6 +76,14 @@ function goQuiz() {
     <article v-for="(sec, i) in lesson.sections" :key="i" class="sec card">
       <h3>{{ sec.h }}</h3>
       <div class="lesson-body" v-html="sanitizeHtml(sec.body)"></div>
+      <div v-if="sec.media && sec.media.length" class="media-grid section-media">
+        <figure v-for="(item, j) in sec.media" :key="j" class="media-card">
+          <img v-if="item.type === 'image' && mediaUrl(item.url)" :src="mediaUrl(item.url)" :alt="item.alt || sec.h">
+          <audio v-else-if="item.type === 'audio' && mediaUrl(item.url)" controls :src="mediaUrl(item.url)"></audio>
+          <video v-else-if="item.type === 'video' && mediaUrl(item.url)" controls preload="metadata" :src="mediaUrl(item.url)"></video>
+          <figcaption v-if="item.caption">{{ item.caption }}</figcaption>
+        </figure>
+      </div>
       <details v-if="sec.points && sec.points.length" class="points">
         <summary>⭐ مۇھىم نۇقتىلار</summary>
         <ul><li v-for="(p, j) in sec.points" :key="j">{{ p }}</li></ul>
@@ -119,6 +142,12 @@ export default { components: { TreeItem } }
 .mind { margin-top: 10px; }
 
 .sec { margin-top: 16px; }
+.media-grid { display:grid; gap:10px; margin-top:16px; }
+.media-card { margin:0; overflow:hidden; }
+.media-card img, .media-card video { display:block; width:100%; max-height:360px; object-fit:contain; background:var(--card-2); }
+.media-card audio { width:100%; }
+.media-card figcaption { padding:.5rem .7rem; color:var(--muted); font-size:.8rem; }
+.section-media { margin-top:12px; }
 .sec h3 { font-size: 1.08rem; margin-bottom: 12px; color: var(--teal-dark); display: flex; align-items: center; gap: .5rem; }
 [data-theme="dark"] .sec h3 { color: var(--teal); }
 .sec h3::before { content: "◈"; color: var(--gold); }
