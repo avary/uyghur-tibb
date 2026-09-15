@@ -18,6 +18,28 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
   const answers = reactive([])
   const checked = reactive([])
   const selfGood = reactive([])
+  const storageKey = () => lesson.value == null ? '' : 'uytibb_quiz_attempt_' + lesson.value
+
+  function persistAttempt() {
+    const key = storageKey()
+    if (!key || step.value !== 'run') return
+    try {
+      localStorage.setItem(key, JSON.stringify({ idx: idx.value, answers, checked, selfGood }))
+    } catch (e) {}
+  }
+
+  function restoreAttempt() {
+    const key = storageKey()
+    if (!key) return
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || 'null')
+      if (!saved || !Array.isArray(saved.answers) || saved.answers.length !== questions.value.length) return
+      saved.answers.forEach((answer, i) => Object.assign(answers[i], answer || {}))
+      saved.checked?.forEach((value, i) => { checked[i] = !!value })
+      saved.selfGood?.forEach((value, i) => { selfGood[i] = !!value })
+      idx.value = Math.min(Math.max(Number(saved.idx) || 0, 0), Math.max(questions.value.length - 1, 0))
+    } catch (e) {}
+  }
 
   function resetMetrics() {
     score.value = 0
@@ -40,10 +62,12 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
     step.value = 'run'
     initState()
     resetMetrics()
+    restoreAttempt()
   }
 
   initState()
   resetMetrics()
+  restoreAttempt()
 
   const q = () => questions.value[idx.value]
   const isLast = () => idx.value >= questions.value.length - 1
@@ -92,14 +116,17 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
       progress.addWrong(qq)
     }
     tot.value = questions.value.length
+    persistAttempt()
   }
 
   function next() {
     if (idx.value < questions.value.length - 1) idx.value++
+    persistAttempt()
   }
 
   function prev() {
     if (idx.value > 0) idx.value--
+    persistAttempt()
   }
 
   function finish() {
@@ -108,6 +135,7 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
     const pct = auto.length ? Math.round((autoOk / auto.length) * 100) : 0
     if (lesson.value != null) progress.saveBest(lesson.value, pct)
     step.value = 'done'
+    try { localStorage.removeItem(storageKey()) } catch (e) {}
     return pct
   }
 
@@ -121,6 +149,7 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
     score.value = 0
     tot.value = questions.value.length
     step.value = 'run'
+    try { localStorage.removeItem(storageKey()) } catch (e) {}
   }
 
   return { questions, idx, answers, checked, selfGood, step, score, tot, q, isLast, check, next, prev, finish, restart, isCorrect, load }
