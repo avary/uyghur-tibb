@@ -6,6 +6,7 @@ import { useView } from '../composables/view'
 import { getLessons, countQuestions } from '../data/loader'
 import { sanitizeHtml } from '../utils/sanitize'
 import { reminderEnabled, toggleReminder } from '../composables/reminder'
+import { useLocale } from '../composables/locale'
 
 const progress = useProgress()
 const theme = useTheme()
@@ -14,6 +15,7 @@ const LESSONS = getLessons()
 const totalQ = countQuestions()
 const autoQ = countQuestions(q => q.type !== 'essay')
 const reminder = ref(reminderEnabled())
+const locale = useLocale()
 
 const wrongCount = computed(() => progress.wrong.length)
 const bestAvg = computed(() => {
@@ -92,6 +94,7 @@ async function setReminder(value) {
       <RouterLink to="/me" class="stat">
         <b>{{ autoQ }}</b><span>ئاپتومات سوئال</span>
       </RouterLink>
+      <RouterLink to="/saved" class="stat"><b>★</b><span>ساقلانغان رېتسېپلار</span></RouterLink>
       <RouterLink to="/me" class="stat">
         <b>🔥{{ progress.streak.n || 0 }}</b><span>كۈن داۋام</span>
         <small v-if="progress.streak.best" class="sub">ئەڭ ياخشى: {{ progress.streak.best }}</small>
@@ -113,6 +116,9 @@ async function setReminder(value) {
     <div class="stats-lines">
       <div class="line"><span>دەرس تاماملاش</span><b>%{{ progress.pctRead }}</b></div>
       <div class="line"><span>ئوتتۇرىچە يۇقىرى نەتىجە</span><b>%{{ bestAvg }}</b></div>
+      <div class="line"><span>ئەپكە كىرگەن قېتىم</span><b>{{ progress.activity.sessions }}</b></div>
+      <div class="line"><span>ئېچىلغان دەرس</span><b>{{ progress.activity.lessonsOpened }}</b></div>
+      <div class="line"><span>تاماملانغان مەشىق</span><b>{{ progress.activity.quizzesCompleted }}</b></div>
     </div>
 
     <div class="secttl">📝 يېقىنقى مەشىق نەتىجىلىرى</div>
@@ -149,6 +155,8 @@ async function setReminder(value) {
         <button class="topt" :class="{ on: view.view.value === 'desktop' }" @click="view.setView('desktop')">💻 كەڭ ئېكران (1040px)</button>
       </div>
     </div>
+    <div class="secttl">🌐 تىل</div>
+    <div class="card data-tools"><label class="muted" for="locale-select">ئەپنىڭ تىلى</label><select id="locale-select" class="input" :value="locale.current" @change="locale.setLocale($event.target.value)"><option v-for="item in locale.locales" :key="item.id" :value="item.id">{{ item.label }}</option></select><small class="muted">تەرجىمە مەزمۇنى بار بولغاندا تاللانغان تىل ئىشلىتىلىدۇ؛ بولمىسا ئۇيغۇرچە مەنبە كۆرۈنىدۇ.</small></div>
 
     <div class="secttl">🔐 مەلۇماتلىرىڭىز</div>
     <div class="card data-tools">

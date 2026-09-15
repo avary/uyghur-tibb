@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useQuiz } from '../composables/useQuiz'
 import { lessonById, QTYPES, QTICON } from '../data/loader'
 import { sanitizeHtml } from '../utils/sanitize'
@@ -14,8 +14,21 @@ const questions = computed(() => {
 const { idx, answers, checked, selfGood, step, score, tot, q, isLast, check, next, prev, finish, restart, isCorrect, load } = useQuiz(questions.value, Number(props.id))
 const resultPct = ref(0)
 const reviewOpen = ref(false)
+const timed = ref(false)
+const seconds = ref(0)
+let timerId = null
+const timeLabel = computed(() => `${Math.floor(seconds.value / 60)}:${String(seconds.value % 60).padStart(2, '0')}`)
+function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null } }
+function startTimer() {
+  stopTimer(); seconds.value = questions.value.length * 60
+  timerId = setInterval(() => { seconds.value--; if (seconds.value <= 0) { stopTimer(); if (step.value === 'run') onFinish() } }, 1000)
+}
+watch(timed, value => { if (value) startTimer(); else stopTimer() })
+watch(step, value => { if (value !== 'run') stopTimer() })
+onUnmounted(stopTimer)
 
 const typeLabel = computed(() => (q() ? QTYPES[q().type] : ''))
+const difficultyLabel = computed(() => ({ easy: 'ئاسان', medium: 'ئوتتۇرا', hard: 'قىيىن' }[q()?.difficulty] || 'ئوتتۇرا'))
 
 function onFinish() {
   resultPct.value = finish()
@@ -27,6 +40,7 @@ function retryWrong() {
   load(missed, Number(props.id))
   resultPct.value = 0
   reviewOpen.value = false
+  if (timed.value) startTimer()
 }
 
 // ---- question templating helpers ----
@@ -47,6 +61,10 @@ const matchRights = computed(() => {
 
 <template>
   <section v-if="questions.length && step === 'run'">
+    <div class="quiz-options">
+      <button class="btn btn-sm" :class="timed ? 'btn-gold' : 'btn-ghost'" @click="timed = !timed">{{ timed ? '⏱️ ۋاقىتلىق مەشىقنى توختىتىش' : '⏱️ ۋاقىتلىق مەشىق' }}</button>
+      <span v-if="timed" class="timer" role="timer" aria-live="polite">{{ timeLabel }}</span>
+    </div>
     <!-- progress -->
     <div class="quiz-prog" role="status" aria-live="polite" aria-atomic="true">
       <div class="qp-track"><i :style="{ width: ((idx + (checked[idx] ? 1 : 0)) / questions.length) * 100 + '%' }"></i></div>
@@ -58,7 +76,7 @@ const matchRights = computed(() => {
 
     <!-- question card -->
     <div class="qcard" :class="'type-' + (q() ? q().type : '')">
-      <div class="qlabel"><b>{{ QTICON[q().type] }}</b>{{ typeLabel }}</div>
+      <div class="qlabel"><b>{{ QTICON[q().type] }}</b>{{ typeLabel }} · {{ difficultyLabel }}</div>
       <h2 class="qtext" v-html="sanitizeHtml(q().q)"></h2>
 
       <!-- choice -->
@@ -164,6 +182,8 @@ const matchRights = computed(() => {
 </template>
 
 <style scoped>
+.quiz-options { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.timer { color:var(--red); font-weight:800; font-variant-numeric:tabular-nums; }
 .quiz-prog { margin-bottom: 14px; }
 .qp-track { height: 7px; background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .qp-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 8px; transition: width .3s ease; }

@@ -8,6 +8,8 @@ import { useToastRender } from './composables/toast'
 import PdfViewerModal from './views/PdfViewerModal.vue'
 import { useAccessibility } from './composables/accessibility'
 import { notifyStudyReminder } from './composables/reminder'
+import { useOnlineStatus } from './composables/online'
+import { useLocale } from './composables/locale'
 
 const route = useRoute()
 const progress = useProgress()
@@ -15,12 +17,16 @@ const theme = useTheme()
 const view = useView()
 const { toasts } = useToastRender()
 const accessibility = useAccessibility()
+const { online } = useOnlineStatus()
+const locale = useLocale()
 
 onMounted(() => {
   theme.init()
   view.init()
   accessibility.init()
+  locale.init()
   progress.updateStreak()
+  progress.trackActivity('sessions')
   notifyStudyReminder()
 })
 
@@ -61,6 +67,7 @@ const currentPal = computed(() => theme.currentPalette())
   </div>
 
   <div v-else class="phone">
+    <div v-if="!online" class="offline-banner" role="status" aria-live="polite">📴 تور يوق — يەرلىك ساقلانغان مەزمۇنلار ئىشلىتىلىۋاتىدۇ.</div>
     <header class="appbar">
       <div class="appbar-in">
         <div class="alogo"><img src="/icon.svg" alt=""></div>
@@ -100,3 +107,7 @@ const currentPal = computed(() => theme.currentPalette())
 
   <PdfViewerModal />
 </template>
+
+<style scoped>
+.offline-banner { padding: .5rem .8rem; background: #fff4d6; border-bottom: 1px solid #e5c878; color: #6b4e00; text-align: center; font-size: .78rem; }
+</style>

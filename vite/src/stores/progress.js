@@ -14,6 +14,7 @@ function full() {
   s.lessons = s.lessons || {}
   s.exams = s.exams || []
   s.quizAttempts = s.quizAttempts || []
+  s.activity = s.activity || { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0 }
   s.streak = s.streak || { d: 0, n: 0, best: 0 }
   s.badges = s.badges || []
   s.wrong = s.wrong || []
@@ -27,6 +28,7 @@ function save(s) {
   merged.lessons = { ...(existing.lessons || {}), ...(s.lessons || {}) }
   merged.exams = s.exams || existing.exams || []
   merged.quizAttempts = s.quizAttempts || existing.quizAttempts || []
+  merged.activity = s.activity || existing.activity || { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0 }
   merged.badges = s.badges || existing.badges || []
   merged.wrong = s.wrong || existing.wrong || []
   merged.marks = s.marks || existing.marks || []
@@ -54,6 +56,7 @@ export const useProgress = defineStore('progress', {
     streak: s => s.data.streak,
     exams: s => s.data.exams,
     quizAttempts: s => s.data.quizAttempts,
+    activity: s => s.data.activity,
     badges: s => s.data.badges,
     wrong: s => s.data.wrong,
     marks: s => s.data.marks,
@@ -80,6 +83,14 @@ export const useProgress = defineStore('progress', {
       const s = full()
       s.quizAttempts.unshift({ ...attempt, at: attempt.at || new Date().toISOString() })
       s.quizAttempts = s.quizAttempts.slice(0, 50)
+      save(s)
+      this._sync()
+    },
+    trackActivity(kind) {
+      const s = full()
+      const activity = { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0, ...(s.activity || {}) }
+      if (Object.prototype.hasOwnProperty.call(activity, kind)) activity[kind]++
+      s.activity = activity
       save(s)
       this._sync()
     },

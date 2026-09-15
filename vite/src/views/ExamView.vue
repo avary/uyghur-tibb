@@ -9,16 +9,20 @@ const progress = useProgress()
 const phase = ref('setup') // setup | run | done
 const count = ref(10)
 const scope = ref('all')
+const typeScope = ref('all')
+const difficultyScope = ref('all')
 const xTime = ref(10)
 
 const pool = computed(() => {
   const all = getLessons().flatMap(L =>
     (L.quiz || []).filter(q => q.type !== 'essay').map(q => ({ q, L }))
   )
+  const typed = typeScope.value === 'all' ? all : all.filter(x => x.q.type === typeScope.value)
+  const filtered = difficultyScope.value === 'all' ? typed : typed.filter(x => (x.q.difficulty || 'medium') === difficultyScope.value)
   if (scope.value === 'read') {
-    return all.filter(x => (progress.data.lessons[x.L.id] || {}).read)
+    return filtered.filter(x => (progress.data.lessons[x.L.id] || {}).read)
   }
-  return all
+  return filtered
 })
 
 const quiz = useQuiz([], null)
@@ -88,6 +92,23 @@ const answered = computed(() => quiz.checked.filter(Boolean).length)
       <label class="lbl">ۋاقىت</label>
       <div class="chips">
         <button v-for="m in [5, 10, 20, 30]" :key="m" class="chip" :class="{ on: xTime === m }" @click="xTime = m">{{ m }} مىنۇت</button>
+      </div>
+
+      <label class="lbl">سوئال تۈرى</label>
+      <div class="chips">
+        <button class="chip" :class="{ on: typeScope === 'all' }" @click="typeScope = 'all'">ھەممىسى</button>
+        <button class="chip" :class="{ on: typeScope === 'choice' }" @click="typeScope = 'choice'">☑ تاللاش</button>
+        <button class="chip" :class="{ on: typeScope === 'tf' }" @click="typeScope = 'tf'">✓✗ توغرا-خاتا</button>
+        <button class="chip" :class="{ on: typeScope === 'blank' }" @click="typeScope = 'blank'">✎ بوش ئورۇن</button>
+        <button class="chip" :class="{ on: typeScope === 'match' }" @click="typeScope = 'match'">🔗 تۇتاشتۇرۇش</button>
+      </div>
+
+      <label class="lbl">قىيىنلىق دەرىجىسى</label>
+      <div class="chips">
+        <button class="chip" :class="{ on: difficultyScope === 'all' }" @click="difficultyScope = 'all'">ھەممىسى</button>
+        <button class="chip" :class="{ on: difficultyScope === 'easy' }" @click="difficultyScope = 'easy'">ئاسان</button>
+        <button class="chip" :class="{ on: difficultyScope === 'medium' }" @click="difficultyScope = 'medium'">ئوتتۇرا</button>
+        <button class="chip" :class="{ on: difficultyScope === 'hard' }" @click="difficultyScope = 'hard'">قىيىن</button>
       </div>
 
       <button class="btn btn-teal btn-block" style="margin-top:16px" :disabled="!pool.length" @click="start">🏁 سىناقنى باشلاش</button>

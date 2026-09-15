@@ -38,6 +38,10 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
       saved.checked?.forEach((value, i) => { checked[i] = !!value })
       saved.selfGood?.forEach((value, i) => { selfGood[i] = !!value })
       idx.value = Math.min(Math.max(Number(saved.idx) || 0, 0), Math.max(questions.value.length - 1, 0))
+      score.value = questions.value.reduce((total, question, i) => {
+        const correct = question.type === 'essay' ? !!selfGood[i] : isCorrect(question, answers[i])
+        return total + (checked[i] && correct ? 1 : 0)
+      }, 0)
     } catch (e) {}
   }
 
@@ -135,6 +139,7 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
     const pct = auto.length ? Math.round((autoOk / auto.length) * 100) : 0
     if (lesson.value != null) progress.saveBest(lesson.value, pct)
     progress.addQuizAttempt({ lessonId: lesson.value, score: autoOk, total: auto.length, pct })
+    progress.trackActivity('quizzesCompleted')
     step.value = 'done'
     try { localStorage.removeItem(storageKey()) } catch (e) {}
     return pct
