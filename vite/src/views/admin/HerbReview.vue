@@ -1,16 +1,19 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useApi } from '../../stores/api'
 const api = useApi()
 const books = Object.values(import.meta.glob('../../data/herbData-*.js', { eager: true, import: 'HERB_BOOK' }))
-const herbs = books.flatMap(b => b?.herbs || [])
+const localHerbs = books.flatMap(b => b?.herbs || [])
+const serverHerbs = ref([])
+onMounted(async () => { const rows = await api.getAllHerbs(); if (Array.isArray(rows)) serverHerbs.value = rows.map(h => ({ ...h, latinName: h.latin_name, sourcePageStart: h.source_page_start, originalText: h.original_text, safetyStatus: h.safety_status })) })
 const q = ref(''); const filter = ref('all'); const refresh = ref(0); const key = 'uytibb_herb_review_overrides'; const historyHerb = ref(null); const history = ref([])
 function read() { try { return JSON.parse(localStorage.getItem(key) || '{}') || {} } catch { return {} } }
 async function save(id, status, safetyStatus = status === 'approved' ? 'reviewed' : status === 'rejected' ? 'blocked' : 'unreviewed') { const note = prompt('تەكشۈرۈش خاتىرىسى (ئىختىيارى):') || ''; const remote = await api.reviewHerb(id, status, safetyStatus, note); if (remote && remote.status === 'ok') { const o = read(); o[id] = { reviewStatus: status, safetyStatus }; localStorage.setItem(key, JSON.stringify(o)); refresh.value++ } }
 async function showHistory(h) { historyHerb.value = h; history.value = await api.getHerbHistory(h.id) }
 function status(h) { return read()[h.id]?.reviewStatus || h.reviewStatus || 'needs_review' }
 function safety(h) { return read()[h.id]?.safetyStatus || h.safetyStatus || h.safety_status || 'unreviewed' }
-const rows = computed(() => { refresh.value; const t = q.value.trim().toLowerCase(); return herbs.filter(h => { const review = status(h); const safe = safety(h); const matches = filter.value === 'all' || (filter.value === 'safety' && safe !== 'reviewed') || review === filter.value; return matches && (!t || [h.name, h.latinName, h.originalText].join(' ').toLowerCase().includes(t)) }) })
+const herbs = computed(() => { const merged = new Map(localHerbs.map(h => [h.id, h])); serverHerbs.value.forEach(h => merged.set(h.id, { ...merged.get(h.id), ...h })); return [...merged.values()] })
+const rows = computed(() => { refresh.value; const t = q.value.trim().toLowerCase(); return herbs.value.filter(h => { const review = status(h); const safe = safety(h); const matches = filter.value === 'all' || (filter.value === 'safety' && safe !== 'reviewed') || review === filter.value; return matches && (!t || [h.name, h.latinName, h.originalText].join(' ').toLowerCase().includes(t)) }) })
 </script>
 <template>
   <div class="card"><h3>🌱 خام دورىلارنى تەكشۈرۈش</h3><p class="acopy">خام دورا كىتابلىرىدىكى نام، لاتىنچە ئىسىم ۋە ئاگاھلاندۇرۇشلار مۇتەخەسسىس تەستىقىدىن ئۆتكەندىن كېيىنلا ئىشلىتىلىدۇ.</p><input v-model="q" class="input" type="search" placeholder="خام دورا ئىزدەش..."><select v-model="filter" class="input" aria-label="خام دورا تەكشۈرۈش ھالىتى"><option value="all">ھەممىسى</option><option value="needs_review">تەكشۈرۈش كۈتۈۋاتىدۇ</option><option value="safety">بىخەتەرلىك كۈتۈۋاتىدۇ</option><option value="approved">تەستىقلانغان</option><option value="rejected">رەت قىلىنغان</option></select><p class="muted">{{ rows.length }} دانە · مەنبەدىكى ھەممە خاتىرە دەسلەپتە تەكشۈرۈشكە موھتاج</p>

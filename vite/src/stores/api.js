@@ -73,6 +73,9 @@ export const useApi = defineStore('api', {
     async getHerbs() {
       try { const r = await fetch(ENDPOINT + '?herbs=1'); if (!r.ok) return null; return (await r.json()).herbs || [] } catch (e) { return null }
     },
+    async getAllHerbs() {
+      try { const r = await fetch(ENDPOINT + '?herbs=all', { headers: token() ? { Authorization: 'Bearer ' + token() } : {} }); if (!r.ok) return null; return (await r.json()).herbs || [] } catch (e) { return null }
+    },
     async reviewRecipe(id, reviewStatus, safetyStatus, note) {
       return post({ action: 'review_recipe', id, reviewStatus, safetyStatus, note })
     },

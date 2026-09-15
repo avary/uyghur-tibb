@@ -147,6 +147,15 @@ test('herbs feed: public endpoint returns approved-only shape', async () => {
   assert.ok(Array.isArray(res.body.herbs));
 });
 
+test('herbs admin feed: all herbs requires authentication', async () => {
+  const denied = await run(req({ method: 'GET', url: '/api/students?herbs=all', headers: { 'x-forwarded-for': uniqIp() } }));
+  assert.equal(denied.statusCode, 401);
+  const login = await run(req({ method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const allowed = await run(req({ method: 'GET', url: '/api/students?herbs=all', headers: { authorization: 'Bearer ' + login.body.token, 'x-forwarded-for': uniqIp() } }));
+  assert.equal(allowed.statusCode, 200);
+  assert.ok(Array.isArray(allowed.body.herbs));
+});
+
 test('recipe review: unauthenticated update is rejected', async () => {
   const res = await run(req({ method: 'POST', body: { action: 'review_recipe', id: 'recipe-1', reviewStatus: 'approved', safetyStatus: 'reviewed' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
   assert.equal(res.statusCode, 401);

@@ -192,6 +192,11 @@ module.exports = async (req, res) => {
         const herbs = db.listHerbs ? await db.listHerbs('approved', 'reviewed') : [];
         return res.status(200).json({ status: 'ok', herbs });
       }
+      if(q.herbs === 'all'){
+        const user = getReqUser(req, res); if(!user) return;
+        const herbs = db.listHerbs ? await db.listHerbs(null, null) : [];
+        return res.status(200).json({ status: 'ok', herbs });
+      }
 
       if(q.recipe_history){
         const user = getReqUser(req, res); if(!user) return;
