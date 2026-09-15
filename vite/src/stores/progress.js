@@ -15,6 +15,7 @@ function full() {
   s.exams = s.exams || []
   s.quizAttempts = s.quizAttempts || []
   s.activity = s.activity || { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0 }
+  s.activity.lastAt = s.activity.lastAt || null
   s.streak = s.streak || { d: 0, n: 0, best: 0 }
   s.badges = s.badges || []
   s.wrong = s.wrong || []
@@ -28,7 +29,7 @@ function save(s) {
   merged.lessons = { ...(existing.lessons || {}), ...(s.lessons || {}) }
   merged.exams = s.exams || existing.exams || []
   merged.quizAttempts = s.quizAttempts || existing.quizAttempts || []
-  merged.activity = s.activity || existing.activity || { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0 }
+  merged.activity = { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0, ...(existing.activity || {}), ...(s.activity || {}) }
   merged.badges = s.badges || existing.badges || []
   merged.wrong = s.wrong || existing.wrong || []
   merged.marks = s.marks || existing.marks || []
@@ -90,6 +91,7 @@ export const useProgress = defineStore('progress', {
       const s = full()
       const activity = { sessions: 0, lessonsOpened: 0, quizzesCompleted: 0, ...(s.activity || {}) }
       if (Object.prototype.hasOwnProperty.call(activity, kind)) activity[kind]++
+      activity.lastAt = new Date().toISOString()
       s.activity = activity
       save(s)
       this._sync()
@@ -97,6 +99,7 @@ export const useProgress = defineStore('progress', {
     saveLast(id) {
       const s = full()
       s.lastLesson = id
+      s.activity = { ...(s.activity || {}), lastAt: new Date().toISOString() }
       save(s)
       this._sync()
     },

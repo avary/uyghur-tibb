@@ -34,6 +34,8 @@ const todayTip = () => {
   return TIPS[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % TIPS.length]
 }
 
+const lastLesson = computed(() => LESSONS.find(l => Number(l.id) === Number(progress.data.lastLesson)) || null)
+
 // Daily question + term, deterministic by date
 const daily = computed(() => {
   const d = new Date()
@@ -97,6 +99,12 @@ loadFb()
       <RouterLink class="menu-tile" to="/exam"><span class="mi">📝</span><b>سىناق</b><small>ۋاقىتلىق سىناق</small></RouterLink>
       <RouterLink class="menu-tile" to="/teachers"><span class="mi">👨‍🏫</span><b>ئۇستازلار</b><small>{{ TEACHERS.length }} تەرجىمىھال</small></RouterLink>
       <RouterLink class="menu-tile" to="/paths"><span class="mi">🧭</span><b>ئۆگىنىش يولى</b><small>يېتەكلەنگەن دەرسلەر</small></RouterLink>
+    </div>
+
+    <div v-if="lastLesson" class="card" style="margin-top:14px">
+      <div class="secttl">▶ داۋاملاشتۇرۇش</div>
+      <p style="margin:.35rem 0 .7rem">ئاخىرقى قېتىم «{{ lastLesson.title }}» دەرسىدە توختىغان ئىدىڭىز.</p>
+      <RouterLink class="btn btn-teal btn-sm" :to="'/lesson/' + lastLesson.id">دەرسكە قايتىش</RouterLink>
     </div>
 
     <div v-if="daily.q" class="dq card">
