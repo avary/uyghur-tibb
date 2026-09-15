@@ -17,6 +17,7 @@ for (const [index, herb] of herbs.entries()) {
   if (!String(herb.originalText || '').trim()) warnings.push(`${label}: missing original OCR text`)
   if (!herb.sourcePageStart) warnings.push(`${label}: missing source page`)
   if (herb.reviewStatus !== 'needs_review') errors.push(`${label}: must start as needs_review`)
+  if (herb.safetyStatus !== 'unreviewed') errors.push(`${label}: must start as safety unreviewed`)
 }
 console.log(`Herb book: ${book.title || '(untitled)'}`)
 console.log(`Records: ${herbs.length} · errors: ${errors.length} · warnings: ${warnings.length}`)
