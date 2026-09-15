@@ -148,9 +148,9 @@ function createDriver(){
         return rows;
       });
     },
-    async reviewHerb(id, reviewStatus, reviewer){
+    async reviewHerb(id, reviewStatus, reviewer, note){
       if(!connected) return;
-      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, reviewer) VALUES (?,?,?)', [id, reviewStatus, reviewer || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
+      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, reviewer, note) VALUES (?,?,?,?)', [id, reviewStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
     },
     async herbReviewHistory(id, limit = 50){
       if(!connected) return [];

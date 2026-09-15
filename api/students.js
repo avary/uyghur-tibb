@@ -242,7 +242,7 @@ module.exports = async (req, res) => {
       if(action === 'review_herb' && data.id){
         const user = getReqUser(req, res); if(!user) return;
         if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus)) return fail(400, 'Invalid herb review status');
-        if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, user.username || 'admin');
+        if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, user.username || 'admin', String(data.note || '').slice(0, 1000));
         return res.status(200).json({ status: 'ok', message: 'Herb review saved' });
       }
 

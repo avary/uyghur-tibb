@@ -159,10 +159,10 @@ function createDriver({ fetchFn } = {}){
       if(!connected) return [];
       return sb('/herbs?select=*&order=name' + (status ? '&review_status=eq.' + pg(status) : ''));
     },
-    async reviewHerb(id, reviewStatus, reviewer){
+    async reviewHerb(id, reviewStatus, reviewer, note){
       if(!connected) return;
       await sb('/herbs?id=eq.' + pg(id), { method: 'PATCH', body: { review_status: reviewStatus, reviewer: reviewer || null, reviewed_at: new Date().toISOString() }, prefer: 'return=minimal' });
-      await sb('/herb_review_history', { method: 'POST', body: { herb_id: id, review_status: reviewStatus, reviewer: reviewer || null }, prefer: 'return=minimal' });
+      await sb('/herb_review_history', { method: 'POST', body: { herb_id: id, review_status: reviewStatus, reviewer: reviewer || null, note: note || null }, prefer: 'return=minimal' });
     },
     async herbReviewHistory(id, limit = 50){
       if(!connected) return [];
