@@ -11,7 +11,7 @@ const questions = computed(() => {
   return L ? [...(L.quiz || [])] : []
 })
 
-const { idx, answers, checked, selfGood, step, score, tot, q, isLast, check, next, prev, finish, restart, isCorrect } = useQuiz(questions.value, Number(props.id))
+const { idx, answers, checked, selfGood, step, score, tot, q, isLast, check, next, prev, finish, restart, isCorrect, load } = useQuiz(questions.value, Number(props.id))
 const resultPct = ref(0)
 const reviewOpen = ref(false)
 
@@ -19,6 +19,14 @@ const typeLabel = computed(() => (q() ? QTYPES[q().type] : ''))
 
 function onFinish() {
   resultPct.value = finish()
+}
+
+function retryWrong() {
+  const missed = questions.value.filter((qq, i) => !(qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])))
+  if (!missed.length) return
+  load(missed, Number(props.id))
+  resultPct.value = 0
+  reviewOpen.value = false
 }
 
 // ---- question templating helpers ----
@@ -135,6 +143,7 @@ const matchRights = computed(() => {
 
       <div class="result-actions">
         <button class="btn btn-teal" @click="restart(); resultPct = 0">🔄 قايتا ئىشلەش</button>
+        <button v-if="questions.some((qq, i) => !(qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])))" class="btn btn-gold" @click="retryWrong">❌ خاتالارنى قايتا ئىشلەش</button>
         <RouterLink class="btn btn-ghost" :to="'/lesson/' + id">← دەرسكە</RouterLink>
         <button class="btn btn-gold" @click="reviewOpen = !reviewOpen">📋 تەكرارلاش</button>
       </div>
