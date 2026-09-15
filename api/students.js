@@ -279,7 +279,9 @@ module.exports = async (req, res) => {
         const user = getReqUser(req, res);
         if(!user) return;
         if(!/^(approved|blocked|pending)$/.test(data.status)) return fail(400, 'Invalid status');
-        if(db.connected) await db.updateStudentStatus(data.phone, data.status);
+        const phone = String(data.phone).trim();
+        if(!/^[0-9+\-\s()]{7,40}$/.test(phone)) return fail(400, 'Invalid phone');
+        if(db.connected) await db.updateStudentStatus(phone, data.status);
         return res.status(200).json({ status: 'ok', message: 'Status updated' });
       }
 
@@ -287,7 +289,9 @@ module.exports = async (req, res) => {
       if(action === 'delete_student' && data.phone){
         const user = getReqUser(req, res);
         if(!user) return;
-        if(db.connected) await db.deleteStudent(data.phone);
+        const phone = String(data.phone).trim();
+        if(!/^[0-9+\-\s()]{7,40}$/.test(phone)) return fail(400, 'Invalid phone');
+        if(db.connected) await db.deleteStudent(phone);
         return res.status(200).json({ status: 'ok', message: 'Student deleted' });
       }
 
@@ -337,6 +341,10 @@ module.exports = async (req, res) => {
       return fail(400, 'Unknown action');
     }
   } catch (err) {
+    // Keep client errors generic, but retain a server-side diagnostic for
+    // deployment logs so approval failures are actionable without leaking DB
+    // details or credentials to the browser.
+    console.error('[api/students] request failed:', err && err.message ? err.message : err);
     return fail(500, 'Server error');
   }
 

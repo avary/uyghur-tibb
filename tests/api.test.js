@@ -206,6 +206,17 @@ test('privileged action: update_status without token returns 401', async () => {
   assert.equal(res.statusCode, 401);
 });
 
+test('privileged action: update_status rejects malformed phone before DB access', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const res = await run(req({
+    method: 'POST',
+    body: { action: 'update_status', phone: 'not-a-phone', status: 'approved' },
+    headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() },
+  }));
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, 'Invalid phone');
+});
+
 test('privileged action: delete_student with forged token returns 401', async () => {
   const r = req({
     method: 'POST', body: { action: 'delete_student', phone: '13800138000' },
