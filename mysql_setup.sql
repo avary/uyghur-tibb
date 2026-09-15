@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS herbs (
     aliases JSON NULL, latin_name VARCHAR(300) NULL, used_part VARCHAR(300) NULL,
     properties TEXT NULL, preparation TEXT NULL, warnings TEXT NULL, image_url TEXT NULL,
     original_text LONGTEXT NOT NULL, source_page_start INT NULL, source_page_end INT NULL,
-    review_status VARCHAR(30) NOT NULL DEFAULT 'needs_review', reviewer VARCHAR(200) NULL,
+    review_status VARCHAR(30) NOT NULL DEFAULT 'needs_review', safety_status VARCHAR(30) NOT NULL DEFAULT 'unreviewed', reviewer VARCHAR(200) NULL,
     reviewed_at TIMESTAMP NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     KEY idx_herb_book (book_id), KEY idx_herb_name (name), KEY idx_herb_status (review_status),
     CONSTRAINT fk_herb_book FOREIGN KEY (book_id) REFERENCES herb_books(id) ON DELETE CASCADE
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS recipe_herbs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS herb_review_history (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, herb_id VARCHAR(120) NOT NULL,
-    review_status VARCHAR(30) NOT NULL, reviewer VARCHAR(200) NULL, note TEXT NULL,
+    review_status VARCHAR(30) NOT NULL, safety_status VARCHAR(30) NOT NULL DEFAULT 'unreviewed', reviewer VARCHAR(200) NULL, note TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_herb_review (herb_id),
     CONSTRAINT fk_herb_review_herb FOREIGN KEY (herb_id) REFERENCES herbs(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

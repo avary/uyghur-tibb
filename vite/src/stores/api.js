@@ -76,8 +76,8 @@ export const useApi = defineStore('api', {
     async reviewRecipe(id, reviewStatus, safetyStatus, note) {
       return post({ action: 'review_recipe', id, reviewStatus, safetyStatus, note })
     },
-    async reviewHerb(id, reviewStatus, note) {
-      return post({ action: 'review_herb', id, reviewStatus, note: note || '' })
+    async reviewHerb(id, reviewStatus, safetyStatus, note) {
+      return post({ action: 'review_herb', id, reviewStatus, safetyStatus: safetyStatus || 'unreviewed', note: note || '' })
     },
     async getRecipeHistory(id) {
       try {

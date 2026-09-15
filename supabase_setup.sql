@@ -97,7 +97,7 @@ create table if not exists public.herbs (
     id text primary key, book_id text not null references public.herb_books(id) on delete cascade,
     name text not null, aliases jsonb, latin_name text, used_part text, properties text,
     preparation text, warnings text, image_url text, original_text text not null,
-    source_page_start int, source_page_end int, review_status text not null default 'needs_review',
+    source_page_start int, source_page_end int, review_status text not null default 'needs_review', safety_status text not null default 'unreviewed',
     reviewer text, reviewed_at timestamptz, created_at timestamptz default now()
 );
 create index if not exists idx_herbs_book on public.herbs(book_id);
@@ -111,7 +111,7 @@ create table if not exists public.recipe_herbs (
 );
 create table if not exists public.herb_review_history (
     id uuid primary key default gen_random_uuid(), herb_id text not null references public.herbs(id) on delete cascade,
-    review_status text not null, reviewer text, note text, created_at timestamptz default now()
+    review_status text not null, safety_status text not null default 'unreviewed', reviewer text, note text, created_at timestamptz default now()
 );
 create index if not exists idx_herb_review_history on public.herb_review_history(herb_id);
 create index if not exists idx_recipes_book on public.recipes(book_id);

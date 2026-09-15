@@ -141,20 +141,20 @@ function createDriver(){
         return rows;
       });
     },
-    async listHerbs(status){
+    async listHerbs(status, safetyStatus){
       if(!connected) return [];
       return withConn(async (conn) => {
-        const [rows] = await conn.execute('SELECT * FROM herbs WHERE (? IS NULL OR review_status = ?) ORDER BY name', [status || null, status || null]);
+        const [rows] = await conn.execute('SELECT * FROM herbs WHERE (? IS NULL OR review_status = ?) AND (? IS NULL OR safety_status = ?) ORDER BY name', [status || null, status || null, safetyStatus || null, safetyStatus || null]);
         return rows;
       });
     },
-    async reviewHerb(id, reviewStatus, reviewer, note){
+    async reviewHerb(id, reviewStatus, safetyStatus, reviewer, note){
       if(!connected) return;
-      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, reviewer, note) VALUES (?,?,?,?)', [id, reviewStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
+      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, safety_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, safetyStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, safety_status, reviewer, note) VALUES (?,?,?,?,?)', [id, reviewStatus, safetyStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
     },
     async herbReviewHistory(id, limit = 50){
       if(!connected) return [];
-      return withConn(async (conn) => { const [rows] = await conn.execute('SELECT id, herb_id, review_status, reviewer, note, created_at FROM herb_review_history WHERE herb_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [id, Math.min(100, Math.max(1, Number(limit) || 50))]); return rows; });
+      return withConn(async (conn) => { const [rows] = await conn.execute('SELECT id, herb_id, review_status, safety_status, reviewer, note, created_at FROM herb_review_history WHERE herb_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [id, Math.min(100, Math.max(1, Number(limit) || 50))]); return rows; });
     },
     async reviewRecipe(id, reviewStatus, safetyStatus, reviewer, note){
       if(!connected) return;

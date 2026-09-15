@@ -189,7 +189,7 @@ module.exports = async (req, res) => {
       }
       if(q.herbs === '1'){
         if(rateLimited(ip)) return fail(429, 'Too many requests');
-        const herbs = db.listHerbs ? await db.listHerbs('approved') : [];
+        const herbs = db.listHerbs ? await db.listHerbs('approved', 'reviewed') : [];
         return res.status(200).json({ status: 'ok', herbs });
       }
 
@@ -241,8 +241,8 @@ module.exports = async (req, res) => {
       }
       if(action === 'review_herb' && data.id){
         const user = getReqUser(req, res); if(!user) return;
-        if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus)) return fail(400, 'Invalid herb review status');
-        if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, user.username || 'admin', String(data.note || '').slice(0, 1000));
+        if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus) || !/^(unreviewed|reviewed|blocked)$/.test(data.safetyStatus || 'unreviewed')) return fail(400, 'Invalid herb review status');
+        if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, data.safetyStatus || 'unreviewed', user.username || 'admin', String(data.note || '').slice(0, 1000));
         return res.status(200).json({ status: 'ok', message: 'Herb review saved' });
       }
 

@@ -155,14 +155,14 @@ function createDriver({ fetchFn } = {}){
       if(!connected) return [];
       return sb('/recipes?select=*,recipe_ingredients(*)&order=id' + (status ? '&review_status=eq.' + pg(status) : ''));
     },
-    async listHerbs(status){
+    async listHerbs(status, safetyStatus){
       if(!connected) return [];
-      return sb('/herbs?select=*&order=name' + (status ? '&review_status=eq.' + pg(status) : ''));
+      return sb('/herbs?select=*&order=name' + (status ? '&review_status=eq.' + pg(status) : '') + (safetyStatus ? '&safety_status=eq.' + pg(safetyStatus) : ''));
     },
-    async reviewHerb(id, reviewStatus, reviewer, note){
+    async reviewHerb(id, reviewStatus, safetyStatus, reviewer, note){
       if(!connected) return;
-      await sb('/herbs?id=eq.' + pg(id), { method: 'PATCH', body: { review_status: reviewStatus, reviewer: reviewer || null, reviewed_at: new Date().toISOString() }, prefer: 'return=minimal' });
-      await sb('/herb_review_history', { method: 'POST', body: { herb_id: id, review_status: reviewStatus, reviewer: reviewer || null, note: note || null }, prefer: 'return=minimal' });
+      await sb('/herbs?id=eq.' + pg(id), { method: 'PATCH', body: { review_status: reviewStatus, safety_status: safetyStatus, reviewer: reviewer || null, reviewed_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      await sb('/herb_review_history', { method: 'POST', body: { herb_id: id, review_status: reviewStatus, safety_status: safetyStatus, reviewer: reviewer || null, note: note || null }, prefer: 'return=minimal' });
     },
     async herbReviewHistory(id, limit = 50){
       if(!connected) return [];
