@@ -4,6 +4,11 @@ import { RECIPE_BOOK, publishedRecipes } from './recipes'
 // app buildable before either future raw-herb book is provided.
 const importedBooks = Object.values(import.meta.glob('./herbData-*.js', { eager: true, import: 'HERB_BOOK' }))
 const importedHerbs = importedBooks.flatMap(book => book?.herbs || [])
+const LS_HERBS = 'uytibb_herb_progress'
+function herbProgress() { try { return JSON.parse(localStorage.getItem(LS_HERBS) || '{}') || {} } catch { return {} } }
+export function herbIsSaved(name) { return !!herbProgress()[name]?.saved }
+export function toggleHerbSaved(name) { const p = herbProgress(); p[name] = { ...(p[name] || {}), saved: !p[name]?.saved }; localStorage.setItem(LS_HERBS, JSON.stringify(p)); return p[name] }
+export function savedHerbs() { return herbIndex().filter(h => herbIsSaved(h.name)) }
 
 // Ingredient names are deliberately kept as OCR-derived candidates until an editor
 // assigns canonical names and safety metadata.

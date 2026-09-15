@@ -14,7 +14,7 @@ const search = ref('')
 const qModal = ref(false)
 const editing = ref(null)
 
-const qForm = reactive({ lessonId: null, type: 'choice', q: '', exp: '', opts: '', a: 0, tfA: 'true', blankA: '', essayA: '' })
+const qForm = reactive({ lessonId: null, type: 'choice', difficulty: 'medium', q: '', exp: '', opts: '', a: 0, tfA: 'true', blankA: '', essayA: '' })
 
 const rows = computed(() => {
   const out = []
@@ -34,6 +34,7 @@ const rows = computed(() => {
 
 function typeLabel(t) { return QTYPES[t] || t }
 function typeBadge(t) { return t === 'choice' ? 'b-green' : (t === 'tf' ? 'b-gold' : 'b-plane') }
+function difficultyLabel(d) { return ({ easy: 'ئاسان', medium: 'ئوتتۇرا', hard: 'قىيىن' }[d] || 'ئوتتۇرا') }
 
 function answerText(q) {
   if (q.type === 'choice') return 'جاۋاب: ' + (q.opts ? q.opts[q.a] : q.a)
@@ -67,6 +68,7 @@ function openEdit(row) {
   editing.value = { lessonId: row.L.id, qIdx: row.qIdx }
   qForm.lessonId = row.L.id
   qForm.type = q.type || 'choice'
+  qForm.difficulty = q.difficulty || 'medium'
   qForm.q = q.q || ''
   qForm.exp = q.exp || ''
   qForm.opts = (q.type === 'choice' && q.opts) ? q.opts.join('\n') : ''
@@ -91,7 +93,7 @@ function saveQ() {
   const qText = qForm.q.trim()
   if (!qText) { toast('سوئال تېكىستىنى كىرگۈزۈڭ!', 'err'); return }
 
-  const newQ = { type: qForm.type, q: qText, exp: qForm.exp.trim() }
+  const newQ = { type: qForm.type, difficulty: qForm.difficulty, q: qText, exp: qForm.exp.trim() }
   if (qForm.type === 'choice') {
     newQ.opts = qForm.opts.split('\n').map(s => s.trim()).filter(Boolean)
     newQ.a = parseInt(qForm.a, 10) || 0
@@ -143,6 +145,7 @@ function saveQ() {
           <tr>
             <th>دەرس</th>
             <th>تۈر</th>
+            <th>قىيىنلىق</th>
             <th>سوئال</th>
             <th>جاۋاب / چۈشەندۈرۈش</th>
             <th>ھەرىكەت</th>
@@ -152,6 +155,7 @@ function saveQ() {
           <tr v-for="row in rows" :key="row.L.id + '-' + row.qIdx">
             <td><b>{{ row.L.id }}</b></td>
             <td><span class="qbadge" :class="typeBadge(row.q.type)">{{ typeLabel(row.q.type) }}</span></td>
+            <td><span class="qbadge">{{ difficultyLabel(row.q.difficulty) }}</span></td>
             <td>
               <div class="q-q">{{ row.q.q || '' }}</div>
             </td>
@@ -186,6 +190,8 @@ function saveQ() {
         </div>
         <div class="fld">
           <label>سوئال تېكىستى</label>
+          <label>قىيىنلىق دەرىجىسى</label>
+          <select v-model="qForm.difficulty" class="input"><option value="easy">ئاسان</option><option value="medium">ئوتتۇرا</option><option value="hard">قىيىن</option></select>
           <textarea v-model="qForm.q" class="input" rows="3" placeholder="سوئالنى بۇ يەرگە يېزىڭ..."></textarea>
         </div>
         <div v-if="qForm.type === 'choice'" class="fld">
