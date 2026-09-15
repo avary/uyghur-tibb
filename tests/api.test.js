@@ -176,6 +176,13 @@ test('herb review: invalid safety status is rejected after authentication', asyn
   assert.equal(res.statusCode, 400);
 });
 
+test('herb review: approved and safety-reviewed status is accepted', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const res = await run(req({ method: 'POST', body: { action: 'review_herb', id: 'herb-1', reviewStatus: 'approved', safetyStatus: 'reviewed', note: 'checked' }, headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+});
+
 test('full list: forged token returns 401', async () => {
   const r = req({
     method: 'GET', url: '/api/students',
