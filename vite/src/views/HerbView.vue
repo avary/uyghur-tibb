@@ -4,7 +4,7 @@ import { findHerb, recipesForHerb, herbIsSaved, toggleHerbSaved } from '../data/
 import { useApi } from '../stores/api'
 const props = defineProps({ name: String }); const api = useApi(); const remote = ref(null); const refresh = ref(0)
 onMounted(async () => { const rows = await api.getHerbs(); remote.value = Array.isArray(rows) ? rows.find(h => h.name === props.name) || null : null })
-const herb = computed(() => { refresh.value; if (!remote.value) return findHerb(props.name); const h = remote.value; return { ...h, latinName: h.latin_name, usedPart: h.used_part, recipeIds: [], pages: [h.source_page_start].filter(Boolean), imported: true } })
+const herb = computed(() => { refresh.value; if (!remote.value) return findHerb(props.name); const h = remote.value; return { ...h, latinName: h.latin_name, usedPart: h.used_part, safetyStatus: h.safety_status, recipeIds: [], pages: [h.source_page_start].filter(Boolean), imported: true } })
 const recipes = computed(() => recipesForHerb(props.name))
 function save() { toggleHerbSaved(herb.value.name); refresh.value++ }
 </script>
@@ -13,6 +13,7 @@ function save() { toggleHerbSaved(herb.value.name); refresh.value++ }
     <RouterLink to="/herbs" class="back">‹ خام دورىلار قامۇسىغا قايتىش</RouterLink><h2 class="pagettl">🌱 {{ herb.name }}</h2>
     <p class="pagesub">{{ herb.recipeIds.length }} رېتسېپتا ئىشلىتىلگەن · مەنبە بەتلىرى: {{ herb.pages.join('، ') || '—' }}</p>
     <div class="notice">⚠️ بۇ مەزمۇن مەنبە كىتابتىن كەلگەن. نام، خۇسۇسىيەت ۋە بىخەتەرلىك ئۇچۇرى مۇتەخەسسىس تەرىپىدىن تەستىقلانمىغۇچە داۋالاش تەۋسىيەسى ئەمەس.</div>
+    <div v-if="herb.safetyStatus === 'reviewed'" class="notice" role="status">✓ بىخەتەرلىك ئۇچۇرى مۇتەخەسسىس تەرىپىدىن تەكشۈرۈلگەن (ئۆگىنىش مەقسىتىدە).</div>
     <dl v-if="herb.imported" class="herb-facts"><template v-if="herb.latinName"><dt>لاتىنچە نام</dt><dd>{{ herb.latinName }}</dd></template><template v-if="herb.usedPart"><dt>ئىشلىتىلىدىغان قىسمى</dt><dd>{{ herb.usedPart }}</dd></template><template v-if="herb.properties"><dt>خۇسۇسىيىتى</dt><dd>{{ herb.properties }}</dd></template><template v-if="herb.preparation"><dt>تەييارلاش / ئىشلىتىش</dt><dd>{{ herb.preparation }}</dd></template><template v-if="herb.warnings"><dt>ئاگاھلاندۇرۇش</dt><dd>{{ herb.warnings }}</dd></template></dl>
     <button class="btn btn-teal btn-sm" @click="save">{{ herbIsSaved(herb.name) ? '★ ساقلانغان' : '☆ ساقلاش' }}</button>
     <h3>باغلانغان تەستىقلانغان رېتسېپلەر</h3><div class="recipe-list"><RouterLink v-for="r in recipes" :key="r.id" class="recipe-card" :to="'/recipe/' + r.id"><b>{{ r.disease }}</b><small>{{ r.recipeNumber }} · {{ r.sourcePageStart }}–{{ r.sourcePageEnd }}-بەت</small></RouterLink></div><p v-if="!recipes.length" class="muted">ھازىر تەستىقلانغان رېتسېپ يوق.</p>
