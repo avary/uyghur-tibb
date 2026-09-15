@@ -39,7 +39,8 @@ function normalizeLesson(L) {
       ? L.sections.map(s => ({
           h: asStr(s && s.h),
           body: asStr(s && s.body),
-          points: asStrArray(s && s.points)
+          points: asStrArray(s && s.points),
+          translations: s && s.translations && typeof s.translations === 'object' ? s.translations : {}
         }))
       : [],
     media: Array.isArray(L.media) ? L.media.map(item => ({ type: asStr(item && item.type), url: asStr(item && item.url), alt: asStr(item && item.alt), caption: asStr(item && item.caption) })).filter(item => ['image', 'audio', 'video'].includes(item.type) && item.url) : [],

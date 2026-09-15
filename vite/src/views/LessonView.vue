@@ -16,6 +16,8 @@ const locale = useLocale()
 const preview = computed(() => route.query.preview === '1')
 const lesson = computed(() => lessonById(props.id, preview.value))
 function textFor(value, field) { return value?.translations?.[locale.current.value]?.[field] || value?.[field] || '' }
+function sectionText(section, field) { return section?.translations?.[locale.current.value]?.[field] || section?.[field] || '' }
+function sectionPoints(section) { return section?.translations?.[locale.current.value]?.points || section?.points || [] }
 const showMind = ref(false)
 
 onMounted(() => {
@@ -82,8 +84,8 @@ function mediaUrl(value) {
     </div>
 
     <article v-for="(sec, i) in lesson.sections" :key="i" class="sec card">
-      <h3>{{ sec.h }}</h3>
-      <div class="lesson-body" v-html="sanitizeHtml(sec.body)"></div>
+      <h3>{{ sectionText(sec, 'h') }}</h3>
+      <div class="lesson-body" v-html="sanitizeHtml(sectionText(sec, 'body'))"></div>
       <div v-if="sec.media && sec.media.length" class="media-grid section-media">
         <figure v-for="(item, j) in sec.media" :key="j" class="media-card">
           <img v-if="item.type === 'image' && mediaUrl(item.url)" :src="mediaUrl(item.url)" :alt="item.alt || sec.h">
@@ -92,9 +94,9 @@ function mediaUrl(value) {
           <figcaption v-if="item.caption">{{ item.caption }}</figcaption>
         </figure>
       </div>
-      <details v-if="sec.points && sec.points.length" class="points">
+      <details v-if="sectionPoints(sec).length" class="points">
         <summary>⭐ مۇھىم نۇقتىلار</summary>
-        <ul><li v-for="(p, j) in sec.points" :key="j">{{ p }}</li></ul>
+        <ul><li v-for="(p, j) in sectionPoints(sec)" :key="j">{{ p }}</li></ul>
       </details>
     </article>
 
