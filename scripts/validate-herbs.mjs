@@ -8,6 +8,9 @@ if (!match) throw new Error('Expected generated HERB_BOOK export')
 const book = Function(`"use strict"; return (${match[1]})`)()
 const herbs = Array.isArray(book.herbs) ? book.herbs : []
 const errors = []; const warnings = []; const ids = new Set()
+if (!String(book.id || '').trim()) errors.push('book: missing stable id')
+if (!String(book.title || '').trim()) errors.push('book: missing title')
+if (!/^(ug|tr|en)$/.test(String(book.language || ''))) errors.push('book: language must be ug, tr, or en')
 for (const [index, herb] of herbs.entries()) {
   const label = `herb #${index + 1}`
   if (!herb.id) errors.push(`${label}: missing id`)
