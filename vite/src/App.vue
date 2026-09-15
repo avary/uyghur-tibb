@@ -67,6 +67,7 @@ const currentPal = computed(() => theme.currentPalette())
           <small>{{ progress.lessonsTotal }} دەرس • نەزەرىيە قىسمى</small>
         </div>
         <button class="aicon gold" title="ئەپنى قاچىلاش" @click="$router.push('/install')">📲 قاچىلاش</button>
+        <button class="aicon" title="ئومۇمىي ئىزدەش" @click="$router.push('/search')">🔎</button>
         <button class="aicon" title="خەت چوڭلۇقىنى ئۆزگەرتىش" @click="accessibility.cycle()">A{{ accessibility.scale === 'normal' ? '' : '+' }}</button>
         <button class="aicon viewbtn" id="viewModeBtn" title="ئېكران ھالىتى (تېلېفون / كەڭ ئېكران)" @click="view.toggle()">{{ view.view.value === 'desktop' ? '📱' : '💻' }}</button>
         <button class="aicon" :title="'تېما: ' + currentPal.label + ' — رەڭگىنى ئالماشتۇرۇش'" @click="theme.cyclePalette()">{{ currentPal.em }}</button>
