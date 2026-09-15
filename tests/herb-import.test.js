@@ -13,5 +13,14 @@ test('raw herb importer creates an isolated validated book', () => {
   execFileSync(process.execPath, ['scripts/import-herbs.mjs', input, output], { env: { ...process.env, HERB_BOOK_ID: 'test-book' }, stdio: 'pipe' })
   const report = execFileSync(process.execPath, ['scripts/validate-herbs.mjs', output], { encoding: 'utf8' })
   assert.match(report, /Records: 1 · errors: 0/)
-  assert.match(fs.readFileSync(output, 'utf8'), /test-book/)
+  const generated = fs.readFileSync(output, 'utf8')
+  assert.match(generated, /test-book/)
+  assert.match(generated, /safetyStatus: "unreviewed"/)
+})
+
+test('herb validator rejects unsupported book language', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'uytibb-herbs-invalid-'))
+  const output = path.join(dir, 'herbData-invalid.js')
+  fs.writeFileSync(output, 'export const HERB_BOOK = { id: "invalid", title: "Test", language: "xx", herbs: [] }\n')
+  assert.throws(() => execFileSync(process.execPath, ['scripts/validate-herbs.mjs', output], { stdio: 'pipe' }), /status 1/)
 })
