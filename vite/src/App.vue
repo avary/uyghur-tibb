@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref, onErrorCaptured } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProgress } from './stores/progress'
 import { useTheme } from './composables/theme'
@@ -55,6 +55,8 @@ const activeTab = computed(() => {
 const bare = computed(() => !!route.meta.bare)
 
 const currentPal = computed(() => theme.currentPalette())
+const runtimeError = ref(false)
+onErrorCaptured(() => { runtimeError.value = true; return false })
 </script>
 
 <template>
@@ -85,7 +87,8 @@ const currentPal = computed(() => theme.currentPalette())
     </header>
 
     <main id="main-content" class="main" tabindex="-1">
-      <router-view />
+      <div v-if="runtimeError" class="runtime-error" role="alert"><h2>بەتنى ئاچقىلى بولمىدى.</h2><p>قايتا سىناپ بېقىڭ ياكى تورسىز ساقلانغان مەزمۇنغا قايتىڭ.</p><button class="btn btn-teal" @click="runtimeError = false; $router.go(0)">قايتا يۈكلەش</button></div>
+      <router-view v-else />
     </main>
 
     <nav class="tabbar">
@@ -110,4 +113,6 @@ const currentPal = computed(() => theme.currentPalette())
 
 <style scoped>
 .offline-banner { padding: .5rem .8rem; background: #fff4d6; border-bottom: 1px solid #e5c878; color: #6b4e00; text-align: center; font-size: .78rem; }
+.runtime-error { margin: 2rem 0; padding: 1.5rem; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+.runtime-error p { color: var(--muted); margin: .6rem 0 1rem; }
 </style>
