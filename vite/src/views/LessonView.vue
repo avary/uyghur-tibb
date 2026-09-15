@@ -1,20 +1,27 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useProgress } from '../stores/progress'
 import { lessonById } from '../data/loader'
 import { useToast } from '../composables/toast'
 import { sanitizeHtml } from '../utils/sanitize'
+import { useLocale } from '../composables/locale'
 
 const props = defineProps({ id: { type: [String, Number], required: true } })
 const progress = useProgress()
+const route = useRoute()
 const { toast } = useToast()
+const locale = useLocale()
 
-const lesson = computed(() => lessonById(props.id))
+const preview = computed(() => route.query.preview === '1')
+const lesson = computed(() => lessonById(props.id, preview.value))
+function textFor(value, field) { return value?.translations?.[locale.current.value]?.[field] || value?.[field] || '' }
 const showMind = ref(false)
 
 onMounted(() => {
   if (lesson.value) {
     progress.markRead(lesson.value.id)
+    progress.trackActivity('lessonsOpened')
     progress.saveLast(lesson.value.id)
   }
 })
@@ -33,13 +40,14 @@ function mediaUrl(value) {
 
 <template>
   <section v-if="lesson">
+    <div v-if="preview && lesson.status === 'draft'" class="preview-banner">👁️ بۇ تەھرىرلىگۈچىنىڭ ئالدىن كۆرۈشى — بۇ دەرس تېخى ئوقۇغۇچىلارغا ئېلان قىلىنمىدى.</div>
     <div class="hero">
       <div class="hero-top">
         <span class="pill teal">{{ lesson.id }}-دەرس</span>
         <span class="pill gold">{{ lesson.quiz.length }} سوئال</span>
       </div>
-      <h1>{{ lesson.title }}</h1>
-      <p v-if="lesson.subtitle" class="hero-sub">{{ lesson.subtitle }}</p>
+      <h1>{{ textFor(lesson, 'title') }}</h1>
+      <p v-if="textFor(lesson, 'subtitle')" class="hero-sub">{{ textFor(lesson, 'subtitle') }}</p>
       <div class="hero-actions">
         <RouterLink class="btn btn-gold btn-sm" :to="'/lesson/' + lesson.id + '/quiz'" @click="goQuiz">📝 مەشىق باشلاش</RouterLink>
         <a
@@ -126,6 +134,7 @@ export default { components: { TreeItem } }
   color: #fff; box-shadow: var(--shadow-lg);
   display: flex; flex-direction: column; gap: 10px;
 }
+.preview-banner { margin-bottom: 10px; padding: .65rem .8rem; border: 1px solid var(--gold); border-radius: var(--radius); background: var(--gold-soft); color: var(--ink); font-size: .8rem; }
 .hero-top { display: flex; gap: 8px; }
 .hero h1 { font-size: 1.28rem; line-height: 1.35; }
 .hero-sub { font-size: .82rem; opacity: .9; }

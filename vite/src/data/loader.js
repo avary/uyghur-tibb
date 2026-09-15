@@ -77,9 +77,10 @@ export function getTeachers() {
   return customTeachers() || window.DEFAULT_TEACHERS || []
 }
 
-export function lessonById(id) {
+export function lessonById(id, includeDraft = false) {
   const n = Number(id)
-  return getLessons().find(l => l.id === n) || null
+  const lessons = includeDraft ? (customLessons() || window.DEFAULT_LESSONS || []) : getLessons()
+  return lessons.find(l => l.id === n) || null
 }
 
 export function countQuestions(filterFn) {

@@ -29,6 +29,7 @@ function normalizeLesson(L) {
   const n = {
     id,
     status: L.status === 'draft' ? 'draft' : 'published',
+    translations: L.translations && typeof L.translations === 'object' ? L.translations : {},
     title: asStr(L.title),
     short: asStr(L.short),
     subtitle: asStr(L.subtitle),
@@ -41,13 +42,15 @@ function normalizeLesson(L) {
           points: asStrArray(s && s.points)
         }))
       : [],
+    media: Array.isArray(L.media) ? L.media.map(item => ({ type: asStr(item && item.type), url: asStr(item && item.url), alt: asStr(item && item.alt), caption: asStr(item && item.caption) })).filter(item => ['image', 'audio', 'video'].includes(item.type) && item.url) : [],
     terms: Array.isArray(L.terms)
       ? L.terms.map(t => ({ w: asStr(t && t.w), m: asStr(t && t.m) }))
       : [],
     quiz: Array.isArray(L.quiz)
       ? L.quiz.map(q => {
           const type = QUIZ_TYPES.includes(q && q.type) ? q.type : 'essay'
-          const nq = { type, q: asStr(q.q), exp: asStr(q.exp) }
+          const difficulty = ['easy', 'medium', 'hard'].includes(q && q.difficulty) ? q.difficulty : 'medium'
+          const nq = { type, difficulty, q: asStr(q.q), exp: asStr(q.exp) }
           if (type === 'choice') {
             nq.opts = asStrArray(q.opts)
             nq.a = Number(q.a)

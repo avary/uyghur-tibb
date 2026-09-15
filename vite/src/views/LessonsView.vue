@@ -32,12 +32,12 @@ const filtered = computed(() => {
 
     <div class="sbox">
       <span class="ic-s">🔍</span>
-      <input v-model="q" class="input" placeholder="دەرس ئىزدەش… (مەسىلەن: ساقلىقنى ساقلاش، مىزاج، خام دورىلار)">
+      <input v-model="q" class="input" aria-label="دەرس ئىزدەش" placeholder="دەرس ئىزدەش… (مەسىلەن: ساقلىقنى ساقلاش، مىزاج، خام دورىلار)">
     </div>
 
     <div class="filters">
-      <button class="btn btn-sm" :class="!pdfOnly ? 'btn-teal' : 'btn-ghost'" @click="pdfOnly = false">ھەممىسى</button>
-      <button class="btn btn-sm" :class="pdfOnly ? 'btn-gold' : 'btn-ghost'" @click="pdfOnly = true">PDF كىتابلىق</button>
+      <button class="btn btn-sm" :aria-pressed="!pdfOnly" :class="!pdfOnly ? 'btn-teal' : 'btn-ghost'" @click="pdfOnly = false">ھەممىسى</button>
+      <button class="btn btn-sm" :aria-pressed="pdfOnly" :class="pdfOnly ? 'btn-gold' : 'btn-ghost'" @click="pdfOnly = true">PDF كىتابلىق</button>
     </div>
 
     <div class="llist">

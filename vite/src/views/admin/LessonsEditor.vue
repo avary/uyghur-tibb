@@ -43,6 +43,17 @@ const goalsText = computed({
   get: () => (lesson.value && lesson.value.goals || []).join('\n'),
   set: v => { const L = lesson.value; if (L) L.goals = v.split('\n').map(s => s.trim()).filter(Boolean) }
 })
+const mediaText = computed({
+  get: () => JSON.stringify((lesson.value && lesson.value.media) || [], null, 2),
+  set: value => {
+    const L = lesson.value
+    if (!L) return
+    try {
+      const items = JSON.parse(value)
+      L.media = Array.isArray(items) ? items.filter(item => item && ['image', 'audio', 'video'].includes(item.type) && String(item.url || '').trim()).map(item => ({ type: item.type, url: String(item.url).trim(), alt: String(item.alt || ''), caption: String(item.caption || '') })) : []
+    } catch (e) {}
+  }
+})
 
 const hasPdf = computed(() => !!lesson.value && (lesson.value.pdfUrl || lesson.value.pdfData))
 const pdfBadge = computed(() => hasPdf.value ? '📄 PDF بار' : '⚠️ PDF يوق')
@@ -218,6 +229,7 @@ function save() {
       <div class="qa-row">
         <button class="btn btn-teal btn-sm" @click="addLesson">➕ يېڭى دەرس قوشۇش</button>
         <button class="btn btn-danger btn-sm" @click="delLesson">🗑️ دەرس ئۆچۈرۈش</button>
+        <a class="btn btn-ghost btn-sm" :href="'#/lesson/' + store.currentLessonId + '?preview=1'" target="_blank" rel="noopener">👁️ ئالدىن كۆرۈش</a>
         <span class="tbadge" :class="hasPdf ? 'b-green' : 'b-gold'">{{ pdfBadge }}</span>
       </div>
     </div>
@@ -250,6 +262,11 @@ function save() {
       <div class="fld">
         <label>مەقسەتلەر (ھەر قۇرغا بىردىن)</label>
         <textarea v-model="goalsText" class="input" rows="3"></textarea>
+      </div>
+      <div class="fld">
+        <label>مېدىيا (ئىختىيارى JSON)</label>
+        <textarea v-model="mediaText" class="input" rows="4" dir="ltr" placeholder='[{"type":"image","url":"/media/herb.jpg","alt":"...","caption":"..."}]'></textarea>
+        <small class="hint">تىپ: image، audio ياكى video. ھەر بىر ئادرېس مۇۋاپىق مەنبەدىن بولسۇن.</small>
       </div>
     </div>
 
