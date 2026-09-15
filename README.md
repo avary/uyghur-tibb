@@ -29,6 +29,11 @@ The project does not use default passwords or client-side password backdoors. Co
 - Admin moderation for recipes and herbs, with MySQL/Supabase persistence and protected APIs.
 - Learner progress, spaced repetition, accessibility controls, RTL UI, PWA installation, and offline caching for approved content.
 - Source-grounded learning assistant that avoids diagnosis and personalized treatment advice.
+- Guided learning paths with local completion tracking, timed exams, question-type and difficulty filters, missed-question retries, quiz history, and resumable attempts.
+- Local learner controls: saved recipe/herb library, progress JSON backup/restore/reset, privacy-friendly activity statistics, browser study reminders, and online/offline status.
+- Teacher workflow controls: lesson drafts, published-only learner visibility, draft preview, multimedia manifests (image/audio/video), content-quality checks, and question difficulty editing.
+- Multilingual foundation for Uyghur, Turkish, and English metadata with safe fallback to original Uyghur content.
+- Safety hardening: structured recipe safety states, reviewer notes/history, explicit AI safety boundaries, and regression tests for diagnosis/dosage/emergency requests.
 
 The roadmap and remaining content work are tracked in [ROADMAP.md](ROADMAP.md).
 
@@ -49,10 +54,14 @@ The current release includes the implemented foundations for the full learning p
    to diagnose or prescribe personal treatment.
 5. **PWA and accessibility** — RTL responsive UI, installable PWA, adjustable text size,
    keyboard/focus support, offline caching for approved recipe/herb feeds, and local study data.
+6. **Learner experience** — guided paths, saved recipe/herb references, timed and filtered
+   assessments, quiz resume/history, local reminders, progress portability, and activity summaries.
+7. **Teacher and safety operations** — draft publishing, learner preview, multimedia-ready
+   lessons, content-quality dashboard, structured safety states, reviewer notes, and tested AI safety boundaries.
 
 The next release is content-driven rather than architecture-driven: import the two raw-herb
 recognition books, verify copyright, complete expert review, and add licensed herb images,
-pronunciation audio, instructor videos, and anatomy diagrams.
+pronunciation audio, instructor videos, anatomy diagrams, and complete Turkish/English translations.
 
 ## Setup
 
