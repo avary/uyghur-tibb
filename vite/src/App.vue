@@ -28,7 +28,12 @@ onMounted(() => {
   progress.updateStreak()
   progress.trackActivity('sessions')
   notifyStudyReminder()
+  window.addEventListener('uytibb:app-update', showUpdate)
 })
+
+const updateAvailable = ref(false)
+function showUpdate() { updateAvailable.value = true }
+function reloadUpdatedApp() { window.location.reload() }
 
 const tabs = [
   { to: '/', t: 'home', ic: '🏠', label: 'باش بەت' },
@@ -69,6 +74,9 @@ onErrorCaptured(() => { runtimeError.value = true; return false })
   </div>
 
   <div v-else class="phone">
+    <div v-if="updateAvailable" class="update-banner" role="status" aria-live="polite">
+      🔄 يېڭى نەشرى تەييار — <button class="update-btn" @click="reloadUpdatedApp">قايتا يۈكلەش</button>
+    </div>
     <div v-if="!online" class="offline-banner" role="status" aria-live="polite">📴 تور يوق — يەرلىك ساقلانغان مەزمۇنلار ئىشلىتىلىۋاتىدۇ.</div>
     <header class="appbar">
       <div class="appbar-in">
@@ -113,6 +121,8 @@ onErrorCaptured(() => { runtimeError.value = true; return false })
 
 <style scoped>
 .offline-banner { padding: .5rem .8rem; background: #fff4d6; border-bottom: 1px solid #e5c878; color: #6b4e00; text-align: center; font-size: .78rem; }
+.update-banner { padding: .45rem .8rem; background: #e5f6f3; border-bottom: 1px solid #9dd8d0; color: #145e59; text-align: center; font-size: .78rem; }
+.update-btn { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; font-weight: 700; }
 .runtime-error { margin: 2rem 0; padding: 1.5rem; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
 .runtime-error p { color: var(--muted); margin: .6rem 0 1rem; }
 </style>
