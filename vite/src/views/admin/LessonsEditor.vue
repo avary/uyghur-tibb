@@ -51,9 +51,11 @@ const mediaText = computed({
     try {
       const items = JSON.parse(value)
       L.media = Array.isArray(items) ? items.filter(item => item && ['image', 'audio', 'video'].includes(item.type) && String(item.url || '').trim()).map(item => ({ type: item.type, url: String(item.url).trim(), alt: String(item.alt || ''), caption: String(item.caption || '') })) : []
-    } catch (e) {}
+      mediaError.value = ''
+    } catch (e) { mediaError.value = 'JSON فورماتى توغرا ئەمەس.' }
   }
 })
+const mediaError = ref('')
 
 const hasPdf = computed(() => !!lesson.value && (lesson.value.pdfUrl || lesson.value.pdfData))
 const pdfBadge = computed(() => hasPdf.value ? '📄 PDF بار' : '⚠️ PDF يوق')
@@ -266,6 +268,7 @@ function save() {
       <div class="fld">
         <label>مېدىيا (ئىختىيارى JSON)</label>
         <textarea v-model="mediaText" class="input" rows="4" dir="ltr" placeholder='[{"type":"image","url":"/media/herb.jpg","alt":"...","caption":"..."}]'></textarea>
+        <small v-if="mediaError" class="hint error">⚠️ {{ mediaError }} — ساقلاشتىن بۇرۇن فورماتنى توغرىلاڭ.</small>
         <small class="hint">تىپ: image، audio ياكى video. ھەر بىر ئادرېس مۇۋاپىق مەنبەدىن بولسۇن.</small>
       </div>
     </div>
