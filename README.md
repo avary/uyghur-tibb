@@ -29,11 +29,11 @@ The project does not use default passwords or client-side password backdoors. Co
 - Admin moderation for recipes and herbs, with MySQL/Supabase persistence and protected APIs.
 - Learner progress, spaced repetition, accessibility controls, RTL UI, PWA installation, and offline caching for approved content.
 - Source-grounded learning assistant that avoids diagnosis and personalized treatment advice.
-- Guided learning paths with local completion tracking, timed exams, question-type and difficulty filters, missed-question retries, quiz history, and resumable attempts.
+- Guided learning paths with local completion tracking, printable educational certificates, timed exams, question-type and difficulty filters, missed-question retries, quiz history, and resumable attempts.
 - Local learner controls: saved recipe/herb library, progress JSON backup/restore/reset, privacy-friendly activity statistics, browser study reminders, and online/offline status.
-- Teacher workflow controls: lesson drafts, published-only learner visibility, draft preview, multimedia manifests (image/audio/video), content-quality checks, and question difficulty editing.
+- Teacher workflow controls: lesson drafts, published-only learner visibility, draft preview, multimedia manifests (image/audio/video), content-quality checks, question difficulty editing, and searchable herb moderation queues.
 - Multilingual foundation for Uyghur, Turkish, and English metadata with safe fallback to original Uyghur content.
-- Safety hardening: structured recipe safety states, reviewer notes/history, explicit AI safety boundaries, and regression tests for diagnosis/dosage/emergency requests.
+- Safety hardening: structured recipe and herb safety states, reviewer notes/history, public safety gates, explicit AI safety boundaries, and regression tests for diagnosis/dosage/emergency requests.
 
 The roadmap and remaining content work are tracked in [ROADMAP.md](ROADMAP.md).
 

@@ -21,8 +21,8 @@
 - `herb_books` ۋە `herbs` جەدۋىلى MySQL/Supabase schema غا قوشۇلدى.
 - رېتسېپ-خام دورا expert link ۋە خام دورا review history جەدۋىلى قوشۇلدى.
 - خام دورا تەستىقلاش actions API ئارقىلىق DB غا ساقلىنىپ، review history غا يېزىلىدۇ.
-- خام دورا review history نى admin API دىن قايتۇرۇش قوللىنىدۇ.
-- approved raw-herb feed service worker ئارقىلىق offline caching قىلىنىدۇ.
+- خام دورا review history نى admin API دىن قايتۇرۇش قوللىنىدۇ؛ reviewer note ۋە ئايرىم safety status ساقلىنىدۇ.
+- approved ۋە safety-reviewed raw-herb feed service worker ئارقىلىق offline caching قىلىنىدۇ.
 - كېيىنكى JSON كىتابلار ئۈچۈن `npm run herbs:import -- <book.json>` normalize قىلىش قورالى تەييار.
 - `npm run herbs:validate -- <herbData-book-id.js>` ئارقىلىق publish/seed ئالدى validation gate قوشۇلدى؛ ھەر بىر كىتاب ئايرىم ساقلىنىدۇ.
 - JSON دا ID بولمىغاندا `HERB_BOOK_ID` ئارقىلىق مۇقىم كىتاب ID بېكىتىش قوللىنىدۇ.
@@ -41,7 +41,7 @@
 
 - فلەش كارتا، spaced repetition، تېما بويىچە ئاجىز نۇقتا تەكرارى.
 - رېتسېپتىن ھاسىل بولىدىغان تاللاش، ماسلاشتۇرۇش ۋە ئەھۋال سوئاللىرى.
-- دەرس يولى، ئىمتىھان ۋە گۇۋاھنامە.
+- دەرس يولى، ئىمتىھان ۋە تاماملانغان يول ئۈچۈن يەرلىك بېسىپ چىقىرىلىدىغان گۇۋاھنامە.
 
 ## باسقۇچ 4 — مۇتەخەسسىس ھەمكارلىقى 🟡
 
@@ -75,7 +75,7 @@
 - Phase 1: رېتسېپ ئىمپورت، 1000+ خاتىرە، ئىزدەش، review gate ۋە DB seed.
 - Phase 2 foundation: raw-herb model، كۆپ كىتاب importer/validator/seeder، learner encyclopedia ۋە admin review.
 - Phase 4 foundation: authenticated review actions، ئىككى باسقۇچلۇق recipe approval ۋە review history.
-- Phase 6 foundation: responsive/accessibility improvements ۋە approved recipe/herb offline caching.
+- Phase 6 foundation: responsive/accessibility improvements، approved recipe/herb offline caching، service-worker update notification ۋە bundled PDF privacy gate.
 
 ### كېيىنكى blocking content tasks
 
