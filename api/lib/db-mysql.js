@@ -132,6 +132,41 @@ function createDriver(){
         );
       });
     }
+    ,
+    async listRecipes(status){
+      if(!connected) return [];
+      return withConn(async (conn) => {
+        const [rows] = await conn.execute('SELECT * FROM recipes WHERE (? IS NULL OR review_status = ?) ORDER BY id', [status || null, status || null]);
+        if(rows.length){ const [ingredients] = await conn.execute('SELECT recipe_id, name, quantity, unit, preparation_note FROM recipe_ingredients WHERE recipe_id IN (' + rows.map(() => '?').join(',') + ')', rows.map(r => r.id)); const byId=new Map(rows.map(r=>[r.id,[]])); for(const item of ingredients) byId.get(item.recipe_id)?.push(item); for(const row of rows) row.ingredients=byId.get(row.id)||[] }
+        return rows;
+      });
+    },
+    async listHerbs(status){
+      if(!connected) return [];
+      return withConn(async (conn) => {
+        const [rows] = await conn.execute('SELECT * FROM herbs WHERE (? IS NULL OR review_status = ?) ORDER BY name', [status || null, status || null]);
+        return rows;
+      });
+    },
+    async reviewHerb(id, reviewStatus, reviewer){
+      if(!connected) return;
+      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, reviewer) VALUES (?,?,?)', [id, reviewStatus, reviewer || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
+    },
+    async herbReviewHistory(id, limit = 50){
+      if(!connected) return [];
+      return withConn(async (conn) => { const [rows] = await conn.execute('SELECT id, herb_id, review_status, reviewer, note, created_at FROM herb_review_history WHERE herb_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [id, Math.min(100, Math.max(1, Number(limit) || 50))]); return rows; });
+    },
+    async reviewRecipe(id, reviewStatus, safetyStatus, reviewer, note){
+      if(!connected) return;
+      await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE recipes SET review_status = ?, safety_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, safetyStatus, reviewer || null, id]); await conn.execute('INSERT INTO recipe_review_history (recipe_id, review_status, safety_status, reviewer, note) VALUES (?,?,?,?,?)', [id, reviewStatus, safetyStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
+    },
+    async recipeReviewHistory(id, limit = 50){
+      if(!connected) return [];
+      return withConn(async (conn) => {
+        const [rows] = await conn.execute('SELECT id, recipe_id, review_status, safety_status, reviewer, created_at FROM recipe_review_history WHERE recipe_id = ? ORDER BY created_at DESC, id DESC LIMIT ?', [id, Math.min(100, Math.max(1, Number(limit) || 50))]);
+        return rows;
+      });
+    }
   };
 }
 

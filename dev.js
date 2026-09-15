@@ -2,8 +2,10 @@
 /**
  * dev.js - Local dev server (no Vercel needed).
  *
- * Serves the static frontend AND the /api/students serverless function so the app
- * works end-to-end against your MySQL database from localhost.
+ * Serves the built Vue app (vite/dist) AND the /api/students serverless function
+ * so the app works end-to-end against your database from localhost.
+ *
+ * Run `npm run vite:build` once before starting this (or after changing the app).
  *
  * Usage:  node dev.js      (or: npm run dev)
  * Env:    PORT  (default 8080), plus the .env variables (MYSQL_*, ADMIN_PASSWORD, ALLOWED_ORIGIN)
@@ -28,6 +30,7 @@ loadEnv();
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT || 8080);
+const STATIC_ROOT = path.join(ROOT, 'vite', 'dist');
 
 // Default ALLOWED_ORIGIN to the local origin so cross-origin POSTs (which browsers
 // always attach an Origin header to) work from localhost. Set it explicitly in .env
@@ -61,14 +64,17 @@ function sendError(res, code, text){
 }
 
 function serveStatic(req, res){
+  if(!fs.existsSync(STATIC_ROOT)){
+    return sendError(res, 500, 'Vue build not found — run `npm run vite:build` first.');
+  }
   let urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   if(urlPath === '/') urlPath = '/index.html';
   // Avoid serving secrets / internals.
   if(urlPath.startsWith('/.') || urlPath.startsWith('/node_modules') || urlPath.startsWith('/tasks')){
     return sendError(res, 404, 'Not found');
   }
-  const filePath = path.normalize(path.join(ROOT, urlPath));
-  if(!filePath.startsWith(ROOT)) return sendError(res, 403, 'Forbidden');
+  const filePath = path.normalize(path.join(STATIC_ROOT, urlPath));
+  if(!filePath.startsWith(STATIC_ROOT)) return sendError(res, 403, 'Forbidden');
   fs.stat(filePath, (err, st) => {
     if(err || !st.isFile()) return sendError(res, 404, 'Not found');
     const ext = path.extname(filePath).toLowerCase();
@@ -129,8 +135,8 @@ server.listen(PORT, () => {
   console.log('│  ئۇيغۇر تېبابىتى مائارىپ سۇپىسى — يەرلىك خىزمەت │');
   console.log('└──────────────────────────────────────────────┘');
   const local = 'http://localhost:' + PORT + '/';
-  console.log('  باش بەت  (index)   → ' + local);
-  console.log('  باشقۇرۇش (admin)  → ' + local + 'admin.html');
+  console.log('  ئەپە (Vue)         → ' + local);
+  console.log('  باشقۇرۇش (/admin) → ' + local + '#/admin');
   console.log('  API (students)     → ' + local + 'api/students');
   const nets = require('os').networkInterfaces();
   for(const name of Object.keys(nets)){

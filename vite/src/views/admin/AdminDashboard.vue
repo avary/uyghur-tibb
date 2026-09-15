@@ -8,6 +8,9 @@ import LessonsEditor from './LessonsEditor.vue'
 import QuestionsBank from './QuestionsBank.vue'
 import TeachersEditor from './TeachersEditor.vue'
 import ManagePanel from './ManagePanel.vue'
+import PdfLibrary from './PdfLibrary.vue'
+import RecipeReview from './RecipeReview.vue'
+import HerbReview from './HerbReview.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -211,6 +214,9 @@ const tabs = [
   { id: 'students', ic: '🎓', label: 'ئوقۇغۇچىلار' },
   { id: 'feedback', ic: '💬', label: 'پىكىر-سوئال' },
   { id: 'lessons', ic: '📖', label: 'دەرسلەر' },
+  { id: 'pdfbooks', ic: '📚', label: 'PDF كۇتۇپخانىسى' },
+  { id: 'recipes', ic: '🌿', label: 'رېتسېپ تەكشۈرۈش' },
+  { id: 'herbs', ic: '🌱', label: 'خام دورا تەكشۈرۈش' },
   { id: 'questions', ic: '☑', label: 'سوئاللار' },
   { id: 'teachers', ic: '👨‍🏫', label: 'ئۇستازلار' },
   { id: 'manage', ic: '🛠', label: 'تەڭشەك / زاپاس' }
@@ -335,6 +341,13 @@ const tabs = [
       <!-- LESSONS EDITOR -->
       <section v-show="tab === 'lessons'"><LessonsEditor /></section>
 
+      <!-- PDF BOOKS LIBRARY -->
+      <section v-show="tab === 'pdfbooks'">
+        <PdfLibrary @edit="tab = 'lessons'" />
+      </section>
+      <section v-show="tab === 'recipes'"><RecipeReview /></section>
+      <section v-show="tab === 'herbs'"><HerbReview /></section>
+
       <!-- QUESTION BANK -->
       <section v-show="tab === 'questions'"><QuestionsBank /></section>
 
@@ -376,14 +389,14 @@ const tabs = [
 .atabs { position: sticky; top: 57px; z-index: 19; display: flex; gap: .4rem; overflow-x: auto; max-width: 860px; margin: 0 auto; width: 100%; padding: .6rem 1rem; background: var(--bg); }
 .atab { position: relative; flex: 1 1 auto; white-space: nowrap; border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 12px; padding: .55rem .8rem; font: inherit; font-size: .85rem; cursor: pointer; }
 .atab.on { background: linear-gradient(135deg, var(--teal), var(--teal-dark)); color: #fff; border-color: transparent; }
-.abadge { position: absolute; top: -5px; inset-inline-end: -5px; background: var(--gold); color: #2e2200; border-radius: 50%; min-width: 20px; height: 20px; line-height: 20px; font-style: normal; font-size: .72rem; }
+.abadge { position: absolute; top: -5px; inset-inline-end: -5px; background: var(--gold); color: var(--accent-btn-ink); border-radius: 50%; min-width: 20px; height: 20px; line-height: 20px; font-style: normal; font-size: .72rem; }
 
 .abody { width: 100%; max-width: 860px; margin: 0 auto; padding: 1rem 1rem 2.5rem; }
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .6rem; margin-bottom: 1rem; }
 .stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: .9rem; text-align: center; }
 .stat b { display: block; font-size: 1.7rem; color: var(--teal); }
 .stat.warn b { color: var(--gold-dark, var(--gold)); }
-.stat.hot { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 162, 39, .18); }
+.stat.hot { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .18); }
 .stat span { color: var(--muted); font-size: .8rem; }
 .ahint { display: block; text-align: center; color: var(--muted); margin-top: 1rem; font-size: .78rem; }
 
@@ -410,7 +423,7 @@ const tabs = [
 .fb-head small { color: var(--muted); font-size: .78rem; }
 .fb-when { margin-inline-start: auto; }
 .fb-q { background: var(--card-2); border-radius: 12px; padding: .6rem .75rem; line-height: 1.8; font-weight: 600; margin-bottom: .5rem; }
-.fb-reply { background: var(--gold-light, rgba(201, 162, 39, .12)); border: 1px solid rgba(201, 162, 39, .45); border-radius: 10px; padding: .5rem .7rem; font-size: .88rem; color: #6b5600; margin-bottom: .5rem; }
+.fb-reply { background: var(--gold-light, rgba(201, 162, 39, .12)); border: 1px solid rgba(var(--accent-rgb), .45); border-radius: 10px; padding: .5rem .7rem; font-size: .88rem; color: var(--accent-ink); margin-bottom: .5rem; }
 .fb-reply small { display: block; color: var(--muted); }
 .fb-unreplied { color: var(--red); font-size: .82rem; margin-bottom: .5rem; }
 .fb-actions { display: flex; gap: .45rem; }

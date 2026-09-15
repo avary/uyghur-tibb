@@ -4,6 +4,7 @@ import { useProgress } from '../stores/progress'
 import { useApi } from '../stores/api'
 import { getLessons, getTeachers, countQuestions } from '../data/loader'
 import { useToast } from '../composables/toast'
+import { sanitizeHtml } from '../utils/sanitize'
 
 const progress = useProgress()
 const api = useApi()
@@ -99,7 +100,7 @@ loadFb()
 
     <div v-if="daily.q" class="dq card">
       <div class="secttl">🎯 بۈگۈنكى سوئال</div>
-      <div class="dqa">🤔 {{ daily.q.q }}</div>
+      <div class="dqa">🤔 <span v-html="sanitizeHtml(daily.q.q.q)"></span></div>
       <RouterLink class="btn btn-teal btn-sm" :to="'/lesson/' + daily.q.l.id + '/quiz'">بۇ دەرسنىڭ مەشىقىگە ئۆتۈش</RouterLink>
     </div>
 
@@ -143,7 +144,7 @@ loadFb()
   content: ""; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px;
   border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.16), transparent 65%);
 }
-.hlogo { width: 66px; height: 66px; border-radius: 18px; overflow: hidden; background: var(--card); display: grid; place-items: center; box-shadow: inset 0 0 0 2px rgba(201,162,39,.55); margin-bottom: 12px; }
+.hlogo { width: 66px; height: 66px; border-radius: 18px; overflow: hidden; background: var(--card); display: grid; place-items: center; box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb),.55); margin-bottom: 12px; }
 .hlogo img { width: 62px; height: 62px; }
 .greet h2 { font-size: 1.18rem; margin-bottom: 4px; }
 .greet p { font-size: .85rem; opacity: .9; margin-bottom: 14px; }
@@ -170,7 +171,7 @@ loadFb()
 .menu-tile .mi { font-size: 1.5rem; }
 .menu-tile b { font-size: .82rem; line-height: 1.25; }
 .menu-tile small { font-size: .66rem; color: var(--muted); }
-.menu-tile.pdf { border: 1.5px solid rgba(201,162,39,.5); background: linear-gradient(180deg, var(--gold-soft), transparent); }
+.menu-tile.pdf { border: 1.5px solid rgba(var(--accent-rgb),.5); background: linear-gradient(180deg, var(--gold-soft), transparent); }
 .menu-tile.pdf b { color: #b45309; }
 [data-theme="dark"] .menu-tile.pdf b { color: var(--gold); }
 
@@ -181,7 +182,7 @@ loadFb()
 [data-theme="dark"] .dtxt { color: var(--gold); }
 
 .tip {
-  margin-top: 16px; background: var(--teal-light); border: 1px dashed rgba(14,124,111,.4);
+  margin-top: 16px; background: var(--teal-light); border: 1px dashed rgba(var(--brand-rgb),.4);
   border-radius: var(--radius-sm); padding: 12px 14px; font-size: .86rem; color: var(--teal-dark);
 }
 [data-theme="dark"] .tip { color: var(--teal); }

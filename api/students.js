@@ -182,6 +182,30 @@ module.exports = async (req, res) => {
     if(req.method === 'GET'){
       const q = Object.fromEntries(new URL(req.url, 'http://x').searchParams.entries());
 
+      if(q.recipes === '1'){
+        if(rateLimited(ip)) return fail(429, 'Too many requests');
+        const recipes = await db.listRecipes('approved');
+        return res.status(200).json({ status: 'ok', recipes });
+      }
+      if(q.herbs === '1'){
+        if(rateLimited(ip)) return fail(429, 'Too many requests');
+        const herbs = db.listHerbs ? await db.listHerbs('approved') : [];
+        return res.status(200).json({ status: 'ok', herbs });
+      }
+
+      if(q.recipe_history){
+        const user = getReqUser(req, res); if(!user) return;
+        const id = String(q.recipe_history).slice(0, 120);
+        const history = db.recipeReviewHistory ? await db.recipeReviewHistory(id, q.limit) : [];
+        return res.status(200).json({ status: 'ok', history });
+      }
+      if(q.herb_history){
+        const user = getReqUser(req, res); if(!user) return;
+        const id = String(q.herb_history).slice(0, 120);
+        const history = db.herbReviewHistory ? await db.herbReviewHistory(id, q.limit) : [];
+        return res.status(200).json({ status: 'ok', history });
+      }
+
       // Public scoped status check: /api/students?phone=... -> only that phone's status
       if(q && q.phone){
         if(rateLimited(ip)) return fail(429, 'Too many requests');
@@ -208,6 +232,19 @@ module.exports = async (req, res) => {
       try { data = typeof req.body === 'string' ? JSON.parse(req.body) : req.body; }
       catch(e){ return fail(400, 'Invalid JSON'); }
       const action = data && data.action;
+
+      if(action === 'review_recipe' && data.id){
+        const user = getReqUser(req, res); if(!user) return;
+        if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus) || !/^(unreviewed|reviewed|blocked)$/.test(data.safetyStatus)) return fail(400, 'Invalid recipe review status');
+        if(db.connected) await db.reviewRecipe(String(data.id).slice(0, 120), data.reviewStatus, data.safetyStatus, user.username || 'admin', String(data.note || '').slice(0, 1000));
+        return res.status(200).json({ status: 'ok', message: 'Recipe review saved' });
+      }
+      if(action === 'review_herb' && data.id){
+        const user = getReqUser(req, res); if(!user) return;
+        if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus)) return fail(400, 'Invalid herb review status');
+        if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, user.username || 'admin');
+        return res.status(200).json({ status: 'ok', message: 'Herb review saved' });
+      }
 
       // 1. Admin login: verify against env ADMIN_PASSWORD, return short-lived token
       if(action === 'login'){

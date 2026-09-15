@@ -1,8 +1,22 @@
 <!doctype html>
-<html lang="ug">
+<html lang="ug" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script>
+    /* apply persisted theme + palette + view mode before first paint */
+    (function () {
+      try {
+        var d = document.documentElement;
+        d.setAttribute('data-theme', localStorage.getItem('uytibb_theme') === 'dark' ? 'dark' : 'light');
+        var p = localStorage.getItem('uytibb_palette');
+        if (p === 'gold' || p === 'rose' || p === 'teal') d.setAttribute('data-palette', p);
+        var v = localStorage.getItem('uytibb_view');
+        if (v === 'desktop' || v === 'mobile') d.setAttribute('data-view', v);
+        else if (window.innerWidth >= 1024) d.setAttribute('data-view', 'desktop');
+      } catch (e) {}
+    })();
+  </script>
   <title>ئۇيغۇر تېبابىتى — نەزەرىيە ئۆگىنىش</title>
   <meta name="theme-color" content="#0e7c6f">
   <meta name="description" content="ئۇيغۇر تېبابىتى نەزەرىيە قىسمى: دەرسلەر، مەشىقلەر، تارىخ ۋە ئۇستازلار">

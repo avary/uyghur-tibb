@@ -3,6 +3,7 @@ import { ref, computed, onBeforeUnmount } from 'vue'
 import { useQuiz } from '../composables/useQuiz'
 import { useProgress } from '../stores/progress'
 import { getLessons } from '../data/loader'
+import { sanitizeHtml } from '../utils/sanitize'
 
 const progress = useProgress()
 const phase = ref('setup') // setup | run | done
@@ -107,7 +108,7 @@ const answered = computed(() => quiz.checked.filter(Boolean).length)
     <!-- run: question card (mirrors QuizView rendering) -->
     <div v-if="phase === 'run'" class="qcard" :class="'type-' + quiz.q().type">
       <div class="qlabel"><b>{{ quiz.q().type === 'choice' ? '☑' : quiz.q().type === 'tf' ? '✓✗' : quiz.q().type === 'blank' ? '✎' : '🔗' }}</b>{{ quiz.q().type === 'choice' ? 'جاۋاب تاللاش' : quiz.q().type === 'tf' ? 'توغرا-خاتا' : quiz.q().type === 'blank' ? 'بوش ئورۇن تولدۇرۇش' : 'تۇتاشتۇرۇش' }}</div>
-      <h2 class="qtext">{{ quiz.q().q }}</h2>
+      <h2 class="qtext" v-html="sanitizeHtml(quiz.q().q)"></h2>
 
       <div v-if="quiz.q().type === 'choice'" class="opts">
         <button v-for="(o, i) in quiz.q().opts" :key="i" class="opt" :class="{
@@ -115,7 +116,7 @@ const answered = computed(() => quiz.checked.filter(Boolean).length)
           correct: quiz.checked[quiz.idx.value] && i === quiz.q().a,
           wrong: quiz.checked[quiz.idx.value] && quiz.answers[quiz.idx.value].sel === i && i !== quiz.q().a
         }" @click="!quiz.checked[quiz.idx.value] && (quiz.answers[quiz.idx.value].sel = i)">
-          <span class="opt-i">{{ i + 1 }}</span>{{ o }}
+          <span class="opt-i">{{ i + 1 }}</span><span v-html="sanitizeHtml(o)"></span>
         </button>
       </div>
 
@@ -148,7 +149,7 @@ const answered = computed(() => quiz.checked.filter(Boolean).length)
 
       <div v-if="quiz.checked[quiz.idx.value]" class="exp" :class="{ bad: !quiz.isCorrect(quiz.q(), quiz.answers[quiz.idx.value]) }">
         <b>{{ quiz.isCorrect(quiz.q(), quiz.answers[quiz.idx.value]) ? 'توغرا!' : 'توغرا ئەمەس' }}</b>
-        <span v-if="quiz.q().exp">{{ quiz.q().exp }}</span>
+        <span v-if="quiz.q().exp" v-html="sanitizeHtml(quiz.q().exp)"></span>
       </div>
     </div>
 

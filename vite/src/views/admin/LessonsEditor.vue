@@ -325,7 +325,7 @@ function save() {
 .hint { display: block; color: var(--teal-dark); font-size: .78rem; margin-top: .3rem; }
 .tbadge { display: inline-block; border-radius: 20px; padding: .3rem .7rem; font-size: .78rem; align-self: center; }
 .tbadge.b-green { background: rgba(38, 157, 66, .15); color: #269d42; }
-.tbadge.b-gold { background: rgba(201, 162, 39, .16); color: #8a6d15; }
+.tbadge.b-gold { background: rgba(var(--accent-rgb), .16); color: var(--accent-ink); }
 .dropzone { margin-top: .8rem; border: 2px dashed var(--line); border-radius: 14px; padding: 1rem; text-align: center; cursor: pointer; color: var(--muted); transition: border-color .15s ease; }
 .dropzone:hover { border-color: var(--teal); background: var(--card-2); }
 .dropzone b { display: block; color: var(--teal-dark); margin-bottom: .15rem; }

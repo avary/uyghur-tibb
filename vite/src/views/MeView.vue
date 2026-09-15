@@ -1,9 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useProgress } from '../stores/progress'
+import { useTheme } from '../composables/theme'
+import { useView } from '../composables/view'
 import { getLessons, countQuestions } from '../data/loader'
+import { sanitizeHtml } from '../utils/sanitize'
 
 const progress = useProgress()
+const theme = useTheme()
+const view = useView()
 const LESSONS = getLessons()
 const totalQ = countQuestions()
 const autoQ = countQuestions(q => q.type !== 'essay')
@@ -51,8 +56,8 @@ const bestAvg = computed(() => {
     <div class="secttl">❌ خاتا سوئاللىرىم ({{ wrongCount }})</div>
     <div v-if="progress.wrong.length" class="wlist">
       <div v-for="(w, i) in progress.wrong" :key="i" class="w card">
-        <div class="w-top"><b>{{ w.q }}</b><span class="pill">{{ w.type }}</span></div>
-        <div class="muted" style="font-size:.82rem">{{ w.exp || w.model }}</div>
+        <div class="w-top"><b v-html="sanitizeHtml(w.q)"></b><span class="pill">{{ w.type }}</span></div>
+        <div class="muted" style="font-size:.82rem" v-html="sanitizeHtml(w.model || w.exp || '')"></div>
         <button class="btn btn-ghost btn-sm" style="align-self:flex-start" @click="progress.removeWrong(w)">✓ بىلىپ قويدۇم</button>
       </div>
     </div>
@@ -62,6 +67,32 @@ const bestAvg = computed(() => {
     <div class="stats-lines">
       <div class="line"><span>دەرس تاماملاش</span><b>%{{ progress.pctRead }}</b></div>
       <div class="line"><span>ئوتتۇرىچە يۇقىرى نەتىجە</span><b>%{{ bestAvg }}</b></div>
+    </div>
+
+    <div class="secttl">🎨 تېما</div>
+    <div class="themes card">
+      <div class="tp-lbl">رەڭگى تېما</div>
+      <div class="tp-row">
+        <div
+          v-for="p in theme.PALETTES"
+          :key="p.id"
+          class="topt"
+          :class="{ on: theme.palette.value === p.id }"
+          @click="theme.setPalette(p.id)"
+        >
+          <i class="t-dot" :style="{ background: p.dot }"></i>
+          <span>{{ p.em }} {{ p.label }}</span>
+        </div>
+        <button class="btn btn-ghost btn-sm wbtn" @click="theme.toggle()">
+          {{ theme.dark.value ? '☀️ كۈندۈز' : '🌙 كېچە' }}
+        </button>
+      </div>
+
+      <div class="tp-lbl">ئېكران كۆرۈنۈشى</div>
+      <div class="tp-row">
+        <button class="topt" :class="{ on: view.view.value === 'mobile' }" @click="view.setView('mobile')">📱 تېلېفون (560px)</button>
+        <button class="topt" :class="{ on: view.view.value === 'desktop' }" @click="view.setView('desktop')">💻 كەڭ ئېكران (1040px)</button>
+      </div>
     </div>
   </section>
 </template>
@@ -86,7 +117,7 @@ const bestAvg = computed(() => {
 .stat b { font-size: 1.35rem; color: var(--teal-dark); }
 [data-theme="dark"] .stat b { color: var(--teal); }
 .stat span { font-size: .76rem; color: var(--muted); }
-.stat > i { position: absolute; left: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 4px 0 0; transition: width .5s ease; }
+.stat > i { position: absolute; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, var(--gold), var(--teal)); border-radius: 4px 0 0 0; transition: width .5s ease; }
 .sub { font-size: .72rem; color: var(--muted); }
 .wlist { display: flex; flex-direction: column; gap: 10px; }
 .w { display: flex; flex-direction: column; gap: 8px; }
@@ -96,4 +127,19 @@ const bestAvg = computed(() => {
 .line { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .88rem; box-shadow: var(--shadow); }
 .line b { color: var(--teal-dark); }
 [data-theme="dark"] .line b { color: var(--teal); }
+.themes { display: block; }
+.tp-lbl { font-size: .72rem; color: var(--muted); font-weight: 800; margin: 6px 0 8px; }
+.tp-lbl:first-child { margin-top: 0; }
+.tp-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.topt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: .42rem .7rem; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card-2);
+  color: var(--muted); font-size: .78rem; font-weight: 700; cursor: pointer;
+  transition: .15s ease;
+}
+.topt.on { background: var(--teal-light); border-color: var(--teal); color: var(--teal-dark); }
+[data-theme="dark"] .topt.on { color: var(--teal); }
+.t-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+.wbtn { margin-inline-start: auto; }
 </style>

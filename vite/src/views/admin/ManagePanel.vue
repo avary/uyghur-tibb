@@ -13,6 +13,8 @@ const newAdmin = reactive({ name: '', username: '', role: 'teacher' })
 
 const LS_ADMINS = 'uytibb_admins'
 const LS_V1 = 'uytibb_v1'
+const LS_RECIPE_REVIEW = 'uytibb_recipe_editor_overrides'
+const LS_RECIPE_SRS = 'uytibb_recipe_srs'
 
 function getAdmins() {
   const raw = localStorage.getItem(LS_ADMINS)
@@ -89,13 +91,16 @@ function saveFeedbackList(list) {
 }
 
 function backup() {
+  const local = key => { try { return JSON.parse(localStorage.getItem(key) || '{}') } catch (e) { return {} } }
   const data = {
-    version: '2.0',
+    version: '2.1',
     exportDate: new Date().toISOString(),
     lessons: store.lessons,
     teachers: store.teachers,
     students: (() => { try { return JSON.parse(localStorage.getItem('uytibb_all_students') || '[]') } catch (e) { return [] } })(),
-    feedback: (() => { try { return JSON.parse(localStorage.getItem('uytibb_feedback') || '[]') } catch (e) { return [] } })()
+    feedback: (() => { try { return JSON.parse(localStorage.getItem('uytibb_feedback') || '[]') } catch (e) { return [] } })(),
+    recipeReviewOverrides: local(LS_RECIPE_REVIEW),
+    recipeStudySchedule: local(LS_RECIPE_SRS)
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
@@ -120,6 +125,8 @@ function restore(e) {
       }
       if (Array.isArray(imported.students)) localStorage.setItem('uytibb_all_students', JSON.stringify(imported.students))
       if (Array.isArray(imported.feedback)) saveFeedbackList(imported.feedback)
+      if (imported.recipeReviewOverrides && typeof imported.recipeReviewOverrides === 'object') localStorage.setItem(LS_RECIPE_REVIEW, JSON.stringify(imported.recipeReviewOverrides))
+      if (imported.recipeStudySchedule && typeof imported.recipeStudySchedule === 'object') localStorage.setItem(LS_RECIPE_SRS, JSON.stringify(imported.recipeStudySchedule))
       toast('✅ بارلىق دەرسلەر، سوئاللار ۋە سانلىق مەلۇماتلار ئەسلىگە كەلتۈرۈلدى!')
     } catch (err) {
       toast('ھۆججەتنى ئوقۇشتا خاتالىق: ' + err.message, 'err')
@@ -225,7 +232,7 @@ function roleLabel(r) { return r === 'super' ? 'ئالىي باشقۇرغۇچى 
 .adm-main b { font-size: .92rem; }
 .adm-main small { color: var(--muted); font-size: .8rem; }
 .tag { border-radius: 20px; padding: .15rem .55rem; font-size: .72rem; font-weight: 700; }
-.tag.b-gold { background: rgba(201, 162, 39, .16); color: #8a6d15; }
+.tag.b-gold { background: rgba(var(--accent-rgb), .16); color: var(--accent-ink); }
 .tag.b-green { background: rgba(38, 157, 66, .15); color: #269d42; }
 .muted { color: var(--muted); font-size: .78rem; }
 .add-admin { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }

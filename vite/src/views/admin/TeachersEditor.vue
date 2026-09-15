@@ -138,7 +138,7 @@ function saveTeacher() {
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; }
 .qa-row { display: flex; flex-wrap: wrap; gap: .55rem; }
 .table-card { overflow-x: auto; }
-.tag { display: inline-block; background: rgba(201, 162, 39, .16); color: #8a6d15; border-radius: 20px; padding: .15rem .55rem; font-size: .72rem; font-weight: 700; }
+.tag { display: inline-block; background: rgba(var(--accent-rgb), .16); color: var(--accent-ink); border-radius: 20px; padding: .15rem .55rem; font-size: .72rem; font-weight: 700; }
 .works { color: var(--muted); max-width: 220px; white-space: normal; line-height: 1.6; }
 .cell-actions { white-space: nowrap; text-align: center; }
 .cell-actions .btn { margin: .15rem; }

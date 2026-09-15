@@ -71,6 +71,6 @@ const steps = [
 .ih-logo img { width: 52px; height: 52px; }
 .install-hero small { display: block; color: rgba(255,255,255,.85); font-size: .78rem; }
 .step { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 12px 14px; margin-bottom: 8px; font-size: .9rem; box-shadow: var(--shadow); }
-.step-n { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--gold), #a8861c); color: #2e2200; font-weight: 900; display: grid; place-items: center; }
+.step-n { flex: none; width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--gold), var(--accent-dark)); color: var(--accent-btn-ink); font-weight: 900; display: grid; place-items: center; }
 .pwa-note { margin-top: 14px; }
 </style>

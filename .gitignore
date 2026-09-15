@@ -30,3 +30,6 @@ qr.svg
 # Windows batch scripts & docs (deployment helpers, not source)
 *.bat
 *.txt
+recipeData.js
+herbData-*.js
+vite/public/pdf/

@@ -62,6 +62,82 @@ CREATE TABLE IF NOT EXISTS lessons (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 4b. Structured recipe library (source-linked, review-gated)
+CREATE TABLE IF NOT EXISTS recipe_books (
+    id VARCHAR(80) PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    subtitle VARCHAR(500) NULL,
+    source_year SMALLINT NULL,
+    language VARCHAR(12) NOT NULL DEFAULT 'ug',
+    pdf_url TEXT NULL,
+    total_pages INT NULL,
+    copyright_status VARCHAR(40) NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS recipes (
+    id VARCHAR(100) PRIMARY KEY,
+    book_id VARCHAR(80) NOT NULL,
+    category VARCHAR(300) NULL,
+    disease_name VARCHAR(300) NOT NULL,
+    recipe_number VARCHAR(30) NULL,
+    original_text LONGTEXT NOT NULL,
+    cleaned_text LONGTEXT NULL,
+    source_page_start INT NULL,
+    source_page_end INT NULL,
+    ocr_confidence DECIMAL(4,3) NULL,
+    review_status VARCHAR(30) NOT NULL DEFAULT 'needs_review',
+    safety_status VARCHAR(30) NOT NULL DEFAULT 'unreviewed',
+    reviewer VARCHAR(200) NULL,
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_recipe_book (book_id), KEY idx_recipe_category (category),
+    KEY idx_recipe_status (review_status),
+    CONSTRAINT fk_recipe_book FOREIGN KEY (book_id) REFERENCES recipe_books(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS recipe_ingredients (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    recipe_id VARCHAR(100) NOT NULL, name VARCHAR(300) NOT NULL, quantity VARCHAR(120) NULL,
+    unit VARCHAR(80) NULL, preparation_note VARCHAR(500) NULL,
+    KEY idx_ingredient_recipe (recipe_id),
+    CONSTRAINT fk_ingredient_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS recipe_review_history (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, recipe_id VARCHAR(100) NOT NULL,
+    review_status VARCHAR(30) NOT NULL, safety_status VARCHAR(30) NOT NULL,
+    reviewer VARCHAR(200) NULL, note TEXT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_review_recipe (recipe_id), CONSTRAINT fk_review_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4c. خام دورىلار قامۇسى (source-separated herb identification books)
+CREATE TABLE IF NOT EXISTS herb_books (
+    id VARCHAR(80) PRIMARY KEY, title VARCHAR(300) NOT NULL, subtitle VARCHAR(500) NULL,
+    language VARCHAR(12) NOT NULL DEFAULT 'ug', total_pages INT NULL,
+    copyright_status VARCHAR(40) NOT NULL DEFAULT 'pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS herbs (
+    id VARCHAR(120) PRIMARY KEY, book_id VARCHAR(80) NOT NULL, name VARCHAR(300) NOT NULL,
+    aliases JSON NULL, latin_name VARCHAR(300) NULL, used_part VARCHAR(300) NULL,
+    properties TEXT NULL, preparation TEXT NULL, warnings TEXT NULL, image_url TEXT NULL,
+    original_text LONGTEXT NOT NULL, source_page_start INT NULL, source_page_end INT NULL,
+    review_status VARCHAR(30) NOT NULL DEFAULT 'needs_review', reviewer VARCHAR(200) NULL,
+    reviewed_at TIMESTAMP NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_herb_book (book_id), KEY idx_herb_name (name), KEY idx_herb_status (review_status),
+    CONSTRAINT fk_herb_book FOREIGN KEY (book_id) REFERENCES herb_books(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS recipe_herbs (
+    recipe_id VARCHAR(100) NOT NULL, herb_id VARCHAR(120) NOT NULL, match_type VARCHAR(30) NOT NULL DEFAULT 'expert',
+    reviewer VARCHAR(200) NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (recipe_id, herb_id), CONSTRAINT fk_recipe_herb_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_recipe_herb_herb FOREIGN KEY (herb_id) REFERENCES herbs(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS herb_review_history (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, herb_id VARCHAR(120) NOT NULL,
+    review_status VARCHAR(30) NOT NULL, reviewer VARCHAR(200) NULL, note TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_herb_review (herb_id),
+    CONSTRAINT fk_herb_review_herb FOREIGN KEY (herb_id) REFERENCES herbs(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 5. ئىمتىھان ۋە سىناق خاتىرىلىرى (Exams)
 CREATE TABLE IF NOT EXISTS exam_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

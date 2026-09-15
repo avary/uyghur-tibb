@@ -17,17 +17,7 @@ through `/api/students`, and the browser clients don't know (or care) which back
 - **DB**: remote MySQL (schema in `mysql_setup.sql`) **or** Supabase (schema in `supabase_setup.sql`)
 - **Hosting**: Vercel (static + Node functions)
 
-## Security model
-- Clients hold **no DB credentials** and no API keys — `supabase.js` only proxies to `/api/students`.
-- The Supabase **Service Role key is server-side only** (loaded from `SUPABASE_SERVICE_ROLE_KEY`),
-  never shipped to the browser.
-- Admin auth is **server-side**: login checks `ADMIN_PASSWORD`, returns an 8-hour HMAC-signed
-  token stored in `sessionStorage`. Every privileged API action requires that token (both drivers).
-- **Fail closed everywhere**: an explicit `DB_DRIVER` without its credentials errors at startup,
-  a Supabase backend outage surfaces as a 500 (never an empty-but-successful admin list), and
-  disallowed CORS origins get a 403.
-- CORS is restricted to `ALLOWED_ORIGIN`; inputs are validated and rate-limited server-side.
-- No hardcoded or default passwords (the previous reset-to-default password backdoors were removed).
+efault passwords (the previous reset-to-default password backdoors were removed).
 
 ## Setup
 
@@ -84,6 +74,32 @@ node migrate.js --seed # also insert an admin row (hashed from ADMIN_PASSWORD)
    npm run migrate:to-supabase        # students/feedback/exam_logs (students upsert by phone)
    ```
 
+### Recipe and raw-herb ingestion
+
+The OCR recipe book stays local until copyright and expert safety review are complete. Do
+not stage `vite/src/data/recipeData.js`, `vite/src/data/herbData-*.js`, or `vite/public/pdf/` when committing. These paths are also ignored by Git. Validate the
+local recipe dataset, then seed it explicitly:
+
+```bash
+npm run recipes:validate
+npm run recipes:seed
+npm run git:check-private
+npm run git:setup-hooks
+```
+
+Future raw-herb recognition books use a separate pipeline:
+
+```bash
+npm run herbs:import -- /path/to/raw-herbs.json
+# If the JSON has no stable ID, provide one to prevent collisions:
+HERB_BOOK_ID=uyghur-raw-herbs npm run herbs:import -- /path/to/raw-herbs.json
+npm run herbs:validate -- vite/src/data/herbData-<book-id>.js
+npm run herbs:seed   # requires HERB_DATA=herbData-book-a.js,herbData-book-b.js
+```
+
+Imported herbs begin as `needs_review`; only reviewed content should be connected to public
+recipes. The full implementation plan is in [ROADMAP.md](ROADMAP.md).
+
 ### 3. Moving data between backends
 
 **MySQL → Supabase** (`npm run migrate:to-supabase`): students upsert by phone (safe to
@@ -117,7 +133,7 @@ Set these in the Vercel project (Settings → Environment Variables):
 | `SUPABASE_URL` | e.g. `https://<ref>.supabase.co` (driver `supabase` only) |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server-side** only (driver `supabase` only) |
 | `ADMIN_PASSWORD` | the admin login password (also signs tokens) — both drivers |
-| `ALLOWED_ORIGIN` | your app origin, e.g. `https://uyghur-tibb.vercel.app` |
+| `ALLOWED_ORIGIN` | your app origin, e.g. `https://uyghur-tibb-mu.vercel.app` |
 
 > An explicit `DB_DRIVER` with missing credentials makes the API **fail closed** (500s on
 > startup) rather than silently reporting empties — the env var table above must match the
@@ -145,22 +161,21 @@ curl -s "https://<ref>.supabase.co/rest/v1/students?select=count" \
 > GRANT as a superuser, or ask your DB host admin to grant those privileges to the app user.
 
 ### 6. Local development
-Run the legacy plain-HTML app **or** the Vue app locally, plus the API, against whichever
-backend `DB_DRIVER` selects in `.env` (MySQL or Supabase — no Vercel needed):
+Run the Vue app locally, plus the API, against whichever backend `DB_DRIVER` selects in
+`.env` (MySQL or Supabase — no Vercel needed). The build must exist first:
 
 ```bash
-npm run dev          # == node dev.js  (default port 8080) — legacy HTML + /api
+npm run vite:build      # build the Vue app once (also copies pdf/ into vite/dist)
+npm run dev             # == node dev.js  (default port 8080) — Vue build + /api
 PORT=3000 npm run dev
-# optional custom port:
 ```
 
-`dev.js` serves the legacy static frontend (`index.html`, `admin.html`, …) **and** the
-`/api/students` serverless function from the same origin, so the API works end-to-end on
-localhost. Set `PORT` in `.env` or on the command line (default `8080`). `ALLOWED_ORIGIN`
-defaults to the local origin when unset, so browser POSTs work locally too.
+`dev.js` serves the built Vue app (`vite/dist`) **and** the `/api/students` serverless
+function from the same origin, so the app works end-to-end on localhost. Set `PORT` in
+`.env` or on the command line (default `8080`). `ALLOWED_ORIGIN` defaults to the local
+origin when unset, so browser POSTs work locally too.
 
-The Vue app runs on its own dev server (which proxies `/api` to `:8080`) and builds to
-`vite/dist`:
+For hot-reload UI development use the Vite dev server (which proxies `/api` to `:8080`):
 
 ```bash
 npm --prefix vite install     # once
@@ -221,7 +236,7 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
    `DB_DRIVER=supabase`, `SUPABASE_URL=...`, `SUPABASE_SERVICE_ROLE_KEY=...`,
    `ADMIN_PASSWORD=...` (and everything for MySQL instead if you picked `mysql`).
    Do this in the **Production** (and any Preview) environments.
-3. Set **`ALLOWED_ORIGIN`** to the deployed URL, e.g. `https://uyghur-tibb.vercel.app`.
+3. Set **`ALLOWED_ORIGIN`** to the deployed URL, e.g. `https://uyghur-tibb-mu.vercel.app`.
    Requests from any other origin are rejected with `403`; if it is left unset, cross-origin
    requests fail closed (`503`). Same-origin requests (an admin panel hosted on the same
    domain) always work.
@@ -235,50 +250,10 @@ Because the app uses hash routing, no SPA fallback rewrites are needed.
 6. Switching databases later is just a matter of changing `DB_DRIVER` + env vars and re-applying
    §3 to move the data — no code or frontend changes needed.
 
-## Vue frontend (port complete)
 
-The Vue 3 + Vite + Pinia + vue-router app in `vite/` is now the **deployed frontend**
-(§7). The legacy `index.html`, `admin.html` and `connect.html` still live at the repo root
-and `dev.js` can still serve them (and the API) — they are only kept during the cutover
-rollout and will be removed once the Vercel preview deployment is verified.
-
-What the Vue app includes:
-- App shell (appbar, tabbar, light/dark theme, toasts) + hash router
-- Home, Lessons list, Lesson reader (sections, goals, mind map, PDF), lesson Quiz
-- Books (PDF), Teachers, Exam (timed), Me (progress/wrong answers), AI assistant, Install
-- Admin (`/admin`, auth-gated): login, dashboard stats, student approve/block/delete,
-  feedback reply/dismiss, CSV export; server API is the source of truth, localStorage
-  keys stay shared with the legacy app
-- Content editors: lesson form + sections + quiz, PDF upload/preview/remove, question bank
-  (choice/TF/blank/essay), teachers editor, backup/restore JSON, reset to defaults, and
-  multi-admin display-names — all inside the Vue admin tabs
-- Progress storage reuses the same `uytibb_v1` localStorage key as the legacy app
-- Content stays in the root `data.js` (single source of truth); `uytibb_custom_lessons` /
-  `uytibb_custom_teachers` overrides are applied (and written by the Vue editors) like in
-  the legacy learner app
-- PWA: `vite/public/sw.js` + manifest are copied into the build; the service worker is
-  registered from `src/main.js` on production/secure contexts
-- Security hardening: lesson bodies and quiz model/explanation HTML are allowlist-sanitized
-  before every `v-html` render; PDF uploads are restricted to `application/pdf`, max 2 MB,
-  with quota-failure handling; restore imports are schema-validated (ids, question types,
-  answers, sections, teachers)
-
-### Content persistence caveat
-Lesson/teacher edits are stored in the current browser's `localStorage` only
-(`uytibb_custom_lessons` / `uytibb_custom_teachers`) — they are **not** synced to the
-server or shared across devices/admins. Use the admin "زاپاسلاش ۋە ئەسلىگە كەلتۈرۈش"
-backup/restore JSON to move content between devices. Server-backed content management
-would be a follow-up feature.
-
-## Admin login
-- Open the Vue admin at `/` → `#/admin`.
-- Enter the `ADMIN_PASSWORD` value. A short-lived token is issued and stored in the session.
-  The Vue route guard validates the token server-side before `/admin` becomes accessible.
 
 ## Model: upstream collaboration
 The upstream project (`github.com/avary/uyghur-tibb`) keeps evolving. When new features land
 upstream, fetch and integrate them **in our hardened way**: keep diffs minimal and targeted in
 the HTML files, and route any new data features through `/api/students` with server-side auth —
 never add client-side DB/API keys or password bypasses.
-
-

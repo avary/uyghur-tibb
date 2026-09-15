@@ -1,11 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { getLessons } from '../data/loader'
+import { publishedRecipes } from '../data/recipes'
 
 const LESSONS = getLessons()
 const q = ref('')
 const msgs = ref([
-  { me: false, text: 'ئەسسالامۇ ئەلەيكۇم! ئۇيغۇر تېبابىتى توغرىسىدا سوئال سوراڭ. مەسىلەن: «مىزاج دېگەن نېمە؟»' }
+  { me: false, text: 'ئەسسالامۇ ئەلەيكۇم! تەستىقلانغان دەرس ۋە رېتسېپ مەنبەلىرىدىن ئۆگىنىش سوئالى سوراڭ. مەسىلەن: «باش ئاغرىقى بابىدا قايسى تەركىبلەر بار؟»' }
 ])
 
 function norm(s) {
@@ -25,8 +26,11 @@ function answer(kw) {
   const norms = Object.fromEntries(kws.map(x => [x.t, x]))
   const low = norm(q.value).toLowerCase()
   const hit = kws.find(x => x.k.some(k => low.includes(k)))
-  if (hit) return hit.r
-  return 'بۇ سوئالغا ھازىرچە تېيىز جاۋاب ئېلەمەن. دەرس بۆلەكلىرىدىن قىدىرىپ كۆرۈڭ، ياكى «سۇئال-پىكىر تاختىسى»دىن ئۇستازلارغا يېزىڭ.'
+  if (hit) return { text: hit.r, source: 'دەرسلىك مەنبەسى' }
+  const lowRecipe = norm(kw).toLowerCase()
+  const recipe = publishedRecipes().find(r => [r.disease, r.category, r.originalText].join(' ').toLowerCase().includes(lowRecipe) || lowRecipe.includes(norm(r.disease).toLowerCase()))
+  if (recipe) return { text: recipe.originalText.slice(0, 600), source: `${recipe.disease} · ${recipe.sourcePageStart}–${recipe.sourcePageEnd}-بەت` }
+  return { text: 'بۇ سوئالغا تەستىقلانغان مەنبەلەردىن جاۋاب تاپالمىدىم. بۇ ياردەمچى دىياگنوز قويمايدۇ ياكى شەخسىي رېتسېپ/مىقدار تەۋسىيە قىلمايدۇ؛ ئۇستازدىن سوراڭ.', source: 'مەنبە تېپىلمىدى' }
 }
 
 function send() {
@@ -35,7 +39,7 @@ function send() {
   msgs.value.push({ me: true, text: t })
   q.value = ''
   setTimeout(() => {
-    msgs.value.push({ me: false, text: answer(t) })
+    msgs.value.push({ me: false, ...answer(t) })
   }, 350)
 }
 
@@ -52,7 +56,7 @@ function scrollDown() {
 
     <div class="chat" ref="chatBox">
       <div v-for="(m, i) in msgs" :key="i" class="chat-msg" :class="{ me: m.me }">
-        <div class="bubble">{{ m.text }}</div>
+        <div class="bubble">{{ m.text }}<small v-if="m.source" class="source">📚 {{ m.source }}</small></div>
       </div>
     </div>
 
@@ -81,6 +85,7 @@ function scrollDown() {
   background: linear-gradient(135deg, var(--teal), var(--teal-deep)); color: #fff;
   border: none; border-start-end-radius: 4px;
 }
+.source { display: block; margin-top: .5rem; color: var(--muted); font-size: .7rem; }
 .chat-in { display: flex; gap: 8px; margin-top: 10px; }
 .chat-in .btn { flex: none; }
 </style>

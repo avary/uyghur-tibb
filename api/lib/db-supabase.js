@@ -150,6 +150,32 @@ function createDriver({ fetchFn } = {}){
         body: { full_name: admin.full_name || 'باشقۇرغۇچى', password_hash: admin.password_hash || null },
         prefer: 'return=minimal',
       });
+    },
+    async listRecipes(status){
+      if(!connected) return [];
+      return sb('/recipes?select=*,recipe_ingredients(*)&order=id' + (status ? '&review_status=eq.' + pg(status) : ''));
+    },
+    async listHerbs(status){
+      if(!connected) return [];
+      return sb('/herbs?select=*&order=name' + (status ? '&review_status=eq.' + pg(status) : ''));
+    },
+    async reviewHerb(id, reviewStatus, reviewer){
+      if(!connected) return;
+      await sb('/herbs?id=eq.' + pg(id), { method: 'PATCH', body: { review_status: reviewStatus, reviewer: reviewer || null, reviewed_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      await sb('/herb_review_history', { method: 'POST', body: { herb_id: id, review_status: reviewStatus, reviewer: reviewer || null }, prefer: 'return=minimal' });
+    },
+    async herbReviewHistory(id, limit = 50){
+      if(!connected) return [];
+      return sb('/herb_review_history?select=id,herb_id,review_status,reviewer,note,created_at&herb_id=eq.' + pg(id) + '&order=created_at.desc&limit=' + Math.min(100, Math.max(1, Number(limit) || 50)));
+    },
+    async reviewRecipe(id, reviewStatus, safetyStatus, reviewer, note){
+      if(!connected) return;
+      await sb('/recipes?id=eq.' + pg(id), { method: 'PATCH', body: { review_status: reviewStatus, safety_status: safetyStatus, reviewer: reviewer || null, reviewed_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      await sb('/recipe_review_history', { method: 'POST', body: { recipe_id: id, review_status: reviewStatus, safety_status: safetyStatus, reviewer: reviewer || null, note: note || null }, prefer: 'return=minimal' });
+    },
+    async recipeReviewHistory(id, limit = 50){
+      if(!connected) return [];
+      return sb('/recipe_review_history?select=id,recipe_id,review_status,safety_status,reviewer,created_at&recipe_id=eq.' + pg(id) + '&order=created_at.desc&limit=' + Math.min(100, Math.max(1, Number(limit) || 50)));
     }
   };
 }

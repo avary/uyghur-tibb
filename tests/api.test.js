@@ -133,6 +133,43 @@ test('full list: GET without token returns 401', async () => {
   assert.equal(res.statusCode, 401);
 });
 
+test('recipes feed: public endpoint returns approved-only shape', async () => {
+  const res = await run(req({ method: 'GET', url: '/api/students?recipes=1', headers: { 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+  assert.ok(Array.isArray(res.body.recipes));
+});
+
+test('herbs feed: public endpoint returns approved-only shape', async () => {
+  const res = await run(req({ method: 'GET', url: '/api/students?herbs=1', headers: { 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+  assert.ok(Array.isArray(res.body.herbs));
+});
+
+test('recipe review: unauthenticated update is rejected', async () => {
+  const res = await run(req({ method: 'POST', body: { action: 'review_recipe', id: 'recipe-1', reviewStatus: 'approved', safetyStatus: 'reviewed' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 401);
+});
+
+test('recipe review: invalid status is rejected after authentication', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(login.statusCode, 200);
+  const res = await run(req({ method: 'POST', body: { action: 'review_recipe', id: 'recipe-1', reviewStatus: 'published', safetyStatus: 'reviewed' }, headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('herb review: unauthenticated update is rejected', async () => {
+  const res = await run(req({ method: 'POST', body: { action: 'review_herb', id: 'herb-1', reviewStatus: 'approved' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 401);
+});
+
+test('herb review: invalid status is rejected after authentication', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', username: 'admin', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const res = await run(req({ method: 'POST', body: { action: 'review_herb', id: 'herb-1', reviewStatus: 'published' }, headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 400);
+});
+
 test('full list: forged token returns 401', async () => {
   const r = req({
     method: 'GET', url: '/api/students',

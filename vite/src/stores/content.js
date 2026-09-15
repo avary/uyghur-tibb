@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { loadData } from '../data/loader'
+import { loadData, syncLessonsCache } from '../data/loader'
 
 // Source of truth for the admin content editors (lessons + teachers).
 // Mirrors the vanilla admin.html model:
@@ -126,6 +126,7 @@ export const useContent = defineStore('content', {
   actions: {
     init() {
       if (this.loaded) return
+      syncLessonsCache()
       const def = cloneDefaults()
 
       let lessons = def.lessons
@@ -134,12 +135,18 @@ export const useContent = defineStore('content', {
         try {
           const custom = JSON.parse(rawL)
           if (Array.isArray(custom)) {
-            lessons = custom
-            lessons.forEach((L, idx) => {
-              const orig = def.lessons[idx] || {}
+            lessons = custom.map(L => {
+              const orig = def.lessons.find(x => Number(x.id) === Number(L.id)) || {}
+              if (orig.quiz && (!L.quiz || L.quiz.length < orig.quiz.length)) {
+                L.quiz = orig.quiz.slice()
+              }
               if (!L.pdfUrl && orig.pdfUrl) L.pdfUrl = orig.pdfUrl
               if (!L.pdfTitle && orig.pdfTitle) L.pdfTitle = orig.pdfTitle
+              return L
             })
+            try {
+              localStorage.setItem(LS_LESSONS, JSON.stringify(lessons))
+            } catch (e) {}
           }
         } catch (e) {
           lessons = def.lessons

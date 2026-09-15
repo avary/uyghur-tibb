@@ -67,6 +67,28 @@ export const useApi = defineStore('api', {
         return d.feedback || null
       } catch (e) { return null }
     },
+    async getRecipes() {
+      try { const r = await fetch(ENDPOINT + '?recipes=1'); if (!r.ok) return null; return (await r.json()).recipes || [] } catch (e) { return null }
+    },
+    async getHerbs() {
+      try { const r = await fetch(ENDPOINT + '?herbs=1'); if (!r.ok) return null; return (await r.json()).herbs || [] } catch (e) { return null }
+    },
+    async reviewRecipe(id, reviewStatus, safetyStatus, note) {
+      return post({ action: 'review_recipe', id, reviewStatus, safetyStatus, note })
+    },
+    async reviewHerb(id, reviewStatus) {
+      return post({ action: 'review_herb', id, reviewStatus })
+    },
+    async getRecipeHistory(id) {
+      try {
+        const r = await fetch(ENDPOINT + '?recipe_history=' + encodeURIComponent(id), { headers: token() ? { Authorization: 'Bearer ' + token() } : {} })
+        if (!r.ok) return []
+        return (await r.json()).history || []
+      } catch (e) { return [] }
+    },
+    async getHerbHistory(id) {
+      try { const r = await fetch(ENDPOINT + '?herb_history=' + encodeURIComponent(id), { headers: token() ? { Authorization: 'Bearer ' + token() } : {} }); if (!r.ok) return []; return (await r.json()).history || [] } catch (e) { return [] }
+    },
     async addFeedback(name, phone, question) {
       return post({ action: 'feedback', feedback: { name: name || '', phone: phone || '', text: question || '' } })
     },

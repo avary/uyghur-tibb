@@ -51,7 +51,7 @@ const matchRights = computed(() => {
     <!-- question card -->
     <div class="qcard" :class="'type-' + (q() ? q().type : '')">
       <div class="qlabel"><b>{{ QTICON[q().type] }}</b>{{ typeLabel }}</div>
-      <h2 class="qtext">{{ q().q }}</h2>
+      <h2 class="qtext" v-html="sanitizeHtml(q().q)"></h2>
 
       <!-- choice -->
       <div v-if="q().type === 'choice'" class="opts">
@@ -65,7 +65,7 @@ const matchRights = computed(() => {
             wrong: checked[idx] && answers[idx].sel === i && i !== q().a
           }"
           @click="!checked[idx] && (answers[idx].sel = i)"
-        ><span class="opt-i">{{ i + 1 }}</span>{{ o }}</button>
+        ><span class="opt-i">{{ i + 1 }}</span><span v-html="sanitizeHtml(o)"></span></button>
       </div>
 
       <!-- tf -->
@@ -112,7 +112,7 @@ const matchRights = computed(() => {
       <!-- explanation -->
       <div v-if="checked[idx]" class="exp" :class="{ bad: !(q().type === 'essay' ? selfGood[idx] : isCorrect(q(), answers[idx])) }">
         <b>{{ q().type === 'essay' ? (selfGood[idx] ? 'مۇۋەپپەقىيەتلىك!' : 'ئۈلگىلىك جاۋاب') : (isCorrect(q(), answers[idx]) ? 'توغرا!' : 'توغرا ئەمەس') }}</b>
-        <span v-if="q().exp">{{ q().exp }}</span>
+        <span v-if="q().exp" v-html="sanitizeHtml(q().exp)"></span>
       </div>
     </div>
 
@@ -142,8 +142,8 @@ const matchRights = computed(() => {
 
     <div v-if="reviewOpen" class="review">
       <div v-for="(qq, i) in questions" :key="i" class="rev card" :class="{ bad: !(qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])) }">
-        <div class="rev-head"><b>{{ QTICON[qq.type] }} {{ qq.q }}</b><span class="pill" :class="(qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])) ? 'green' : 'red'">{{ (qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])) ? 'توغرا' : 'خاتا' }}</span></div>
-        <div class="muted" style="font-size:.82rem">{{ qq.exp || qq.model }}</div>
+        <div class="rev-head"><b>{{ QTICON[qq.type] }} <span v-html="sanitizeHtml(qq.q)"></span></b><span class="pill" :class="(qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])) ? 'green' : 'red'">{{ (qq.type === 'essay' ? selfGood[i] : isCorrect(qq, answers[i])) ? 'توغرا' : 'خاتا' }}</span></div>
+        <div class="muted" style="font-size:.82rem" v-html="sanitizeHtml(qq.model || qq.exp || '')"></div>
       </div>
     </div>
   </section>

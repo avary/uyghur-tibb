@@ -67,6 +67,57 @@ create table if not exists public.lessons (
     updated_at timestamptz default now()
 );
 
+create table if not exists public.recipe_books (
+    id text primary key, title text not null, subtitle text, source_year int,
+    language text not null default 'ug', pdf_url text, total_pages int,
+    copyright_status text not null default 'pending', created_at timestamptz default now()
+);
+create table if not exists public.recipes (
+    id text primary key,
+    book_id text not null references public.recipe_books(id) on delete cascade,
+    category text, disease_name text not null, recipe_number text,
+    original_text text not null, cleaned_text text, source_page_start int, source_page_end int,
+    ocr_confidence numeric(4,3), review_status text not null default 'needs_review',
+    safety_status text not null default 'unreviewed', reviewer text, reviewed_at timestamptz,
+    created_at timestamptz default now(), updated_at timestamptz default now()
+);
+create table if not exists public.recipe_ingredients (
+    id uuid primary key default gen_random_uuid(), recipe_id text not null references public.recipes(id) on delete cascade,
+    name text not null, quantity text, unit text, preparation_note text
+);
+create table if not exists public.recipe_review_history (
+    id uuid primary key default gen_random_uuid(), recipe_id text not null references public.recipes(id) on delete cascade,
+    review_status text not null, safety_status text not null, reviewer text, note text, created_at timestamptz default now()
+);
+create table if not exists public.herb_books (
+    id text primary key, title text not null, subtitle text, language text not null default 'ug',
+    total_pages int, copyright_status text not null default 'pending', created_at timestamptz default now()
+);
+create table if not exists public.herbs (
+    id text primary key, book_id text not null references public.herb_books(id) on delete cascade,
+    name text not null, aliases jsonb, latin_name text, used_part text, properties text,
+    preparation text, warnings text, image_url text, original_text text not null,
+    source_page_start int, source_page_end int, review_status text not null default 'needs_review',
+    reviewer text, reviewed_at timestamptz, created_at timestamptz default now()
+);
+create index if not exists idx_herbs_book on public.herbs(book_id);
+create index if not exists idx_herbs_name on public.herbs(name);
+create index if not exists idx_herbs_status on public.herbs(review_status);
+create table if not exists public.recipe_herbs (
+    recipe_id text not null references public.recipes(id) on delete cascade,
+    herb_id text not null references public.herbs(id) on delete cascade,
+    match_type text not null default 'expert', reviewer text, created_at timestamptz default now(),
+    primary key (recipe_id, herb_id)
+);
+create table if not exists public.herb_review_history (
+    id uuid primary key default gen_random_uuid(), herb_id text not null references public.herbs(id) on delete cascade,
+    review_status text not null, reviewer text, note text, created_at timestamptz default now()
+);
+create index if not exists idx_herb_review_history on public.herb_review_history(herb_id);
+create index if not exists idx_recipes_book on public.recipes(book_id);
+create index if not exists idx_recipes_category on public.recipes(category);
+create index if not exists idx_recipes_status on public.recipes(review_status);
+
 create table if not exists public.exam_logs (
     id uuid primary key default gen_random_uuid(),
     student_phone text references public.students(phone) on delete cascade,

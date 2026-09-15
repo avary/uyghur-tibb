@@ -82,8 +82,8 @@ async function doLogin() {
   justify-content: center;
   padding: 1.5rem;
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(14, 124, 111, .28), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgba(201, 162, 39, .18), transparent 60%),
+    radial-gradient(1200px 600px at 20% -10%, rgba(var(--brand-rgb), .28), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgba(var(--accent-rgb), .18), transparent 60%),
     var(--bg);
 }
 .alogin-card {
@@ -112,7 +112,7 @@ async function doLogin() {
   direction: ltr;
   text-align: center;
 }
-.field input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14, 124, 111, .18); }
+.field input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(var(--brand-rgb), .18); }
 .pass-row { position: relative; }
 .pass-toggle {
   position: absolute;

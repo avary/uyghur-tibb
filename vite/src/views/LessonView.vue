@@ -113,7 +113,7 @@ export default { components: { TreeItem } }
 
 .mind-toggle {
   margin-top: 16px; width: 100%;
-  background: linear-gradient(135deg, var(--gold), #a8861c); color: #2e2200;
+  background: linear-gradient(135deg, var(--gold), var(--accent-dark)); color: var(--accent-btn-ink);
   border: none; border-radius: 13px; padding: .7rem; font-weight: 800; font-size: .9rem; cursor: pointer;
 }
 .mind { margin-top: 10px; }

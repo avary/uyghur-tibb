@@ -235,7 +235,7 @@ function saveQ() {
 .tbl th:first-child { width: 44px; }
 .qbadge { display: inline-block; border-radius: 20px; padding: .15rem .55rem; font-size: .72rem; font-weight: 700; }
 .qbadge.b-green { background: rgba(38, 157, 66, .15); color: #269d42; }
-.qbadge.b-gold { background: rgba(201, 162, 39, .16); color: #8a6d15; }
+.qbadge.b-gold { background: rgba(var(--accent-rgb), .16); color: var(--accent-ink); }
 .qbadge.b-plane { background: var(--card-2); color: var(--muted); }
 .q-q { font-weight: 700; max-width: 340px; white-space: normal; line-height: 1.7; }
 .q-a { color: var(--teal-dark); font-size: .82rem; white-space: normal; }

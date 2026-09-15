@@ -1,7 +1,7 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "buildCommand": "npm --prefix vite run build",
+  "buildCommand": "npm --prefix vite install --no-audit --no-fund && npm --prefix vite run build",
   "outputDirectory": "vite/dist",
   "headers": [
     {
