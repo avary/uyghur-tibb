@@ -22,5 +22,5 @@ test('herb validator rejects unsupported book language', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'uytibb-herbs-invalid-'))
   const output = path.join(dir, 'herbData-invalid.js')
   fs.writeFileSync(output, 'export const HERB_BOOK = { id: "invalid", title: "Test", language: "xx", herbs: [] }\n')
-  assert.throws(() => execFileSync(process.execPath, ['scripts/validate-herbs.mjs', output], { stdio: 'pipe' }), /status 1/)
+  assert.throws(() => execFileSync(process.execPath, ['scripts/validate-herbs.mjs', output], { stdio: 'pipe' }), error => error && error.status === 1)
 })
