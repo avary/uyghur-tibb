@@ -26,7 +26,7 @@ function printCertificate(path) {
       <article v-for="path in paths" :key="path.id" class="card path-card">
         <h3>{{ path.title }}</h3>
         <p class="muted">{{ path.description }}</p>
-        <div class="path-progress"><i :style="{ width: path.stats.percent + '%' }"></i></div>
+        <div class="path-progress" role="progressbar" :aria-label="path.title + ' تاماملىنىش نىسبىتى'" :aria-valuenow="path.stats.percent" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: path.stats.percent + '%' }"></i></div>
         <div class="path-meta"><span>{{ path.stats.done }}/{{ path.stats.total }} دەرس</span><b>%{{ path.stats.percent }}</b></div>
         <button v-if="path.stats.percent === 100" class="btn btn-teal btn-sm certificate" @click="printCertificate(path)">🏅 گۇۋاھنامە بېسىش</button>
         <div class="path-lessons">
