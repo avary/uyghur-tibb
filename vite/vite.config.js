@@ -15,6 +15,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Keep the locally imported recipe book isolated from the application
+    // runtime so normal UI changes do not invalidate this large cacheable chunk.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          recipeData: ['./src/data/recipeData.js']
+        }
+      }
+    }
   }
 })
