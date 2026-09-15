@@ -19,6 +19,7 @@ const bestAvg = computed(() => {
   if (!vals.length) return 0
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
 })
+const recentAttempts = computed(() => progress.quizAttempts.slice(0, 8).map(a => ({ ...a, lesson: LESSONS.find(L => Number(L.id) === Number(a.lessonId)) })))
 </script>
 
 <template>
@@ -68,6 +69,15 @@ const bestAvg = computed(() => {
       <div class="line"><span>دەرس تاماملاش</span><b>%{{ progress.pctRead }}</b></div>
       <div class="line"><span>ئوتتۇرىچە يۇقىرى نەتىجە</span><b>%{{ bestAvg }}</b></div>
     </div>
+
+    <div class="secttl">📝 يېقىنقى مەشىق نەتىجىلىرى</div>
+    <div v-if="recentAttempts.length" class="attempts card">
+      <div v-for="(attempt, i) in recentAttempts" :key="i" class="attempt">
+        <RouterLink :to="'/lesson/' + attempt.lessonId + '/quiz'">{{ attempt.lesson?.title || ('دەرس ' + attempt.lessonId) }}</RouterLink>
+        <span>%{{ attempt.pct }} · {{ new Date(attempt.at).toLocaleDateString() }}</span>
+      </div>
+    </div>
+    <p v-else class="muted">تېخى مەشىق نەتىجىسى يوق.</p>
 
     <div class="secttl">🎨 تېما</div>
     <div class="themes card">
@@ -124,6 +134,11 @@ const bestAvg = computed(() => {
 .w-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .w-top b { font-size: .9rem; line-height: 1.4; }
 .stats-lines { display: flex; flex-direction: column; gap: 8px; }
+.attempts { display:flex; flex-direction:column; gap:.2rem; }
+.attempt { display:flex; justify-content:space-between; gap:.75rem; padding:.55rem 0; border-bottom:1px solid var(--line); font-size:.84rem; }
+.attempt:last-child { border-bottom:0; }
+.attempt a { color:var(--ink); text-decoration:none; font-weight:700; }
+.attempt span { color:var(--muted); white-space:nowrap; }
 .line { display: flex; justify-content: space-between; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: .88rem; box-shadow: var(--shadow); }
 .line b { color: var(--teal-dark); }
 [data-theme="dark"] .line b { color: var(--teal); }

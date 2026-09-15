@@ -13,6 +13,7 @@ function full() {
   const s = read()
   s.lessons = s.lessons || {}
   s.exams = s.exams || []
+  s.quizAttempts = s.quizAttempts || []
   s.streak = s.streak || { d: 0, n: 0, best: 0 }
   s.badges = s.badges || []
   s.wrong = s.wrong || []
@@ -25,6 +26,7 @@ function save(s) {
   const merged = { ...existing, ...s }
   merged.lessons = { ...(existing.lessons || {}), ...(s.lessons || {}) }
   merged.exams = s.exams || existing.exams || []
+  merged.quizAttempts = s.quizAttempts || existing.quizAttempts || []
   merged.badges = s.badges || existing.badges || []
   merged.wrong = s.wrong || existing.wrong || []
   merged.marks = s.marks || existing.marks || []
@@ -51,6 +53,7 @@ export const useProgress = defineStore('progress', {
     user: s => s.data.user || null,
     streak: s => s.data.streak,
     exams: s => s.data.exams,
+    quizAttempts: s => s.data.quizAttempts,
     badges: s => s.data.badges,
     wrong: s => s.data.wrong,
     marks: s => s.data.marks,
@@ -70,6 +73,13 @@ export const useProgress = defineStore('progress', {
       const s = full()
       s.lessons[id] = s.lessons[id] || {}
       if (s.lessons[id].best == null || pct > s.lessons[id].best) s.lessons[id].best = pct
+      save(s)
+      this._sync()
+    },
+    addQuizAttempt(attempt) {
+      const s = full()
+      s.quizAttempts.unshift({ ...attempt, at: attempt.at || new Date().toISOString() })
+      s.quizAttempts = s.quizAttempts.slice(0, 50)
       save(s)
       this._sync()
     },

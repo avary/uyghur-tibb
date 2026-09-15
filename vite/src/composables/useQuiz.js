@@ -134,6 +134,7 @@ export function useQuiz(initialQuestions = [], lessonId = null) {
     const autoOk = auto.filter(qq => isCorrect(qq, answers[questions.value.indexOf(qq)])).length
     const pct = auto.length ? Math.round((autoOk / auto.length) * 100) : 0
     if (lesson.value != null) progress.saveBest(lesson.value, pct)
+    progress.addQuizAttempt({ lessonId: lesson.value, score: autoOk, total: auto.length, pct })
     step.value = 'done'
     try { localStorage.removeItem(storageKey()) } catch (e) {}
     return pct
