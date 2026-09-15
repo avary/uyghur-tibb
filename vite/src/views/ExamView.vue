@@ -96,19 +96,19 @@ const answered = computed(() => quiz.checked.filter(Boolean).length)
 
       <label class="lbl">سوئال تۈرى</label>
       <div class="chips">
-        <button class="chip" :class="{ on: typeScope === 'all' }" @click="typeScope = 'all'">ھەممىسى</button>
-        <button class="chip" :class="{ on: typeScope === 'choice' }" @click="typeScope = 'choice'">☑ تاللاش</button>
-        <button class="chip" :class="{ on: typeScope === 'tf' }" @click="typeScope = 'tf'">✓✗ توغرا-خاتا</button>
-        <button class="chip" :class="{ on: typeScope === 'blank' }" @click="typeScope = 'blank'">✎ بوش ئورۇن</button>
-        <button class="chip" :class="{ on: typeScope === 'match' }" @click="typeScope = 'match'">🔗 تۇتاشتۇرۇش</button>
+        <button class="chip" :class="{ on: typeScope === 'all' }" :aria-pressed="typeScope === 'all'" @click="typeScope = 'all'">ھەممىسى</button>
+        <button class="chip" :class="{ on: typeScope === 'choice' }" :aria-pressed="typeScope === 'choice'" @click="typeScope = 'choice'">☑ تاللاش</button>
+        <button class="chip" :class="{ on: typeScope === 'tf' }" :aria-pressed="typeScope === 'tf'" @click="typeScope = 'tf'">✓✗ توغرا-خاتا</button>
+        <button class="chip" :class="{ on: typeScope === 'blank' }" :aria-pressed="typeScope === 'blank'" @click="typeScope = 'blank'">✎ بوش ئورۇن</button>
+        <button class="chip" :class="{ on: typeScope === 'match' }" :aria-pressed="typeScope === 'match'" @click="typeScope = 'match'">🔗 تۇتاشتۇرۇش</button>
       </div>
 
       <label class="lbl">قىيىنلىق دەرىجىسى</label>
       <div class="chips">
-        <button class="chip" :class="{ on: difficultyScope === 'all' }" @click="difficultyScope = 'all'">ھەممىسى</button>
-        <button class="chip" :class="{ on: difficultyScope === 'easy' }" @click="difficultyScope = 'easy'">ئاسان</button>
-        <button class="chip" :class="{ on: difficultyScope === 'medium' }" @click="difficultyScope = 'medium'">ئوتتۇرا</button>
-        <button class="chip" :class="{ on: difficultyScope === 'hard' }" @click="difficultyScope = 'hard'">قىيىن</button>
+        <button class="chip" :class="{ on: difficultyScope === 'all' }" :aria-pressed="difficultyScope === 'all'" @click="difficultyScope = 'all'">ھەممىسى</button>
+        <button class="chip" :class="{ on: difficultyScope === 'easy' }" :aria-pressed="difficultyScope === 'easy'" @click="difficultyScope = 'easy'">ئاسان</button>
+        <button class="chip" :class="{ on: difficultyScope === 'medium' }" :aria-pressed="difficultyScope === 'medium'" @click="difficultyScope = 'medium'">ئوتتۇرا</button>
+        <button class="chip" :class="{ on: difficultyScope === 'hard' }" :aria-pressed="difficultyScope === 'hard'" @click="difficultyScope = 'hard'">قىيىن</button>
       </div>
 
       <button class="btn btn-teal btn-block" style="margin-top:16px" :disabled="!pool.length" @click="start">🏁 سىناقنى باشلاش</button>
