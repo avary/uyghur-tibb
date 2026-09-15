@@ -18,6 +18,7 @@ const lesson = computed(() => lessonById(props.id, preview.value))
 function textFor(value, field) { return value?.translations?.[locale.current.value]?.[field] || value?.[field] || '' }
 function sectionText(section, field) { return section?.translations?.[locale.current.value]?.[field] || section?.[field] || '' }
 function sectionPoints(section) { return section?.translations?.[locale.current.value]?.points || section?.points || [] }
+function lessonGoals(value) { return value?.translations?.[locale.current.value]?.goals || value?.goals || [] }
 const showMind = ref(false)
 
 onMounted(() => {
@@ -62,10 +63,10 @@ function mediaUrl(value) {
       </div>
     </div>
 
-    <div v-if="lesson.goals && lesson.goals.length" class="goal card">
+    <div v-if="lessonGoals(lesson).length" class="goal card">
       <div class="secttl">🎯 بۇ دەرستە تۆۋەندىكىلەرنى ئۆگىنىسىز</div>
       <ul>
-        <li v-for="(g, i) in lesson.goals" :key="i">{{ g }}</li>
+        <li v-for="(g, i) in lessonGoals(lesson)" :key="i">{{ g }}</li>
       </ul>
     </div>
 
