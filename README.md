@@ -101,6 +101,9 @@ node migrate.js        # apply schema (mysql_setup.sql) — creates tables
 node migrate.js --seed # also insert an admin row (hashed from ADMIN_PASSWORD)
 ```
 
+For an existing MySQL deployment, apply the relevant file in `migrations/` when upgrading
+the herb safety workflow (the base schema already includes these columns for new installs).
+
 ### 2. Option B — Supabase backend
 
 1. Create a Supabase project, then open **SQL Editor** and run `supabase_setup.sql`
