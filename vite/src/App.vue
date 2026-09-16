@@ -38,7 +38,9 @@ function reloadUpdatedApp() { window.location.reload() }
 const tabs = [
   { to: '/', t: 'home', ic: '🏠', label: 'باش بەت' },
   { to: '/lessons', t: 'lessons', ic: '📚', label: 'دەرسلەر' },
-  { to: '/books', t: 'books', ic: '📖', label: 'PDF', gold: true },
+  { to: '/books', t: 'books', ic: '📖', label: 'كىتابلار', gold: true },
+  { to: '/farhiz', t: 'farhiz', ic: '📘', label: 'فەرھىز' },
+  { to: '/mizaj', t: 'mizaj', ic: '🧭', label: 'مىزاج' },
   { to: '/recipes', t: 'recipes', ic: '🌿', label: 'رېتسېپلار' },
   { to: '/herbs', t: 'herbs', ic: '🌱', label: 'خام دورىلار' },
   { to: '/study', t: 'study', ic: '🧠', label: 'تەكرارلاش' },
@@ -53,6 +55,8 @@ const activeTab = computed(() => {
   if (h.startsWith('/recipe')) return 'recipes'
   if (h.startsWith('/herb')) return 'herbs'
   if (h.startsWith('/study')) return 'study'
+  if (h.startsWith('/farhiz')) return 'farhiz'
+  if (h.startsWith('/mizaj')) return 'mizaj'
   const hit = tabs.find(t => h === t.to)
   return hit ? hit.t : ''
 })

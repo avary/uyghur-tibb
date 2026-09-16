@@ -9,6 +9,8 @@ import {
   dataUrlToBlobUrl,
   bookSource
 } from '../data/books'
+import { FARHIZ_BOOK } from '../data/farhiz'
+import { MIZAJ_BOOK } from '../data/mizaj'
 
 const LESSONS = getLessons()
 const { toast } = useToast()
@@ -34,13 +36,17 @@ const items = computed(() => {
       })
       .map(b => ({ kind: 'book', item: b }))
   )
+  if (FARHIZ_BOOK && (!term || [FARHIZ_BOOK.title, FARHIZ_BOOK.subtitle].join(' ').toLowerCase().includes(term))) rows.push({ kind: 'farhiz', item: FARHIZ_BOOK })
+  if (MIZAJ_BOOK && (!term || [MIZAJ_BOOK.title, MIZAJ_BOOK.subtitle].join(' ').toLowerCase().includes(term))) rows.push({ kind: 'mizaj', item: MIZAJ_BOOK })
   return rows
 })
 
 async function openBook(row) {
   const { kind, item } = row
   try {
-    if (kind === 'book') {
+    if (kind === 'farhiz' || kind === 'mizaj') {
+      window.location.hash = kind === 'mizaj' ? '#/mizaj' : '#/farhiz'
+    } else if (kind === 'book') {
       const src = await bookSource(item)
       if (!src) return toast('⚠️ كىتاب ھۆججىتى تېپىلمىدى.', 'err')
       openPdfViewer(src, item.title || 'PDF كىتابى')
@@ -79,8 +85,8 @@ async function openBook(row) {
           <span v-else>📘</span>
         </div>
         <div class="book-info">
-          <span class="tbadge" :class="row.kind === 'book' ? 'b-extra' : 'b-lesson'">
-            {{ row.kind === 'book' ? '📖 قوشۇمچە كىتاب' : '📄 دەرسلىك كىتابى' }}
+          <span class="tbadge" :class="row.kind === 'lesson' ? 'b-lesson' : 'b-extra'">
+            {{ row.kind === 'lesson' ? '📄 دەرسلىك كىتابى' : row.kind === 'mizaj' ? '🧭 مىزاج ئۆگىنىش كىتابى' : row.kind === 'farhiz' ? '📘 OCR ئۆگىنىش كىتابى' : '📖 قوشۇمچە كىتاب' }}
           </span>
           <b>{{ row.kind === 'lesson' ? (row.item.id + '-دەرس: ' + row.item.title) : row.item.title }}</b>
           <small>{{ row.item.pdfTitle || row.item.subtitle || row.item.desc }}</small>
@@ -89,7 +95,7 @@ async function openBook(row) {
           <button class="btn btn-teal" @click="openBook(row)">📖 ئوقۇش</button>
           <a
             class="btn btn-ghost"
-            :href="row.item.pdfData && row.item.pdfData.indexOf('data:') === 0 ? row.item.pdfData : resolvePdfUrl(row.item)"
+            :href="row.kind === 'farhiz' ? '#/farhiz' : row.kind === 'mizaj' ? '#/mizaj' : row.item.pdfData && row.item.pdfData.indexOf('data:') === 0 ? row.item.pdfData : resolvePdfUrl(row.item)"
             target="_blank"
             rel="noopener"
             title="يېڭى كۆزنەكتە ئېچىش"

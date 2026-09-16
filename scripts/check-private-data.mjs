@@ -4,6 +4,10 @@ import { execFileSync } from 'node:child_process'
 const forbidden = [
   'vite/src/data/recipeData.js',
   'vite/src/data/herbData-',
+  'vite/src/data/farhiz.json',
+  'vite/src/data/farhizData.js',
+  'vite/src/data/mizaj.json',
+  'vite/src/data/mizajData.js',
   'vite/public/pdf/',
   'vite/dist/pdf/',
 ]

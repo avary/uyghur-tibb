@@ -23,6 +23,7 @@ The project does not use default passwords or client-side password backdoors. Co
 ## Product capabilities
 
 - **1,000-recipe traditional medicine book integrated** — the OCR source is transformed into a source-linked recipe library and utilized throughout the learner app for browsing, category/search discovery, recipe details, study questions, quizzes, spaced repetition, and expert-gated publishing.
+- **Farhiz/Mizaj study book integrated locally** — the 209-page OCR book *ئۇيغۇرلاردا مىزاج ۋە ساغلاملىق* is available as searchable, page-linked reading, chapter navigation, and heading-based comprehension quizzes; both source JSON and generated modules remain private and are never committed.
 - Source-linked traditional recipe library with OCR text, page provenance, categories, search, and study quizzes.
 - Review-gated publishing: content approval and safety approval are separate, with reviewer history and notes.
 - Raw-herb encyclopedia prepared for multiple JSON books, including structured names, Latin names, uses, warnings, and source pages.
@@ -146,6 +147,25 @@ npm run herbs:seed   # requires HERB_DATA=herbData-book-a.js,herbData-book-b.js
 
 Imported herbs begin as `needs_review`; only reviewed content should be connected to public
 recipes. The full implementation plan is in [ROADMAP.md](ROADMAP.md).
+
+The local Farhiz OCR book can be prepared for the learner reader with:
+
+```bash
+npm run farhiz:import
+```
+
+Then open `/farhiz` from the PDF library. The source JSON and generated `farhizData.js` are
+intentionally ignored by Git and protected by the pre-commit private-data check.
+
+The local Mizaj OCR book uses the same private workflow:
+
+```bash
+npm run mizaj:import
+```
+
+Then open `/mizaj` from the Books page. It provides searchable full-page reading, a chapter
+guide, and a study quiz. `mizaj.json` and generated `mizajData.js` are intentionally ignored
+by Git and protected by the pre-commit private-data check.
 
 ### 3. Moving data between backends
 

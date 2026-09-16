@@ -16,6 +16,8 @@
     "herbs:import": "node scripts/import-herbs.mjs",
     "herbs:validate": "node scripts/validate-herbs.mjs",
     "herbs:seed": "node scripts/seed-herbs.mjs",
+    "farhiz:import": "node scripts/import-farhiz.mjs",
+    "mizaj:import": "node scripts/import-mizaj.mjs",
     "git:check-private": "node scripts/check-private-data.mjs",
     "git:setup-hooks": "sh scripts/setup-git-hooks.sh",
     "dev": "node dev.js",

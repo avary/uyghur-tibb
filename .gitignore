@@ -32,4 +32,8 @@ qr.svg
 *.txt
 recipeData.js
 herbData-*.js
+farhiz.json
+farhizData.js
+mizaj.json
+mizajData.js
 vite/public/pdf/

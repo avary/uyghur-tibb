@@ -5,6 +5,7 @@ import { getCustomPdfBooks } from '../data/books'
 import { publishedRecipes } from '../data/recipes'
 import { herbIndex } from '../data/herbs'
 import { useApi } from '../stores/api'
+import { MIZAJ_BOOK, mizajPages } from '../data/mizaj'
 
 const api = useApi(); const q = ref(''); const remoteRecipes = ref(null); const remoteHerbs = ref(null)
 const norm = value => String(value || '').toLocaleLowerCase().replace(/[ًٌٍَُِّْـ]/g, '').trim()
@@ -15,7 +16,8 @@ const records = computed(() => {
   const recipes = (remoteRecipes.value?.length ? remoteRecipes.value : publishedRecipes()).map(r => ({ type:'recipe', icon:'🌿', title:r.disease || r.disease_name, text:[r.category,r.recipeNumber,r.recipe_number,r.originalText,r.original_text].join(' '), to:'/recipe/'+r.id }))
   const herbs = (remoteHerbs.value?.length ? remoteHerbs.value : herbIndex()).map(h => ({ type:'herb', icon:'🌱', title:h.name, text:[h.latinName,h.latin_name,h.aliases,h.properties].join(' '), to:'/herb/'+encodeURIComponent(h.name) }))
   const questions = getLessons().flatMap(l => (l.quiz||[]).map((item,i) => ({ type:'question', icon:'❓', title:item.q || item.question || 'سوئال', text:[item.a,item.answer,item.explain,item.explanation].join(' '), to:'/lesson/'+l.id+'/quiz?question='+i })))
-  return [...lessons,...books,...recipes,...herbs,...questions]
+  const mizaj = MIZAJ_BOOK ? [{ type:'book', icon:'🧭', title:MIZAJ_BOOK.title, text:[MIZAJ_BOOK.subtitle, ...mizajPages().slice(0, 30).map(p => p.text)].join(' '), to:'/mizaj' }] : []
+  return [...lessons,...books,...mizaj,...recipes,...herbs,...questions]
 })
 const results = computed(() => { if (!search.value) return []; return records.value.filter(r => norm([r.title,r.text].join(' ')).includes(search.value)).slice(0,100) })
 onMounted(async () => { const [recipes, herbs] = await Promise.all([api.getRecipes(), api.getHerbs()]); if (recipes?.length) remoteRecipes.value=recipes; if (herbs?.length) remoteHerbs.value=herbs })
