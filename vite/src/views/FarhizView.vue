@@ -25,6 +25,7 @@ onMounted(() => { const section = FARHIZ_BOOK.sections?.find(item => item.id ===
     <RouterLink to="/books" class="back">‹ كىتابلارغا قايتىش</RouterLink>
     <h2 class="pagettl">📘 {{ FARHIZ_BOOK.title }}</h2>
     <p class="pagesub">{{ FARHIZ_BOOK.subtitle }} · {{ FARHIZ_BOOK.pages.length }} OCR بەت</p>
+    <div v-if="FARHIZ_BOOK.canonicalOf" class="notice duplicate">ℹ️ بۇ يەرلىك OCR مەنبە مىزاج كىتابى بىلەن ئوخشاش مەزمۇنلۇق نۇسخا؛ تۆۋەندىكى بۆلەكلەر بىرلا مەنبە كىتاب سۈپىتىدە ئۆگىنىشكە تەشكىللەندى.</div>
     <div class="notice">⚠️ مەنبە OCR تېكىستى ئۆگىنىش ئۈچۈندۇر؛ پەرھىز ياكى داۋالاش قارارىنى مۇتەخەسسىس ۋە دوختۇر بىلەن مەسلىھەتلىشىپ چىقىڭ.</div>
     <div class="actions"><RouterLink class="btn btn-teal" to="/farhiz/quiz">📝 بۆلەك تېمىلىرى بويىچە quiz</RouterLink></div>
     <input v-model="q" class="input" type="search" placeholder="كىتاب ئىچىدىن ئىزدەش..." aria-label="فەرھىز كىتابىدىن ئىزدەش">
