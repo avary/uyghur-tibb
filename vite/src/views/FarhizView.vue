@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { FARHIZ_BOOK, searchFarhiz, farhizSections } from '../data/farhiz'
 import { markTopicStudied, toggleTopicSaved, topicProgress } from '../data/topicProgress'
 import { relatedHerbs, relatedRecipes } from '../data/bookLinks'
 const q = ref(''); const selected = ref(null); const reader = ref(null)
+const route = useRoute()
 const pages = computed(() => searchFarhiz(q.value))
 const sections = computed(() => farhizSections().slice(0, 60))
 const selectedState = computed(() => selected.value ? topicProgress(selected.value.id) : {})
@@ -14,6 +16,7 @@ function openSection(section) { selected.value = section; q.value = ''; requestA
 function movePage(delta) { const i = FARHIZ_BOOK.pages.findIndex(page => page.pageNumber === selected.value?.pageNumber); openPage(FARHIZ_BOOK.pages[Math.max(0, Math.min(FARHIZ_BOOK.pages.length - 1, i + delta))]) }
 function saveTopic() { toggleTopicSaved(selected.value.id); selected.value = { ...selected.value } }
 function studyTopic() { markTopicStudied(selected.value.id); selected.value = { ...selected.value } }
+onMounted(() => { const section = FARHIZ_BOOK.sections?.find(item => item.id === route.query.section); if (section) openSection(section) })
 </script>
 <template>
   <section v-if="FARHIZ_BOOK">

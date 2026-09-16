@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { MIZAJ_BOOK, mizajSections, searchMizaj, mizajQuiz } from '../data/mizaj'
 import { markTopicStudied, toggleTopicSaved, topicProgress } from '../data/topicProgress'
 import { relatedHerbs, relatedRecipes } from '../data/bookLinks'
 const q = ref(''); const selected = ref(null); const showQuiz = ref(false); const reader = ref(null)
+const route = useRoute()
 const pages = computed(() => searchMizaj(q.value))
 const sections = computed(() => mizajSections().slice(0, 60))
 const selectedState = computed(() => selected.value ? topicProgress(selected.value.id) : {})
@@ -13,6 +15,7 @@ function openPage(page) { selected.value = page; showQuiz.value = false; request
 function openSection(section) { selected.value = section; q.value = ''; showQuiz.value = false; requestAnimationFrame(() => reader.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })) }
 function movePage(delta) { const i = MIZAJ_BOOK.pages.findIndex(page => page.pageNumber === selected.value?.pageNumber); openPage(MIZAJ_BOOK.pages[Math.max(0, Math.min(MIZAJ_BOOK.pages.length - 1, i + delta))]) }
 function startQuiz() { showQuiz.value = true; selected.value = null }
+onMounted(() => { const section = MIZAJ_BOOK.sections?.find(item => item.id === route.query.section); if (section) openSection(section) })
 function saveTopic() { toggleTopicSaved(selected.value.id); selected.value = { ...selected.value } }
 function studyTopic() { markTopicStudied(selected.value.id); selected.value = { ...selected.value } }
 </script>
