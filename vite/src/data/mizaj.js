@@ -7,8 +7,8 @@ export function searchMizaj(term) {
 }
 export function mizajHeadings() { return MIZAJ_BOOK?.headings || [] }
 export function mizajSections() { return MIZAJ_BOOK?.sections || [] }
-export function mizajQuiz(sectionId) {
-  const sections = MIZAJ_BOOK?.sections || []
+export function mizajQuiz(sectionId, sourceBook = MIZAJ_BOOK) {
+  const sections = sourceBook?.sections || []
   const selected = sectionId ? sections.find(section => section.id === sectionId) : null
   const hs = selected ? [{ title: selected.title, pageNumber: selected.startPage }] : mizajHeadings().filter(h => h.title.length > 4).slice(0, 12)
   return hs.map((heading, index) => {

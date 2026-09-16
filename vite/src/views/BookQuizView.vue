@@ -5,7 +5,7 @@ import { MIZAJ_BOOK, mizajQuiz } from '../data/mizaj'
 import { FARHIZ_BOOK } from '../data/farhiz'
 const route = useRoute()
 const book = computed(() => route.path.startsWith('/farhiz') ? FARHIZ_BOOK : MIZAJ_BOOK)
-const questions = computed(() => mizajQuiz(route.query.section))
+const questions = computed(() => mizajQuiz(route.query.section, book.value))
 const index = ref(0); const picked = ref(null); const checked = ref(false); const score = ref(0)
 const current = computed(() => questions.value[index.value])
 function choose(i) { if (!checked.value) picked.value = i }
