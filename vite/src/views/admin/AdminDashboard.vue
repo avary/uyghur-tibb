@@ -11,6 +11,7 @@ import ManagePanel from './ManagePanel.vue'
 import PdfLibrary from './PdfLibrary.vue'
 import RecipeReview from './RecipeReview.vue'
 import HerbReview from './HerbReview.vue'
+import BookTopicReview from './BookTopicReview.vue'
 
 const router = useRouter()
 const api = useApi()
@@ -229,6 +230,7 @@ const tabs = [
   { id: 'pdfbooks', ic: '📚', label: 'PDF كۇتۇپخانىسى' },
   { id: 'recipes', ic: '🌿', label: 'رېتسېپ تەكشۈرۈش' },
   { id: 'herbs', ic: '🌱', label: 'خام دورا تەكشۈرۈش' },
+  { id: 'booktopics', ic: '📚', label: 'كىتاب بۆلەكلىرى' },
   { id: 'questions', ic: '☑', label: 'سوئاللار' },
   { id: 'quality', ic: '🩺', label: 'مەزمۇن سۈپىتى' },
   { id: 'teachers', ic: '👨‍🏫', label: 'ئۇستازلار' },
@@ -360,6 +362,7 @@ const tabs = [
       </section>
       <section v-show="tab === 'recipes'"><RecipeReview /></section>
       <section v-show="tab === 'herbs'"><HerbReview /></section>
+      <section v-show="tab === 'booktopics'"><BookTopicReview /></section>
 
       <!-- QUESTION BANK -->
       <section v-show="tab === 'questions'"><QuestionsBank /></section>

@@ -38,4 +38,13 @@ function moveSection(delta) { const next = sections.value[sectionIndex.value + d
   </section>
   <section v-else><h2 class="pagettl">مىزاج كىتابى تېپىلمىدى</h2><p class="muted">mizaj.json نى يەرلىك ھالدا ئىمپورت قىلىڭ.</p></section>
 </template>
+<style scoped>
+.toc button.level-2 { font-weight: 800; margin-top: .35rem; }
+.toc button.level-3 { padding-inline-start: 1.2rem; color: var(--muted); }
+.toc button small { float: inline-end; }
+.reader-actions, .section-nav { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
+.source-page { border-top: 1px solid var(--line); padding-top: .7rem; margin-top: .8rem; }
+.source-page h4 { color: var(--teal); margin: 0; }
+.source-page p { white-space: pre-wrap; line-height: 2; }
+</style>
 <style scoped>.back{display:inline-block;margin-bottom:.7rem;color:var(--accent-ink)}.notice{padding:.8rem 1rem;margin:.8rem 0;background:#fff4d6;border:1px solid #e5c878;border-radius:var(--radius);font-size:.82rem;line-height:1.7}.actions{margin:.8rem 0}.toc{display:grid;gap:.4rem;margin:.8rem 0;padding:1rem}.toc button{border:0;background:transparent;text-align:start;color:inherit;cursor:pointer;padding:.25rem}.toc small{color:var(--muted);margin-inline-start:.4rem}.page-list{display:grid;gap:.6rem;margin-top:1rem}.page-row{display:grid;gap:.35rem;text-align:start;border:1px solid var(--line);color:inherit;cursor:pointer;line-height:1.7}.page-row b{color:var(--teal)}.page-row span{font-size:.82rem}.reader,.quiz-box{margin-top:1rem}.reader{scroll-margin-top:1rem}.reader-head{display:flex;justify-content:space-between;align-items:center}.reader article{white-space:pre-wrap;line-height:2;font-size:.95rem;margin-top:.7rem}.reader-nav{display:flex;gap:.5rem;margin-top:1rem}.reader-nav .btn{flex:1}</style>

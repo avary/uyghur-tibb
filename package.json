@@ -18,6 +18,8 @@
     "herbs:seed": "node scripts/seed-herbs.mjs",
     "farhiz:import": "node scripts/import-farhiz.mjs",
     "mizaj:import": "node scripts/import-mizaj.mjs",
+    "books:validate": "node scripts/validate-book-topics.mjs",
+    "books:compare": "node scripts/compare-book-sources.mjs",
     "git:check-private": "node scripts/check-private-data.mjs",
     "git:setup-hooks": "sh scripts/setup-git-hooks.sh",
     "dev": "node dev.js",
