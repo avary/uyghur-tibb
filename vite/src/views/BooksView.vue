@@ -89,7 +89,7 @@ async function openBook(row) {
             {{ row.kind === 'lesson' ? '📄 دەرسلىك كىتابى' : row.kind === 'mizaj' ? '🧭 مىزاج ئۆگىنىش كىتابى' : row.kind === 'farhiz' ? '📘 OCR ئۆگىنىش كىتابى' : '📖 قوشۇمچە كىتاب' }}
           </span>
           <b>{{ row.kind === 'lesson' ? (row.item.id + '-دەرس: ' + row.item.title) : row.item.title }}</b>
-          <small>{{ row.item.pdfTitle || row.item.subtitle || row.item.desc }}</small>
+          <small>{{ row.kind === 'farhiz' || row.kind === 'mizaj' ? `${row.item.pages.length} بەت · ${row.item.sections?.length || 0} بۆلەك · ئىزدەش ۋە quiz` : (row.item.pdfTitle || row.item.subtitle || row.item.desc) }}</small>
         </div>
         <div class="book-actions">
           <button class="btn btn-teal" @click="openBook(row)">📖 ئوقۇش</button>
