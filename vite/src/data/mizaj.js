@@ -10,7 +10,7 @@ export function mizajSections() { return MIZAJ_BOOK?.sections || [] }
 export function mizajQuiz(sectionId, sourceBook = MIZAJ_BOOK) {
   const sections = sourceBook?.sections || []
   const selected = sectionId ? sections.find(section => section.id === sectionId) : null
-  const hs = selected ? [{ title: selected.title, pageNumber: selected.startPage }] : mizajHeadings().filter(h => h.title.length > 4).slice(0, 12)
+  const hs = selected ? [selected, ...sections.filter(section => section.id !== selected.id && section.title.length > 4).slice(0, 3).map(section => ({ title: section.title, pageNumber: section.startPage }))] : mizajHeadings().filter(h => h.title.length > 4).slice(0, 12)
   return hs.map((heading, index) => {
     const alternatives = hs.filter((_, i) => i !== index).slice(0, 3)
     const options = [heading.title, ...alternatives.map(h => h.title)]
