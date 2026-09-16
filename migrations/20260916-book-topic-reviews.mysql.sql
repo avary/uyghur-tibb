@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS book_topic_reviews (
+  topic_id VARCHAR(160) PRIMARY KEY,
+  book_id VARCHAR(160) NOT NULL,
+  title TEXT NULL,
+  summary TEXT NULL,
+  review_status VARCHAR(30) NOT NULL DEFAULT 'needs_review',
+  reviewer VARCHAR(160) NULL,
+  reviewed_at DATETIME NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

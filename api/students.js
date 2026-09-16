@@ -198,6 +198,12 @@ module.exports = async (req, res) => {
         const herbs = db.listHerbs ? await db.listHerbs(null, null) : [];
         return res.status(200).json({ status: 'ok', herbs });
       }
+      if(q.book_topics === '1' || q.book_topics === 'all'){
+        if(rateLimited(ip)) return fail(429, 'Too many requests');
+        if(q.book_topics === 'all'){ const user = getReqUser(req, res); if(!user) return; }
+        const topics = db.listBookTopics ? await db.listBookTopics(q.book_topics === 'all' ? null : 'approved') : [];
+        return res.status(200).json({ status: 'ok', topics });
+      }
 
       if(q.recipe_history){
         const user = getReqUser(req, res); if(!user) return;
@@ -250,6 +256,12 @@ module.exports = async (req, res) => {
         if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus) || !/^(unreviewed|reviewed|blocked)$/.test(data.safetyStatus || 'unreviewed')) return fail(400, 'Invalid herb review status');
         if(db.connected && db.reviewHerb) await db.reviewHerb(String(data.id).slice(0, 120), data.reviewStatus, data.safetyStatus || 'unreviewed', user.username || 'admin', String(data.note || '').slice(0, 1000));
         return res.status(200).json({ status: 'ok', message: 'Herb review saved' });
+      }
+      if(action === 'review_book_topic' && data.topicId && data.bookId){
+        const user = getReqUser(req, res); if(!user) return;
+        if(!/^(needs_review|approved|rejected)$/.test(data.reviewStatus || 'needs_review')) return fail(400, 'Invalid book topic review status');
+        if(db.connected && db.reviewBookTopic) await db.reviewBookTopic(String(data.topicId).slice(0, 160), String(data.bookId).slice(0, 160), String(data.title || '').slice(0, 500), String(data.summary || '').slice(0, 4000), data.reviewStatus || 'needs_review', user.username || 'admin');
+        return res.status(200).json({ status: 'ok', message: 'Book topic review saved' });
       }
 
       // 1. Admin login: verify against env ADMIN_PASSWORD, return short-lived token

@@ -126,6 +126,28 @@ async function applySchema(conn){
   }
 }
 
+async function applyVersionedMigrations(conn){
+  const dir = path.join(process.cwd(), 'migrations');
+  if(!fs.existsSync(dir)) return;
+  const files = fs.readdirSync(dir)
+    .filter(name => name.endsWith('.mysql.sql'))
+    .sort();
+  for(const file of files){
+    const sql = fs.readFileSync(path.join(dir, file), 'utf8');
+    for(const stmt of splitStatements(sql)){
+      try {
+        await conn.query(stmt);
+      } catch(e){
+        // Versioned migrations are intentionally idempotent. Keep the runner
+        // usable with older MySQL versions where IF NOT EXISTS on ALTER TABLE
+        // is unsupported, while still surfacing real migration failures.
+        if(!/already exists|duplicate column|duplicate key name/i.test(e.message)) throw e;
+      }
+    }
+    console.log(`  ✓ migration: ${file}`);
+  }
+}
+
 function hashPassword(pw){
   const salt = crypto.randomBytes(16).toString('hex');
   const derived = crypto.scryptSync(pw, salt, 64).toString('hex');
@@ -323,6 +345,7 @@ async function main(){
   const conn = await mysql.createConnection(baseConfig());
   if(doDrop) await dropTables(conn);
   await applySchema(conn);
+  await applyVersionedMigrations(conn);
   if(doSeed) await seedAdmin(conn);
   if(doSupabase) await migrateFromSupabase(conn);
   if(doToSupabase) await migrateToSupabase(conn);

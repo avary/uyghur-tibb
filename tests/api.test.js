@@ -192,6 +192,35 @@ test('herb review: approved and safety-reviewed status is accepted', async () =>
   assert.equal(res.body.status, 'ok');
 });
 
+test('book topic review: unauthenticated update is rejected', async () => {
+  const res = await run(req({ method: 'POST', body: { action: 'review_book_topic', topicId: 'mizaj-1', bookId: 'mizaj-saghlamliq', reviewStatus: 'approved' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 401);
+});
+
+test('book topic review: invalid status is rejected after authentication', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const res = await run(req({ method: 'POST', body: { action: 'review_book_topic', topicId: 'mizaj-1', bookId: 'mizaj-saghlamliq', reviewStatus: 'published' }, headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 400);
+});
+
+test('book topic review: authenticated metadata update is accepted', async () => {
+  const login = await run(req({ method: 'POST', body: { action: 'login', password: 'uyghurtibb' }, headers: { 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  const res = await run(req({ method: 'POST', body: { action: 'review_book_topic', topicId: 'mizaj-1', bookId: 'mizaj-saghlamliq', title: 'Reviewed topic', summary: 'Study summary', reviewStatus: 'approved' }, headers: { authorization: 'Bearer ' + login.body.token, 'content-type': 'application/json', 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+});
+
+test('book topics: public feed returns approved-only metadata', async () => {
+  const res = await run(req({ method: 'GET', url: '/api/students?book_topics=1', headers: { 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body.topics, []);
+});
+
+test('book topics: all-status feed requires authentication', async () => {
+  const res = await run(req({ method: 'GET', url: '/api/students?book_topics=all', headers: { 'x-forwarded-for': uniqIp() } }));
+  assert.equal(res.statusCode, 401);
+});
+
 test('full list: forged token returns 401', async () => {
   const r = req({
     method: 'GET', url: '/api/students',

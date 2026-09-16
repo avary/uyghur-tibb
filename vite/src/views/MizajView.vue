@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router'
 import { MIZAJ_BOOK, mizajSections, searchMizaj, mizajQuiz } from '../data/mizaj'
 import { markTopicStudied, toggleTopicSaved, topicProgress } from '../data/topicProgress'
 import { relatedHerbs, relatedRecipes } from '../data/bookLinks'
-const q = ref(''); const topicQ = ref(''); const selected = ref(null); const showQuiz = ref(false); const reader = ref(null)
+import { topicReviewStatus } from '../data/topicReview'
+import { useApi } from '../stores/api'
+const q = ref(''); const topicQ = ref(''); const selected = ref(null); const showQuiz = ref(false); const reader = ref(null); const remoteTopics = ref([]); const api = useApi()
 const route = useRoute()
 const pages = computed(() => searchMizaj(q.value))
-const sections = computed(() => mizajSections())
+const sections = computed(() => mizajSections().filter(section => remoteTopics.value.find(item => item.topic_id === section.id)?.review_status !== 'rejected').map(section => { const remote = remoteTopics.value.find(item => item.topic_id === section.id); return remote ? { ...section, title: remote.title || section.title, summary: remote.summary || section.summary || '' } : section }))
 const visibleSections = computed(() => { const term = topicQ.value.trim().toLocaleLowerCase(); return sections.value.filter(section => !term || section.title.toLocaleLowerCase().includes(term)) })
 const selectedState = computed(() => selected.value ? topicProgress(selected.value.id) : {})
 const linkedRecipes = computed(() => relatedRecipes(selected.value))
@@ -17,20 +19,22 @@ function openPage(page) { selected.value = page; showQuiz.value = false; request
 function openSection(section) { selected.value = section; q.value = ''; showQuiz.value = false; requestAnimationFrame(() => reader.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })) }
 function movePage(delta) { const i = MIZAJ_BOOK.pages.findIndex(page => page.pageNumber === selected.value?.pageNumber); openPage(MIZAJ_BOOK.pages[Math.max(0, Math.min(MIZAJ_BOOK.pages.length - 1, i + delta))]) }
 function startQuiz() { showQuiz.value = true; selected.value = null }
-onMounted(() => { const section = MIZAJ_BOOK.sections?.find(item => item.id === route.query.section); if (section) openSection(section) })
+onMounted(() => { const section = sections.value.find(item => item.id === route.query.section); if (section) openSection(section) })
+onMounted(async () => { const rows = await api.getBookTopics(); if (Array.isArray(rows)) { remoteTopics.value = rows.filter(item => item.book_id === MIZAJ_BOOK.id); const section = sections.value.find(item => item.id === route.query.section); if (section) openSection(section) } })
 function saveTopic() { toggleTopicSaved(selected.value.id); selected.value = { ...selected.value } }
 function studyTopic() { markTopicStudied(selected.value.id); selected.value = { ...selected.value } }
 function moveSection(delta) { const next = sections.value[sectionIndex.value + delta]; if (next) openSection(next) }
 </script>
 <template>
   <section v-if="MIZAJ_BOOK">
+    <div v-if="selected?.summary" class="review-summary"><b>🧠 ئۆگىنىش چۈشەندۈرۈشى</b><p>{{ selected.summary }}</p></div>
     <RouterLink to="/books" class="back">‹ كىتابلارغا قايتىش</RouterLink>
     <h2 class="pagettl">🧭 {{ MIZAJ_BOOK.title }}</h2>
     <p class="pagesub">{{ MIZAJ_BOOK.subtitle }} · {{ MIZAJ_BOOK.pages.length }} بەت</p>
     <div class="notice">⚠️ بۇ مەنبە ئۆگىنىش ۋە تارىخىي بىلىم ئۈچۈندۇر؛ كېسەللىك ياكى پەرھىز قارارىنى مۇتەخەسسىس بىلەن مەسلىھەتلىشىپ چىقىڭ.</div>
     <div class="actions"><button class="btn btn-teal" @click="startQuiz">📝 بۆلەك تېمىلىرى بويىچە quiz ({{ mizajQuiz().length }})</button></div>
     <div v-if="selected" ref="reader" class="reader card"><div class="reader-head"><div><h3>{{ selected.title }}</h3><small>{{ selected.startPage }}–{{ selected.endPage }}-بەت</small></div><button class="btn btn-ghost btn-sm" @click="selected = null">×</button></div><article><div v-for="page in selected.sourcePages" :key="page.pageNumber" class="source-page"><h4>{{ page.displayPageNumber }}-بەت</h4><p>{{ page.text || 'بوش بەت' }}</p></div></article><div class="reader-actions"><button class="btn btn-teal" @click="saveTopic">{{ selectedState.saved ? '★ ساقلانغان' : '☆ ساقلاش' }}</button><button class="btn btn-ghost" @click="studyTopic">{{ selectedState.studied ? '✓ ئۆگىنىلدى' : 'ئۆگىنىلدى دەپ بەلگىلەش' }}</button><RouterLink class="btn btn-ghost" :to="'/mizaj/quiz?section=' + selected.id">📝 بۇ بۆلەك quiz</RouterLink></div><div class="section-nav"><button class="btn btn-ghost" :disabled="sectionIndex <= 0" @click="moveSection(-1)">‹ ئالدىنقى بۆلەك</button><button class="btn btn-ghost" :disabled="sectionIndex >= sections.length - 1" @click="moveSection(1)">كېيىنكى بۆلەك ›</button></div><div v-if="linkedRecipes.length || linkedHerbs.length" class="links"><h4>🔗 مۇناسىۋەتلىك مەزمۇن</h4><RouterLink v-for="r in linkedRecipes" :key="r.id" :to="'/recipe/' + r.id">🌿 {{ r.disease }}</RouterLink><RouterLink v-for="h in linkedHerbs" :key="h.name" :to="'/herb/' + encodeURIComponent(h.name)">🌱 {{ h.name }}</RouterLink></div></div>
-    <div v-if="!q" class="toc card"><b>بۆلەك يولباشچىسى ({{ visibleSections.length }})</b><input v-model="topicQ" class="input" type="search" placeholder="بۆلەك نامىدىن ئىزدەش..." aria-label="بۆلەك نامىدىن ئىزدەش"><button v-for="s in visibleSections" :key="s.id" :class="'level-' + s.level" @click="openSection(s)">{{ s.title }} <small>{{ s.startPage }}–{{ s.endPage }}-بەت</small></button></div>
+    <div v-if="!q" class="toc card"><b>بۆلەك يولباشچىسى ({{ visibleSections.length }})</b><input v-model="topicQ" class="input" type="search" placeholder="بۆلەك نامىدىن ئىزدەش..." aria-label="بۆلەك نامىدىن ئىزدەش"><button v-for="s in visibleSections" :key="s.id" :class="'level-' + s.level" @click="openSection(s)">{{ s.title }} <small>{{ s.startPage }}–{{ s.endPage }}-بەت · {{ topicReviewStatus(s.id) === 'approved' ? '✅' : '📝' }}</small></button></div>
     <input v-model="q" class="input" type="search" placeholder="كىتاب ئىچىدىن ئىزدەش..." aria-label="مىزاج كىتابىدىن ئىزدەش">
     <div class="page-list"><button v-for="page in pages" :key="page.pageNumber" class="card page-row" @click="openPage(page)"><b>{{ page.displayPageNumber }}-بەت</b><span>{{ page.text.slice(0, 220) || 'بوش بەت' }}{{ page.text.length > 220 ? '…' : '' }}</span></button></div>
     <p v-if="!pages.length" class="muted">بۇ سۆز بىلەن نەتىجە تېپىلمىدى.</p>

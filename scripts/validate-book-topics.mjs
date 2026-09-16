@@ -2,6 +2,7 @@
 import fs from 'node:fs'
 
 const input = process.argv[2] || 'vite/src/data/mizaj.json'
+const compareInput = process.argv[3] === '--different-from' ? process.argv[4] : null
 if (!fs.existsSync(input)) throw new Error(`Book OCR file not found: ${input}`)
 const pages = JSON.parse(fs.readFileSync(input, 'utf8'))
 if (!Array.isArray(pages) || !pages.length) throw new Error('Expected a non-empty page array')
@@ -16,5 +17,9 @@ headings.forEach((heading, index) => {
   if (!Number.isFinite(heading.page)) errors.push(`invalid page number for heading: ${heading.title}`)
 })
 for (let i = 1; i < pages.length; i++) if (Number(pages[i].pageNumber) <= Number(pages[i - 1].pageNumber)) errors.push(`page order is not increasing at index ${i}`)
+if (compareInput) {
+  if (!fs.existsSync(compareInput)) throw new Error(`Comparison book not found: ${compareInput}`)
+  if (fs.readFileSync(input).equals(fs.readFileSync(compareInput))) errors.push(`book is identical to comparison source: ${compareInput}`)
+}
 if (errors.length) { console.error(errors.join('\n')); process.exit(1) }
 console.log(`Book topic validation passed: ${pages.length} pages, ${headings.length} headings`)

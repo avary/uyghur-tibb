@@ -1,3 +1,4 @@
+import { isLearnerTopicVisible, applyTopicReview } from './topicReview'
 const books = import.meta.glob('./mizajData.js', { eager: true, import: 'MIZAJ_BOOK' })
 export const MIZAJ_BOOK = Object.values(books)[0] || null
 export function mizajPages() { return MIZAJ_BOOK?.pages || [] }
@@ -6,9 +7,9 @@ export function searchMizaj(term) {
   return mizajPages().filter(page => !q || page.text.toLowerCase().includes(q))
 }
 export function mizajHeadings() { return MIZAJ_BOOK?.headings || [] }
-export function mizajSections() { return MIZAJ_BOOK?.sections || [] }
+export function mizajSections() { return (MIZAJ_BOOK?.sections || []).filter(isLearnerTopicVisible).map(applyTopicReview) }
 export function mizajQuiz(sectionId, sourceBook = MIZAJ_BOOK) {
-  const sections = sourceBook?.sections || []
+  const sections = (sourceBook?.sections || []).map(applyTopicReview)
   const selected = sectionId ? sections.find(section => section.id === sectionId) : null
   const hs = selected ? [selected, ...sections.filter(section => section.id !== selected.id && section.title.length > 4).slice(0, 3).map(section => ({ title: section.title, pageNumber: section.startPage }))] : mizajHeadings().filter(h => h.title.length > 4).slice(0, 12)
   return hs.map((heading, index) => {

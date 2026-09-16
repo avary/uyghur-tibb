@@ -23,7 +23,7 @@ The project does not use default passwords or client-side password backdoors. Co
 ## Product capabilities
 
 - **1,000-recipe traditional medicine book integrated** — the OCR source is transformed into a source-linked recipe library and utilized throughout the learner app for browsing, category/search discovery, recipe details, study questions, quizzes, spaced repetition, and expert-gated publishing.
-- **Farhiz/Mizaj study book integrated locally** — the 209-page OCR book *ئۇيغۇرلاردا مىزاج ۋە ساغلاملىق* is available as searchable, page-linked reading, chapter navigation, and heading-based comprehension quizzes; both source JSON and generated modules remain private and are never committed.
+- **Farhiz and Mizaj study books integrated locally** — Mizaj contains 209 OCR pages and Farhiz contains 482 OCR pages, each with its own source-linked reading, chapter navigation, search, and heading-based comprehension quizzes; both source JSON files and generated modules remain private and are never committed.
 - Source-linked traditional recipe library with OCR text, page provenance, categories, search, and study quizzes.
 - Review-gated publishing: content approval and safety approval are separate, with reviewer history and notes.
 - Raw-herb encyclopedia prepared for multiple JSON books, including structured names, Latin names, uses, warnings, and source pages.
@@ -98,12 +98,13 @@ Create your remote MySQL database and tables, then (optionally) seed an admin ro
 cp .env.example .env   # fill in MYSQL_* (non-empty password) + ADMIN_PASSWORD; DB_DRIVER=mysql
 
 npm install            # installs mysql2
-node migrate.js        # apply schema (mysql_setup.sql) — creates tables
+node migrate.js        # apply base schema and all versioned MySQL migrations
 node migrate.js --seed # also insert an admin row (hashed from ADMIN_PASSWORD)
 ```
 
-For an existing MySQL deployment, apply the relevant file in `migrations/` when upgrading
-the herb safety workflow (the base schema already includes these columns for new installs).
+Versioned MySQL migrations in `migrations/` are applied automatically by `node migrate.js`.
+They are safe to re-run; use the command after pulling an update or when setting up an
+existing deployment.
 
 ### 2. Option B — Supabase backend
 
@@ -152,6 +153,7 @@ The local Farhiz OCR book can be prepared for the learner reader with:
 
 ```bash
 npm run farhiz:import
+npm run books:validate:distinct  # ensure Farhiz is not an accidental copy of Mizaj
 ```
 
 Then open `/farhiz` from the PDF library. The source JSON and generated `farhizData.js` are
@@ -166,6 +168,10 @@ npm run mizaj:import
 Then open `/mizaj` from the Books page. It provides searchable full-page reading, a chapter
 guide, and a study quiz. `mizaj.json` and generated `mizajData.js` are intentionally ignored
 by Git and protected by the pre-commit private-data check.
+
+For shared admin review persistence, apply the matching `20260916-book-topic-reviews` SQL
+migration for MySQL or Supabase. Only topic metadata (title, summary, and review status) is
+stored server-side; the OCR pages and generated book modules remain local and Git-ignored.
 
 ### 3. Moving data between backends
 

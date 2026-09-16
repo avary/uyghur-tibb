@@ -148,6 +148,10 @@ function createDriver(){
         return rows;
       });
     },
+    async listBookTopics(status){
+      if(!connected) return [];
+      return withConn(async conn => { const [rows] = await conn.execute('SELECT topic_id, book_id, title, summary, review_status, reviewer, reviewed_at FROM book_topic_reviews WHERE (? IS NULL OR review_status = ?) ORDER BY book_id, topic_id', [status || null, status || null]); return rows; });
+    },
     async reviewHerb(id, reviewStatus, safetyStatus, reviewer, note){
       if(!connected) return;
       await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE herbs SET review_status = ?, safety_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, safetyStatus, reviewer || null, id]); await conn.execute('INSERT INTO herb_review_history (herb_id, review_status, safety_status, reviewer, note) VALUES (?,?,?,?,?)', [id, reviewStatus, safetyStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
@@ -159,6 +163,10 @@ function createDriver(){
     async reviewRecipe(id, reviewStatus, safetyStatus, reviewer, note){
       if(!connected) return;
       await withConn(async (conn) => { await conn.beginTransaction(); try { await conn.execute('UPDATE recipes SET review_status = ?, safety_status = ?, reviewer = ?, reviewed_at = NOW() WHERE id = ?', [reviewStatus, safetyStatus, reviewer || null, id]); await conn.execute('INSERT INTO recipe_review_history (recipe_id, review_status, safety_status, reviewer, note) VALUES (?,?,?,?,?)', [id, reviewStatus, safetyStatus, reviewer || null, note || null]); await conn.commit(); } catch (e) { await conn.rollback(); throw e; } });
+    },
+    async reviewBookTopic(topicId, bookId, title, summary, reviewStatus, reviewer){
+      if(!connected) return;
+      await withConn(async conn => conn.execute('INSERT INTO book_topic_reviews (topic_id, book_id, title, summary, review_status, reviewer, reviewed_at) VALUES (?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE title=VALUES(title), summary=VALUES(summary), review_status=VALUES(review_status), reviewer=VALUES(reviewer), reviewed_at=NOW()', [topicId, bookId, title || null, summary || null, reviewStatus, reviewer || null]));
     },
     async recipeReviewHistory(id, limit = 50){
       if(!connected) return [];

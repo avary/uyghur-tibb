@@ -73,6 +73,9 @@ export const useApi = defineStore('api', {
     async getHerbs() {
       try { const r = await fetch(ENDPOINT + '?herbs=1'); if (!r.ok) return null; return (await r.json()).herbs || [] } catch (e) { return null }
     },
+    async getBookTopics(all = false) {
+      try { const r = await fetch(ENDPOINT + '?book_topics=' + (all ? 'all' : '1'), { headers: token() ? { Authorization: 'Bearer ' + token() } : {} }); if (!r.ok) return null; return (await r.json()).topics || [] } catch (e) { return null }
+    },
     async getAllHerbs() {
       try { const r = await fetch(ENDPOINT + '?herbs=all', { headers: token() ? { Authorization: 'Bearer ' + token() } : {} }); if (!r.ok) return null; return (await r.json()).herbs || [] } catch (e) { return null }
     },
@@ -81,6 +84,9 @@ export const useApi = defineStore('api', {
     },
     async reviewHerb(id, reviewStatus, safetyStatus, note) {
       return post({ action: 'review_herb', id, reviewStatus, safetyStatus: safetyStatus || 'unreviewed', note: note || '' })
+    },
+    async reviewBookTopic(topicId, bookId, title, summary, reviewStatus) {
+      return post({ action: 'review_book_topic', topicId, bookId, title, summary, reviewStatus })
     },
     async getRecipeHistory(id) {
       try {
