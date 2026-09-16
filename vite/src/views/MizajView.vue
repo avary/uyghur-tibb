@@ -7,7 +7,7 @@ import { relatedHerbs, relatedRecipes } from '../data/bookLinks'
 const q = ref(''); const selected = ref(null); const showQuiz = ref(false); const reader = ref(null)
 const route = useRoute()
 const pages = computed(() => searchMizaj(q.value))
-const sections = computed(() => mizajSections().slice(0, 60))
+const sections = computed(() => mizajSections())
 const selectedState = computed(() => selected.value ? topicProgress(selected.value.id) : {})
 const linkedRecipes = computed(() => relatedRecipes(selected.value))
 const linkedHerbs = computed(() => relatedHerbs(selected.value))

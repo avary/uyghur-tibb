@@ -7,7 +7,7 @@ import { relatedHerbs, relatedRecipes } from '../data/bookLinks'
 const q = ref(''); const selected = ref(null); const reader = ref(null)
 const route = useRoute()
 const pages = computed(() => searchFarhiz(q.value))
-const sections = computed(() => farhizSections().slice(0, 60))
+const sections = computed(() => farhizSections())
 const selectedState = computed(() => selected.value ? topicProgress(selected.value.id) : {})
 const linkedRecipes = computed(() => relatedRecipes(selected.value))
 const linkedHerbs = computed(() => relatedHerbs(selected.value))
