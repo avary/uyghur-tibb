@@ -7,6 +7,7 @@ import { getLessons, countQuestions } from '../data/loader'
 import { sanitizeHtml } from '../utils/sanitize'
 import { reminderEnabled, toggleReminder } from '../composables/reminder'
 import { useLocale } from '../composables/locale'
+import SavedBookTopics from '../components/SavedBookTopics.vue'
 
 const progress = useProgress()
 const theme = useTheme()
@@ -71,6 +72,7 @@ async function setReminder(value) {
 
 <template>
   <section>
+    <SavedBookTopics />
     <h2 class="pagettl">👤 مەن</h2>
 
     <div class="me hero">
