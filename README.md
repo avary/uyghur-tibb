@@ -123,56 +123,6 @@ existing deployment.
    npm run migrate:to-supabase        # students/feedback/exam_logs (students upsert by phone)
    ```
 
-### Recipe and raw-herb ingestion
-
-The OCR recipe book stays local until copyright and expert safety review are complete. Do
-not stage `vite/src/data/recipeData.js`, `vite/src/data/herbData-*.js`, or `vite/public/pdf/` when committing. These paths are also ignored by Git. Validate the
-local recipe dataset, then seed it explicitly:
-
-```bash
-npm run recipes:validate
-npm run recipes:seed
-npm run git:check-private
-npm run git:setup-hooks
-```
-
-Future raw-herb recognition books use a separate pipeline:
-
-```bash
-npm run herbs:import -- /path/to/raw-herbs.json
-# If the JSON has no stable ID, provide one to prevent collisions:
-HERB_BOOK_ID=uyghur-raw-herbs npm run herbs:import -- /path/to/raw-herbs.json
-npm run herbs:validate -- vite/src/data/herbData-<book-id>.js
-npm run herbs:seed   # requires HERB_DATA=herbData-book-a.js,herbData-book-b.js
-```
-
-Imported herbs begin as `needs_review`; only reviewed content should be connected to public
-recipes. The full implementation plan is in [ROADMAP.md](ROADMAP.md).
-
-The local Farhiz OCR book can be prepared for the learner reader with:
-
-```bash
-npm run farhiz:import
-npm run books:validate:distinct  # ensure Farhiz is not an accidental copy of Mizaj
-```
-
-Then open `/farhiz` from the PDF library. The source JSON and generated `farhizData.js` are
-intentionally ignored by Git and protected by the pre-commit private-data check.
-
-The local Mizaj OCR book uses the same private workflow:
-
-```bash
-npm run mizaj:import
-```
-
-Then open `/mizaj` from the Books page. It provides searchable full-page reading, a chapter
-guide, and a study quiz. `mizaj.json` and generated `mizajData.js` are intentionally ignored
-by Git and protected by the pre-commit private-data check.
-
-For shared admin review persistence, apply the matching `20260916-book-topic-reviews` SQL
-migration for MySQL or Supabase. Only topic metadata (title, summary, and review status) is
-stored server-side; the OCR pages and generated book modules remain local and Git-ignored.
-
 ### 3. Moving data between backends
 
 **MySQL → Supabase** (`npm run migrate:to-supabase`): students upsert by phone (safe to
